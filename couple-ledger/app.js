@@ -5,7 +5,7 @@ const STORE_API = "https://superjsonblob.com/api/jsonBlob";
 const categoriesExpense = ["食","衣","住","行","育","樂","其他"];
 const categoriesIncome = ["薪資","獎金","投資","退款","其他收入"];
 const quickExpense = ["食","衣","住","行","育","樂"];
-const accounts = ["Cash","國泰","台新","富邦","UBOT","其他"];
+const defaultAccounts = ["Cash","國泰","台新","富邦","UBOT","其他"];
 const projects = ["日常生活","旅行","裝潢","其他"];
 
 let data = null;
@@ -115,9 +115,15 @@ function normalizeData(input) {
   if (memberA === "David") memberA = "老公";
   if (memberB === "太太") memberB = "老婆";
 
+  const savedAccounts = Array.isArray(settings.accounts)
+    ? settings.accounts.map((x) => String(x).trim().slice(0, 30)).filter(Boolean)
+    : defaultAccounts;
+  const uniqueAccounts = [...new Set(savedAccounts)].slice(0, 20);
+
   base.settings = {
     memberA,
     memberB,
+    accounts: uniqueAccounts.length ? uniqueAccounts : [...defaultAccounts],
     monthlyBudget: Math.max(0, Number(settings.monthlyBudget) || 0)
   };
   base.settingsUpdatedAt = String(input.settingsUpdatedAt || "1970-01-01T00:00:00.000Z");
@@ -274,12 +280,19 @@ function renderMembers() {
     `<option value="B">${escapeHtml(data.settings.memberB)}</option>`;
   $("#memberAName").value = data.settings.memberA;
   $("#memberBName").value = data.settings.memberB;
-  $("#monthlyBudget").value = data.settings.monthlyBudget || "";
+  $("#accountsInput").value = data.settings.accounts.join(", ");\n  $("#monthlyBudget").value = data.settings.monthlyBudget || "";
 }
 
 function renderStaticOptions() {
-  $("#account").innerHTML = accounts.map((x) => `<option value="${x}">${x}</option>`).join("");
   $("#project").innerHTML = projects.map((x) => `<option value="${x}">${x}</option>`).join("");
+}
+
+function renderAccountOptions(selected = "") {
+  const values = data?.settings?.accounts?.length ? data.settings.accounts : defaultAccounts;
+  const current = selected || $("#account").value || values[0];
+  const options = values.includes(current) ? values : [current, ...values];
+  $("#account").innerHTML = options.map((x) => `<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join("");
+  $("#account").value = options.includes(current) ? current : options[0];
 }
 
 function visibleEntries() {
@@ -422,7 +435,7 @@ function resetForm() {
   $("#note").value = "";
   $("#date").value = localDate();
   setType("expense");
-  $("#account").value = "Cash";
+  $("#account").value = data.settings.accounts[0] || "Cash";
   $("#project").value = "日常生活";
   $("#saveEntry").textContent = "＋ 記一筆";
   $("#cancelEdit").classList.add("hidden");
@@ -468,7 +481,7 @@ function startEdit(id) {
     $("#category").add(new Option(entry.category, entry.category));
     $("#category").value = entry.category;
   }
-  $("#account").value = accounts.includes(entry.account) ? entry.account : "其他";
+  renderAccountOptions(entry.account);
   $("#project").value = projects.includes(entry.project) ? entry.project : "其他";
   $("#date").value = entry.date;
   $("#note").value = entry.note || "";
@@ -490,9 +503,20 @@ async function removeEntry(id) {
 async function saveSettings() {
   const memberA = $("#memberAName").value.trim() || "老公";
   const memberB = $("#memberBName").value.trim() || "老婆";
+  const accounts = [...new Set(
+    $("#accountsInput").value
+      .split(/[,，\n]/)
+      .map((x) => x.trim())
+      .filter(Boolean)
+  )].slice(0, 20);
   const monthlyBudget = Math.max(0, Number($("#monthlyBudget").value) || 0);
   await syncMutation((next) => {
-    next.settings = { memberA, memberB, monthlyBudget };
+    next.settings = {
+      memberA,
+      memberB,
+      accounts: accounts.length ? accounts : [...defaultAccounts],
+      monthlyBudget
+    };
     next.settingsUpdatedAt = nowIso();
   });
 }
@@ -550,7 +574,7 @@ async function init() {
     await bootStorage();
     setType("expense");
     $("#date").value = localDate();
-    $("#account").value = "Cash";
+    $("#account").value = data.settings.accounts[0] || "Cash";
     $("#project").value = "日常生活";
     render();
     setStatus("Home Flow 已同步 · AES‑256 加密共用", "ok");
