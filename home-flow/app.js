@@ -280,7 +280,8 @@ function renderMembers() {
     `<option value="B">${escapeHtml(data.settings.memberB)}</option>`;
   $("#memberAName").value = data.settings.memberA;
   $("#memberBName").value = data.settings.memberB;
-  $("#accountsInput").value = data.settings.accounts.join(", ");\n  $("#monthlyBudget").value = data.settings.monthlyBudget || "";
+  $("#accountsInput").value = data.settings.accounts.join(", ");
+  $("#monthlyBudget").value = data.settings.monthlyBudget || "";
 }
 
 function renderStaticOptions() {
