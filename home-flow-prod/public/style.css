@@ -106,3 +106,9 @@ label{font-size:10px}
   .nav button b{font-size:11px}
   .nav button span{font-size:22px}
 }
+
+/* Entry action touch safety */
+.entry-actions{gap:4px}
+.entry-actions button{min-width:42px;min-height:34px;padding:7px 9px;border-radius:9px;font-size:11px;font-weight:750}
+.entry-actions .entry-edit{background:var(--paper2);color:var(--muted)}
+.entry-actions .entry-delete{background:#fff0ec;color:var(--danger)}
