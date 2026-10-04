@@ -25,7 +25,8 @@ const state = {
   search: "",
   filters: { year:"全部", category:"全部", nature:"全部", project:"全部" },
   listLimit: 80,
-  analysisMode: "cockpit"
+  analysisMode: "cockpit",
+  aiMessages: []
 };
 
 function esc(v="") {
@@ -197,6 +198,93 @@ function flowStatus(entries,d=state.viewDate){
   if(pct!==null&&pct>25)return{code:"ACTION",tone:"action",text:first?.text||"實質生活成本明顯高於近期平均。"};
   if(pct!==null&&pct>10)return{code:"WATCH",tone:"watch",text:first?.text||"實質生活成本略高於近期平均。"};
   return{code:"NORMAL",tone:"normal",text:first?.text||"目前沒有明顯異常。"};
+}
+
+
+function monthsBack(end,n){
+  const out=[];
+  for(let i=n-1;i>=0;i--)out.push(addMonths(end,-i));
+  return out;
+}
+function queryNumber(text,def=3){
+  const m=String(text).match(/(\d{1,2})\s*個?\s*月/);
+  if(m)return Math.min(24,Math.max(1,Number(m[1])));
+  const map={"一":1,"二":2,"兩":2,"三":3,"四":4,"五":5,"六":6,"七":7,"八":8,"九":9,"十":10,"十一":11,"十二":12};
+  const c=String(text).match(/(十二|十一|十|[一二兩三四五六七八九])\s*個?\s*月/);
+  return c?map[c[1]]:def;
+}
+function queryCategory(text){
+  const t=String(text).toLowerCase();
+  if(/(^|[^生])食|餐飲|餐費|伙食|吃|早餐|午餐|晚餐/.test(t))return "食";
+  if(/衣|服飾|衣服|鞋/.test(t))return "衣";
+  if(/住|住房|房屋|居住|家居/.test(t))return "住";
+  if(/行|交通|車|加油|停車/.test(t))return "行";
+  if(/育|教育|學費|托嬰|幼兒園/.test(t))return "育";
+  if(/樂|娛樂|旅遊|旅行|玩具/.test(t))return "樂";
+  if(/其他/.test(t))return "其他";
+  return null;
+}
+function sumRows(rows){return expenseRows(rows).reduce((s,e)=>s+e.amount,0)}
+function rowsForMonths(entries,end,n){
+  const keys=new Set(monthsBack(end,n).map(monthKey));
+  return entries.filter(e=>keys.has(e.date.slice(0,7)));
+}
+function monthlyCategorySeries(entries,end,n,category=null){
+  return monthsBack(end,n).map(d=>{
+    const rows=monthRows(entries,d).filter(e=>!category||e.category===category);
+    return {key:monthKey(d),label:`${d.getMonth()+1}月`,value:sumRows(rows)};
+  });
+}
+function chatMiniBars(series){
+  const peak=Math.max(...series.map(x=>x.value),1);
+  return `<div class="chat-chart">${series.map(x=>`<div class="chat-bar-col"><div class="chat-bar-value">${shortMoney(x.value)}</div><div class="chat-bar-wrap"><i style="height:${Math.max(3,x.value/peak*72)}px"></i></div><span>${esc(x.label)}</span></div>`).join("")}</div>`;
+}
+function chatAnswer(query,entries){
+  const q=String(query||"").trim();
+  if(!q)return{title:"你可以直接問帳本",text:"例如：show 給我看 3 個月內的食費用。"};
+  const n=queryNumber(q,3),cat=queryCategory(q),now=state.viewDate;
+  const yearMatch=q.match(/20\d{2}/);
+  const targetYear=yearMatch?yearMatch[0]:(/去年/.test(q)?String(now.getFullYear()-1):(/今年/.test(q)?String(now.getFullYear()):null));
+
+  if(/base\s*burn|生活成本|年化/.test(q.toLowerCase())){
+    const annual=baseBurn(entries,now);
+    return{title:"Base Burn",text:`目前估計 ${money(annual/12)} / 月，${money(annual)} / 年。這會排除資本支出、房貸本金、資金移轉與 One-off。`};
+  }
+  if(/比較|對比|vs/i.test(q)){
+    const recent=rowsForMonths(entries,now,n),prevEnd=addMonths(now,-n),prev=rowsForMonths(entries,prevEnd,n);
+    const a=cat?sumRows(recent.filter(e=>e.category===cat)):sumRows(recent);
+    const b=cat?sumRows(prev.filter(e=>e.category===cat)):sumRows(prev);
+    const pct=b>0?(a/b-1)*100:null;
+    return{title:`最近 ${n} 個月${cat?`「${cat}」`:"支出"}比較`,text:`最近 ${n} 個月 ${money(a)}；前 ${n} 個月 ${money(b)}。${pct===null?"前期沒有可比較資料。":`變動 ${pct>=0?"+":""}${pct.toFixed(1)}%。`}`,chart:chatMiniBars([{label:`前${n}月`,value:b},{label:`近${n}月`,value:a}])};
+  }
+  if(targetYear){
+    const rows=entries.filter(e=>e.date.startsWith(targetYear+"-")).filter(e=>!cat||e.category===cat);
+    const total=sumRows(rows);
+    const monthly=Array.from({length:12},(_,i)=>{const key=`${targetYear}-${String(i+1).padStart(2,"0")}`;return{label:`${i+1}月`,value:sumRows(rows.filter(e=>e.date.startsWith(key)))}}).filter(x=>x.value>0);
+    return{title:`${targetYear} ${cat?`${cat}類`:"總"}支出`,text:`合計 ${money(total)}，共 ${expenseRows(rows).length.toLocaleString()} 筆。${monthly.length?`有紀錄月份平均 ${money(total/monthly.length)}。`:""}`,chart:monthly.length?chatMiniBars(monthly):""};
+  }
+  if(/最多|最高|top/i.test(q)){
+    const rows=rowsForMonths(entries,now,n),top=byField(rows,"category").slice(0,5),total=sumRows(rows);
+    return{title:`最近 ${n} 個月支出 Top 5`,text:top.length?`第一名是「${top[0][0]}」${money(top[0][1])}，占 ${total?Math.round(top[0][1]/total*100):0}%。`:"這段期間沒有支出資料。",chart:top.length?`<div class="chat-rank">${top.map(([k,v])=>`<div><b>${esc(k)}</b><span>${money(v)}</span></div>`).join("")}</div>`:""};
+  }
+  if(cat || /月|費用|花多少|支出|show|看/i.test(q)){
+    const series=monthlyCategorySeries(entries,now,n,cat),total=series.reduce((s,x)=>s+x.value,0),peak=series.slice().sort((a,b)=>b.value-a.value)[0];
+    return{title:`最近 ${n} 個月${cat?`「${cat}」`:""}支出`,text:`合計 ${money(total)}，月平均 ${money(total/n)}。${peak?`最高月份 ${peak.label} ${money(peak.value)}。`:""}`,chart:chatMiniBars(series)};
+  }
+  const judges=aiJudgement(entries,now);
+  return{title:"家庭現金流判讀",text:judges.map(x=>`${x.title}：${x.text}`).join(" ")};
+}
+function addChatMessage(role,payload){
+  state.aiMessages.push({role,...payload,at:Date.now()});
+  if(state.aiMessages.length>20)state.aiMessages=state.aiMessages.slice(-20);
+}
+function askFinanceAI(text){
+  const q=String(text||"").trim();
+  if(!q)return;
+  addChatMessage("user",{text:q});
+  addChatMessage("assistant",chatAnswer(q,effectiveEntries()));
+  render();
+  requestAnimationFrame(()=>document.querySelector(".chat-thread")?.scrollTo({top:99999,behavior:"smooth"}));
 }
 
 function nav(){ $$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===state.tab)) }
