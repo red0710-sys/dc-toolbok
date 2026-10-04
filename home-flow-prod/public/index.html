@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f7f2e9">
+  <meta name="referrer" content="no-referrer">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Home Flow">
+  <title>Home Flow｜家庭現金流控制台</title>
+  <link rel="stylesheet" href="./style.css">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <style id="hero-hotfix">
+    .hero{
+      background:linear-gradient(145deg,#f1e8dc 0%,#f7efe5 62%,#eee8dc 100%) !important;
+      color:#25231f !important;
+      border:1px solid #ddd1c2 !important;
+      box-shadow:0 12px 30px rgba(79,59,39,.08) !important;
+      position:relative;
+      overflow:hidden;
+    }
+    .hero::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:#ef6a3a}
+    .hero .hero-head small{color:#d95225 !important;font-weight:800;letter-spacing:.08em}
+    .hero .hero-head>span,.hero .stat span,.hero .stat small{color:#746f67 !important;opacity:1 !important}
+    .hero .stat{border-right:1px solid rgba(92,75,57,.11)}
+    .hero .stat:last-child{border-right:0}
+    .hero .stat strong{color:#25231f !important}
+  </style>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#f4efe6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Home Flow">
+</head>
+<body>
+  <div id="app" class="app">
+    <header class="header">
+      <div><div class="kicker">HOME FLOW 3.0</div><h1>家庭現金流</h1></div>
+      <button id="shareBtn" class="icon-btn" aria-label="分享 Home Flow">↗</button>
+    </header>
+    <div id="status" class="status">正在開啟 Home Flow…</div>
+    <main id="content"></main>
+  </div>
+
+  <nav class="nav" aria-label="Home Flow 功能列">
+    <button data-tab="home" class="active"><span>⌂</span><b>總覽</b></button>
+    <button data-tab="add"><span>＋</span><b>記帳</b></button>
+    <button data-tab="analysis"><span>◎</span><b>分析</b></button>
+    <button data-tab="chat"><span>✦</span><b>AI</b></button>
+    <button data-tab="projects"><span>▦</span><b>專案</b></button>
+    <button data-tab="list"><span>⌕</span><b>明細</b></button>
+  </nav>
+
+  <script src="./cloud-sync.js"></script>
+  <script type="module" src="./app.js"></script>
+  <script src="./pwa.js"></script>
+</body>
+</html>
