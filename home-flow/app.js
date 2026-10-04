@@ -274,16 +274,6 @@ function renderQuickCategories() {
   });
 }
 
-function renderMembers() {
-  $("#member").innerHTML =
-    `<option value="A">${escapeHtml(data.settings.memberA)}</option>` +
-    `<option value="B">${escapeHtml(data.settings.memberB)}</option>`;
-  $("#memberAName").value = data.settings.memberA;
-  $("#memberBName").value = data.settings.memberB;
-  $("#accountsInput").value = data.settings.accounts.join(", ");
-  $("#monthlyBudget").value = data.settings.monthlyBudget || "";
-}
-
 function renderStaticOptions() {
   $("#project").innerHTML = projects.map((x) => `<option value="${x}">${x}</option>`).join("");
 }
@@ -318,7 +308,6 @@ function renderProjectFilter() {
 function render() {
   if (!data) return;
   renderMonthLabel();
-  renderMembers();
   renderAccountOptions();
   renderProjectFilter();
 
@@ -332,8 +321,6 @@ function render() {
   $("#expenseTotal").textContent = money(expense);
   $("#incomeTotal").textContent = money(income);
   $("#balanceTotal").textContent = money(income - expense);
-  $("#entryCount").textContent = projectFilter === "全部專案" ? `${monthRows.length} 筆` : `${rows.length} 筆 · ${projectFilter}`;
-
   const budget = Number(data.settings.monthlyBudget) || 0;
   $("#budgetWrap").classList.toggle("hidden", budget <= 0);
   if (budget > 0) {
@@ -341,12 +328,6 @@ function render() {
     $("#budgetBar").style.width = `${pct}%`;
     $("#budgetText").textContent = `${Math.round((expense / budget) * 100)}% · 尚餘 ${money(Math.max(0, budget - expense))}`;
   }
-
-  const a = expenses.filter((e) => e.member === "A").reduce((s, e) => s + e.amount, 0);
-  const b = expenses.filter((e) => e.member === "B").reduce((s, e) => s + e.amount, 0);
-  const total = a + b || 1;
-  $("#memberSplit").innerHTML = [[data.settings.memberA, a],[data.settings.memberB, b]]
-    .map(([name, value]) => `<div class="person"><span>${escapeHtml(name)} · ${Math.round((value / total) * 100)}%</span><strong>${money(value)}</strong></div>`).join("");
 
   const byCat = {};
   expenses.forEach((e) => { byCat[e.category] = (byCat[e.category] || 0) + e.amount; });
@@ -359,11 +340,9 @@ function render() {
 
   $("#entries").innerHTML = rows.length
     ? rows.map((e) => {
-        const member = e.member === "A" ? data.settings.memberA : data.settings.memberB;
         return `<div class="entry">
           <div class="entry-main">
             <div class="entry-title">${escapeHtml(e.category)}
-              <span class="tag">${escapeHtml(member)}</span>
               <span class="tag account">${escapeHtml(e.account)}</span>
               <span class="tag project">${escapeHtml(e.project)}</span>
             </div>
@@ -451,7 +430,7 @@ async function saveEntry() {
     type: entryType,
     amount,
     category: $("#category").value,
-    member: $("#member").value,
+    member: "A",
     account: $("#account").value,
     project: $("#project").value,
     note: $("#note").value.trim(),
@@ -477,7 +456,6 @@ function startEdit(id) {
   editId = id;
   setType(entry.type);
   $("#amount").value = entry.amount;
-  $("#member").value = entry.member;
   $("#category").value = entry.category;
   if (![...$("#category").options].some((o) => o.value === entry.category)) {
     $("#category").add(new Option(entry.category, entry.category));
@@ -502,34 +480,37 @@ async function removeEntry(id) {
   });
 }
 
-async function saveSettings() {
-  const memberA = $("#memberAName").value.trim() || "老公";
-  const memberB = $("#memberBName").value.trim() || "老婆";
+async function editAccounts() {
+  const current = data.settings.accounts.join(", ");
+  const input = prompt("編輯付款帳戶（用逗號分隔）", current);
+  if (input === null) return;
+
   const accounts = [...new Set(
-    $("#accountsInput").value
+    input
       .split(/[,，\n]/)
       .map((x) => x.trim())
       .filter(Boolean)
   )].slice(0, 20);
-  const monthlyBudget = Math.max(0, Number($("#monthlyBudget").value) || 0);
+
+  if (!accounts.length) return;
+
   await syncMutation((next) => {
     next.settings = {
-      memberA,
-      memberB,
-      accounts: accounts.length ? accounts : [...defaultAccounts],
-      monthlyBudget
+      ...next.settings,
+      accounts
     };
     next.settingsUpdatedAt = nowIso();
   });
+
+  renderAccountOptions();
 }
 
 function exportCsv() {
-  const rows = [["日期","類型","付款人","分類","付款帳戶","專案","金額","備註"]];
+  const rows = [["日期","類型","分類","付款帳戶","專案","金額","備註"]];
   data.entries.slice().sort((a, b) => a.date.localeCompare(b.date)).forEach((e) => {
     rows.push([
       e.date,
       e.type === "expense" ? "支出" : "收入",
-      e.member === "A" ? data.settings.memberA : data.settings.memberB,
       e.category,
       e.account,
       e.project,
@@ -598,7 +579,7 @@ $("#category").onchange = renderQuickCategories;
 $("#projectFilter").onchange = () => { projectFilter = $("#projectFilter").value; render(); };
 $("#saveEntry").onclick = saveEntry;
 $("#cancelEdit").onclick = resetForm;
-$("#saveSettings").onclick = saveSettings;
+$("#editAccountsBtn").onclick = editAccounts;
 $("#exportBtn").onclick = exportCsv;
 $("#shareBtn").onclick = shareBook;
 $("#prevMonth").onclick = () => { viewMonth = new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1, 1); render(); };
