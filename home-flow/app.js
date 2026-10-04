@@ -2,7 +2,7 @@ const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 
 const STORE_API = "https://superjsonblob.com/api/jsonBlob";
-const HISTORY = { chunks: 13, iv: "_ibeQ4Z7LKmugB90", aad: "homeflow-history-v1" };
+const HISTORY = { chunks: 7, iv: "_ibeQ4Z7LKmugB90", aad: "homeflow-history-v1" };
 const EXPENSE_CATS = ["食","衣","住","行","育","樂","其他"];
 const NATURES = ["生活消費","固定義務","房貸本金","利息","資本支出","資金移轉"];
 const DEFAULT_ACCOUNTS = ["Cash","國泰","台新","富邦","UBOT","ES","中信","一銀","其他"];
