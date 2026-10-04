@@ -13,7 +13,7 @@
     {
       "binding": "DB",
       "database_name": "home-flow",
-      "database_id": "REPLACE_AFTER_D1_CREATE"
+      "database_id": "f8e19560-74f3-48cf-ae84-c88d7b1fd157"
     }
   ],
   "triggers": {
