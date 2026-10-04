@@ -548,6 +548,11 @@ async function shareBook() {
 
 async function init() {
   try {
+    const legacyUrl = new URL(location.href);
+    if (legacyUrl.searchParams.has("book")) {
+      legacyUrl.searchParams.delete("book");
+      history.replaceState(null, "", legacyUrl);
+    }
     if (!window.crypto?.subtle) throw new Error("Web Crypto unavailable");
 
     await bootStorage();
