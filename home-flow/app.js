@@ -365,12 +365,24 @@ function renderAnalysis(entries){
 }
 
 
+function renderChat(entries){
+  if(!state.aiMessages.length){
+    state.aiMessages=[{role:"assistant",title:"Home Flow AI",text:"直接問你的帳本。我會在裝置端分析 2019–2026 資料，不把明細傳出去。",at:Date.now()}];
+  }
+  const examples=["3 個月內的食費用","最近 6 個月花最多什麼？","今年住花多少？","比較最近 3 個月跟前 3 個月","我的 Base Burn 是多少？"];
+  $("#content").innerHTML=`<section class="ai-chat-head"><div><span class="ai-orb">✦</span><div><h2>Home Flow AI</h2><small>問你的 ${effectiveEntries().length.toLocaleString()} 筆家庭金流</small></div></div><span class="local-badge">LOCAL</span></section>
+    <div class="chat-examples">${examples.map(x=>`<button data-ai-example="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+    <section class="chat-thread">${state.aiMessages.map(m=>m.role==="user"?`<div class="chat-msg user">${esc(m.text)}</div>`:`<div class="chat-msg assistant"><b>${esc(m.title||"Home Flow AI")}</b><p>${esc(m.text||"")}</p>${m.chart||""}</div>`).join("")}</section>
+    <form id="aiChatForm" class="chat-input-wrap"><input id="aiChatInput" autocomplete="off" placeholder="問：3 個月內的食費用？"><button type="submit">↑</button></form>
+    <p class="chat-privacy">目前為本機資料分析器：免 API、免登入、帳務明細不離開裝置。</p>`;
+}
+
 function renderProjects(entries){const groups={};for(const e of expenseRows(entries)){if(e.project==="日常生活")continue;(groups[e.project]??={sum:0,count:0}).sum+=e.amount;groups[e.project].count++}const cards=Object.entries(groups).sort((a,b)=>b[1].sum-a[1].sum).map(([name,g])=>`<div class="project-card"><button class="project-open" data-project-open="${esc(name)}"><div class="project-head"><div><b>${esc(name)}</b><span>主帳 ${g.count} 筆 · 點一下看明細</span></div><strong>${money(g.sum)}</strong></div></button></div>`).join("");const refs=(historyPayload.projectDetails||[]).map(p=>`<details class="project-card ref"><summary><div class="project-head"><div><b>${esc(p.name)}</b><span>${esc(p.kind)} · 專案參考明細，不重複加入主帳</span></div><strong>${money(p.referenceTotal)}</strong></div></summary>${p.items.map(i=>`<div class="ref-row"><span>${esc(i.name)}${i.memo?`<div class="ref-note">${esc(i.memo)}</div>`:""}</span><b>${money(i.amount)}</b></div>`).join("")}</details>`).join("");$("#content").innerHTML=`<section class="card"><div class="section-head"><h2>Project 專案帳</h2><span>同一筆只算一次</span></div><p class="tiny">主帳是唯一交易來源；東京行、裝潢原始獨立表只作為專案參考明細，避免重複計算。</p></section>${cards||'<div class="empty">目前沒有專案交易</div>'}<section class="card"><div class="section-head"><h2>原始專案表</h2><span>Reference</span></div>${refs||'<div class="empty">歷史專案資料尚未解鎖</div>'}</section>`}
 
 function filteredList(entries){let r=entries;const q=state.search.trim().toLowerCase();if(q)r=r.filter(e=>[e.legacyCategory,e.note,e.account,e.project,e.category,e.nature,e.date].join(" ").toLowerCase().includes(q));const f=state.filters;if(f.year!=="全部")r=r.filter(e=>e.date.startsWith(f.year+"-"));if(f.category!=="全部")r=r.filter(e=>e.category===f.category);if(f.nature!=="全部")r=r.filter(e=>e.nature===f.nature);if(f.project!=="全部")r=r.filter(e=>e.project===f.project);return r}
 function renderList(entries){const years=["全部",...new Set(entries.map(e=>e.date.slice(0,4)))].sort((a,b)=>a==="全部"?-1:b.localeCompare(a)),projects=["全部",...new Set(entries.map(e=>e.project).filter(Boolean))],rows=filteredList(entries);$("#content").innerHTML=`<section class="search"><span>⌕</span><input id="searchBox" placeholder="搜尋 Costco、日本、房貸、店家…" value="${esc(state.search)}"></section><div class="filter-grid"><div class="filter"><select id="yearFilter">${formOptions(years,state.filters.year)}</select></div><div class="filter"><select id="categoryFilter">${formOptions(["全部",...EXPENSE_CATS],state.filters.category)}</select></div><div class="filter"><select id="natureFilter">${formOptions(["全部",...NATURES],state.filters.nature)}</select></div><div class="filter"><select id="projectFilter">${formOptions(projects,state.filters.project)}</select></div></div><div class="result-note">找到 ${rows.length.toLocaleString()} 筆 · 合計 ${money(cashOut(rows))}</div><section class="card">${entriesHtml(rows,state.listLimit)}${rows.length>state.listLimit?'<button class="load-more" data-load-more>再顯示 80 筆</button>':""}</section><section class="card"><div class="section-head"><h2>資料工具</h2><span>你的資料可帶走</span></div><div class="tools"><button data-export-csv>匯出全部 CSV</button><button data-export-json>備份修改資料</button><label>匯入備份<input id="importBackup" type="file" accept="application/json" hidden></label></div><p class="tiny">歷史原始資料已加密內建；JSON 備份主要保存你之後新增、修改、刪除的差異與自訂帳戶/專案。</p></section>`}
 
-function render(){nav();const entries=effectiveEntries();if(state.tab==="home")renderHome(entries);else if(state.tab==="add")renderAdd(entries);else if(state.tab==="analysis")renderAnalysis(entries);else if(state.tab==="projects")renderProjects(entries);else renderList(entries);bindViewEvents(entries)}
+function render(){nav();const entries=effectiveEntries();if(state.tab==="home")renderHome(entries);else if(state.tab==="add")renderAdd(entries);else if(state.tab==="analysis")renderAnalysis(entries);else if(state.tab==="chat")renderChat(entries);else if(state.tab==="projects")renderProjects(entries);else renderList(entries);bindViewEvents(entries)}
 
 function editAccounts(){const cur=data.settings.accounts.join(", "),v=prompt("編輯付款帳戶（用逗號分隔）",cur);if(v===null)return;const arr=[...new Set(v.split(/[,，\n]/).map(x=>x.trim()).filter(Boolean))].slice(0,30);if(!arr.length)return;syncMutation(n=>{n.settings={...n.settings,accounts:arr};n.settingsUpdatedAt=nowIso()})}
 function editProjects(){const cur=data.settings.projects.join(", "),v=prompt("編輯 Project（用逗號分隔）",cur);if(v===null)return;const arr=[...new Set(v.split(/[,，\n]/).map(x=>x.trim()).filter(Boolean))].slice(0,40);if(!arr.length)return;syncMutation(n=>{n.settings={...n.settings,projects:arr};n.settingsUpdatedAt=nowIso()})}
@@ -395,6 +407,7 @@ function bindViewEvents(entries){
   $("#saveEntry")?.addEventListener("click",saveEntry);
   $('[data-cancel-edit]')?.addEventListener('click',()=>{editId=null;setTab('home')});
   $('[data-go-analysis]')?.addEventListener('click',()=>setTab('analysis'));
+  $('[data-go-chat]')?.addEventListener('click',()=>setTab('chat'));
   $('[data-go-list]')?.addEventListener('click',()=>setTab('list'));
   $$('[data-project-open]').forEach(b=>b.onclick=()=>{state.filters.project=b.dataset.projectOpen;state.tab='list';render()});
   const sb=$("#searchBox");
@@ -403,7 +416,9 @@ function bindViewEvents(entries){
   $('[data-load-more]')?.addEventListener('click',()=>{state.listLimit+=80;render()});
   $('[data-export-csv]')?.addEventListener('click',exportCsv);
   $('[data-export-json]')?.addEventListener('click',exportBackup);
-  $("#importBackup")?.addEventListener("change",e=>importBackup(e.target.files?.[0]))
+  $("#importBackup")?.addEventListener("change",e=>importBackup(e.target.files?.[0]));
+  $('[data-ai-example]').forEach(b=>b.onclick=()=>askFinanceAI(b.dataset.aiExample));
+  $("#aiChatForm")?.addEventListener("submit",e=>{e.preventDefault();const input=$("#aiChatInput");askFinanceAI(input?.value);if(input)input.value=""});
 }
 
 
