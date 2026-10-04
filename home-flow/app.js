@@ -4,7 +4,7 @@ const $$ = (s) => [...document.querySelectorAll(s)];
 const STORE_API = "https://superjsonblob.com/api/jsonBlob";
 const HISTORY = { chunks: 7, iv: "_ibeQ4Z7LKmugB90", aad: "homeflow-history-v1" };
 const EXPENSE_CATS = ["食","衣","住","行","育","樂","其他"];
-const NATURES = ["生活消費","房屋相關","家庭孝親","育兒教育","保險相關","手機等服務","房貸本金","利息","資本支出","資金移轉"];
+const NATURES = ["生活消費","房屋相關","家庭孝親","育兒教育","保險相關","手機等服務"];
 const FIXED_OBLIGATION_CATS = ["房屋相關","家庭孝親","育兒教育","保險相關","手機等服務"];
 const DEFAULT_ACCOUNTS = ["Cash","國泰","台新","富邦","UBOT","ES","中信","一銀","其他"];
 const DEFAULT_PROJECTS = ["日常生活","旅行","東京 2026","聯悅臻裝潢","其他"];
@@ -60,7 +60,7 @@ function normalizeEntry(e){return{
   category:String(e.category||"其他").slice(0,30),legacyCategory:String(e.legacyCategory||"").slice(0,80),account:String(e.account||"未指定").slice(0,30),nature:String(e.nature||"生活消費").slice(0,30),obligationCategory:"",project:String(e.project||"日常生活").slice(0,50),note:String(e.note||"").slice(0,240),oneOff:!!e.oneOff,
   imported:!!e.imported,source:String(e.source||""),sourceRow:Number(e.sourceRow)||0,createdAt:String(e.createdAt||nowIso()),updatedAt:String(e.updatedAt||e.createdAt||nowIso())
 }}
-function normalizeData(input){const base=defaultData();if(!input||typeof input!=="object")return base;const s=input.settings||{};base.settings.accounts=[...new Set((Array.isArray(s.accounts)?s.accounts:DEFAULT_ACCOUNTS).map(x=>String(x).trim()).filter(Boolean))].slice(0,30);base.settings.projects=[...new Set((Array.isArray(s.projects)?s.projects:DEFAULT_PROJECTS).map(x=>String(x).trim()).filter(Boolean))].slice(0,40);base.settings.natures=[...new Set((Array.isArray(s.natures)?s.natures:NATURES).map(x=>String(x).trim()).filter(Boolean))].slice(0,30);base.settingsUpdatedAt=String(input.settingsUpdatedAt||base.settingsUpdatedAt);base.entries=Array.isArray(input.entries)?input.entries.map(normalizeEntry).filter(e=>e.id&&e.amount>0):[];base.tombstones=input.tombstones&&typeof input.tombstones==="object"?{...input.tombstones}:{};base.modifiedAt=String(input.modifiedAt||base.modifiedAt);return base}
+function normalizeData(input){const base=defaultData();if(!input||typeof input!=="object")return base;const s=input.settings||{};base.settings.accounts=[...new Set((Array.isArray(s.accounts)?s.accounts:DEFAULT_ACCOUNTS).map(x=>String(x).trim()).filter(Boolean))].slice(0,30);base.settings.projects=[...new Set((Array.isArray(s.projects)?s.projects:DEFAULT_PROJECTS).map(x=>String(x).trim()).filter(Boolean))].slice(0,40);base.settings.natures=[...new Set((Array.isArray(s.natures)?s.natures:NATURES).map(x=>String(x).trim()).filter(x=>x&&!["房貸本金","利息","資本支出","資金移轉","固定義務"].includes(x)))];if(!base.settings.natures.length)base.settings.natures=[...NATURES];base.settings.natures=base.settings.natures.slice(0,30);base.settingsUpdatedAt=String(input.settingsUpdatedAt||base.settingsUpdatedAt);base.entries=Array.isArray(input.entries)?input.entries.map(normalizeEntry).filter(e=>e.id&&e.amount>0):[];base.tombstones=input.tombstones&&typeof input.tombstones==="object"?{...input.tombstones}:{};base.modifiedAt=String(input.modifiedAt||base.modifiedAt);return base}
 function maxIso(a,b){return String(a||"")>=String(b||"")?String(a||""):String(b||"")}
 function mergeData(a0,b0){const a=normalizeData(a0),b=normalizeData(b0),m=defaultData();if(a.settingsUpdatedAt>=b.settingsUpdatedAt){m.settings=a.settings;m.settingsUpdatedAt=a.settingsUpdatedAt}else{m.settings=b.settings;m.settingsUpdatedAt=b.settingsUpdatedAt}m.tombstones={...a.tombstones};for(const[id,t]of Object.entries(b.tombstones))m.tombstones[id]=maxIso(m.tombstones[id],t);const map=new Map();for(const e of[...a.entries,...b.entries]){const cur=map.get(e.id);if(!cur||e.updatedAt>cur.updatedAt)map.set(e.id,e)}m.entries=[...map.values()].filter(e=>!m.tombstones[e.id]||e.updatedAt>m.tombstones[e.id]);m.modifiedAt=maxIso(a.modifiedAt,b.modifiedAt);return m}
 
@@ -379,7 +379,7 @@ function renderChat(entries){
   if(!state.aiMessages.length){
     state.aiMessages=[{role:"assistant",title:"Home Flow AI",text:"直接問你的帳本。我會在裝置端分析 2019–2026 資料，不把明細傳出去。",at:Date.now()}];
   }
-  const examples=["3 個月內的食費用","最近 6 個月花最多什麼？","今年住花多少？","比較最近 3 個月跟前 3 個月","我的 Base Burn 是多少？"];
+  const examples=["3 個月內的食費用","最近 6 個月花最多什麼？","今年住花多少？","比較最近 3 個月跟前 3 個月","我的 Base Burn 是多少？","最近 12 個月支出趨勢","今年花最多的類別","最近 3 個月交通花多少？","最近 6 個月娛樂花多少？","今年育兒教育花多少？","今年保險相關花多少？","今年手機等服務花多少？","今年支出跟去年比","最近哪個月花最多？","家庭現金流有異常嗎？"];
   $("#content").innerHTML=`<section class="ai-chat-head"><div><span class="ai-orb">✦</span><div><h2>Home Flow AI</h2><small>問你的 ${effectiveEntries().length.toLocaleString()} 筆家庭金流</small></div></div><span class="local-badge">LOCAL</span></section>
     <div class="chat-examples">${examples.map(x=>`<button data-ai-example="${esc(x)}">${esc(x)}</button>`).join("")}</div>
     <section class="chat-thread">${state.aiMessages.map(m=>m.role==="user"?`<div class="chat-msg user">${esc(m.text)}</div>`:`<div class="chat-msg assistant"><b>${esc(m.title||"Home Flow AI")}</b><p>${esc(m.text||"")}</p>${m.chart||""}</div>`).join("")}</section>
