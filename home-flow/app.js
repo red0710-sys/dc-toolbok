@@ -24,7 +24,8 @@ const state = {
   viewDate: new Date(),
   search: "",
   filters: { year:"全部", category:"全部", nature:"全部", project:"全部" },
-  listLimit: 80
+  listLimit: 80,
+  analysisMode: "cockpit"
 };
 
 function esc(v="") {
@@ -82,6 +83,106 @@ function byField(rows,key){const o={};for(const e of expenseRows(rows)){const k=
 function avgPriorMonths(entries,d,n=6){let total=0,count=0;for(let i=1;i<=n;i++){const r=monthRows(entries,addMonths(d,-i));if(r.length){total+=cashOut(r);count++}}return count?total/count:0}
 function localInsights(entries,d=state.viewDate){const cur=monthRows(entries,d),spend=cashOut(cur),avg=avgPriorMonths(entries,d,6),cats=byField(cur,"category"),b=bucketSummary(cur),large=expenseRows(cur).filter(e=>e.amount>=30000&&(e.category==="其他"||!e.category));const arr=[];if(avg>0){const pct=(spend/avg-1)*100;arr.push(`本月現金流出 ${money(spend)}，較前 6 個有資料月份平均${pct>=0?"高":"低"} ${Math.abs(pct).toFixed(1)}%。`)}else arr.push(`本月目前記錄 ${money(spend)}。`);if(cats[0])arr.push(`最大支出類別是「${cats[0][0]}」${money(cats[0][1])}，占本月 ${spend?Math.round(cats[0][1]/spend*100):0}%。`);if(b.一次性>0)arr.push(`本月一次性支出 ${money(b.一次性)}；Base Burn 已排除這些項目。`);if(b.資本>0)arr.push(`有 ${money(b.資本)} 被辨識為資本支出／房貸本金，不等同日常消費。`);if(large.length)arr.push(`有 ${large.length} 筆 ≥ $30,000 仍在「其他」，建議補分類。`);if(!arr.length)arr.push("目前沒有足夠資料形成異常判讀。");return arr.slice(0,5)}
 
+function adjustedExpenseRows(rows){
+  return expenseRows(rows).filter(e=>!e.oneOff && !["資本支出","資金移轉","房貸本金"].includes(e.nature));
+}
+function adjustedSpend(rows){return adjustedExpenseRows(rows).reduce((s,e)=>s+e.amount,0)}
+function annualStats(entries){
+  const years=[...new Set(entries.map(e=>e.date.slice(0,4)).filter(y=>/^\d{4}$/.test(y)))].sort();
+  return years.map(year=>{
+    const rows=entries.filter(e=>e.date.startsWith(year+"-"));
+    const b=bucketSummary(rows);
+    return {year,cash:cashOut(rows),adjusted:adjustedSpend(rows),fixed:b.固定,life:b.生活,capital:b.資本,oneOff:b.一次性,transfer:b.移轉,count:rows.length};
+  });
+}
+function completedAnnualCagr(stats){
+  const current=String(new Date().getFullYear());
+  const full=stats.filter(x=>x.year!==current && x.adjusted>0);
+  if(full.length<2)return null;
+  const first=full[0],last=full[full.length-1],years=Number(last.year)-Number(first.year);
+  if(years<=0)return null;
+  return {from:first.year,to:last.year,value:Math.pow(last.adjusted/first.adjusted,1/years)-1};
+}
+function avgPriorAdjusted(entries,d,n=6){
+  let total=0,count=0;
+  for(let i=1;i<=n;i++){
+    const r=monthRows(entries,addMonths(d,-i));
+    if(r.length){total+=adjustedSpend(r);count++}
+  }
+  return count?total/count:0;
+}
+function aiJudgement(entries,d=state.viewDate){
+  const cur=monthRows(entries,d),spend=cashOut(cur),adj=adjustedSpend(cur);
+  const avg=avgPriorMonths(entries,d,6),avgAdj=avgPriorAdjusted(entries,d,6);
+  const b=bucketSummary(cur),cats=byField(cur,"category");
+  const out=[];
+  const cashPct=avg>0?(spend/avg-1)*100:null;
+  const adjPct=avgAdj>0?(adj/avgAdj-1)*100:null;
+
+  if(cashPct!==null && adjPct!==null){
+    if(cashPct>15 && adjPct<10){
+      out.push({tone:"good",title:"帳面支出上升，但生活成本未明顯惡化",text:`現金流出較近 6 月平均高 ${cashPct.toFixed(1)}%，但排除資本／移轉／One-off 後只變動 ${adjPct.toFixed(1)}%。`});
+    }else if(adjPct>15){
+      out.push({tone:"warn",title:"實質生活成本正在上升",text:`Adjusted Burn 較近 6 月平均高 ${adjPct.toFixed(1)}%，這比單純看帳面支出更值得注意。`});
+    }else if(adjPct<-15){
+      out.push({tone:"good",title:"本月實質生活成本下降",text:`Adjusted Burn 較近 6 月平均低 ${Math.abs(adjPct).toFixed(1)}%，不是靠資金移轉造成的假象。`});
+    }else{
+      out.push({tone:"neutral",title:"家庭生活成本大致穩定",text:`Adjusted Burn 與近 6 月平均差異 ${Math.abs(adjPct).toFixed(1)}%，目前沒有明顯結構性惡化。`});
+    }
+  }
+  if(b.一次性+b.資本>0){
+    out.push({tone:"neutral",title:"大額支出要和生活費分開看",text:`本月一次性＋資本支出 ${money(b.一次性+b.資本)}，Home Flow 已將它與 Base Burn 分離。`});
+  }
+  if(cats[0]&&spend>0){
+    out.push({tone:"neutral",title:`本月最大類別：${cats[0][0]}`,text:`${money(cats[0][1])}，占總現金流出 ${Math.round(cats[0][1]/spend*100)}%。`});
+  }
+  const flexible=adjustedExpenseRows(cur).filter(e=>e.nature==="生活消費").reduce((s,e)=>s+e.amount,0);
+  if(adj>0)out.push({tone:"neutral",title:"真正可調整的空間",text:`本月生活消費約 ${money(flexible)}，占 Adjusted Burn ${Math.round(flexible/adj*100)}%。這部分才是最直接能省的錢。`});
+  return out.slice(0,4);
+}
+function guessCategory(e){
+  const t=`${e.legacyCategory} ${e.note} ${e.project}`.toLowerCase();
+  if(/早餐|午餐|晚餐|餐|便當|飲料|咖啡|超商|全聯|costco|好市多|食品|水果|零食|麥當勞|星巴克/.test(t))return "食";
+  if(/衣|鞋|服飾|uniqlo|zara|包包/.test(t))return "衣";
+  if(/房租|房貸|管理費|水費|電費|瓦斯|家具|家電|ikea|冷氣|冰箱|電視|裝潢|修繕/.test(t))return "住";
+  if(/加油|停車|高鐵|台鐵|uber|計程車|捷運|機票|交通|車票|機車|汽車/.test(t))return "行";
+  if(/學費|幼兒園|托嬰|書|課程|補習|教育|文具/.test(t))return "育";
+  if(/電影|遊戲|玩具|旅遊|旅行|住宿|飯店|娛樂|樂園/.test(t))return "樂";
+  return null;
+}
+function guessNature(e){
+  const t=`${e.legacyCategory} ${e.note} ${e.project}`.toLowerCase();
+  if(/房貸本金|本金/.test(t))return "房貸本金";
+  if(/利息/.test(t))return "利息";
+  if(/裝潢|交屋|冷氣|冰箱|電視|家具|家電|沙發|床墊|ikea/.test(t))return "資本支出";
+  if(/轉帳|匯款|入金|出金|投資|股票|etf|定存|質押|借款/.test(t))return "資金移轉";
+  if(/保險|保費|房租|管理費|孝親|孲費|幼兒園|托嬰|網路|電信|電話費/.test(t))return "固定義務";
+  return null;
+}
+function doctorIssues(entries){
+  const issues=[];
+  for(const e of expenseRows(entries)){
+    const suggestion={};const reasons=[];
+    const cat=guessCategory(e),nat=guessNature(e);
+    if((e.category==="其他"||!e.category) && cat && cat!==e.category){suggestion.category=cat;reasons.push(`分類建議 → ${cat}`)}
+    if(nat && nat!==e.nature){suggestion.nature=nat;reasons.push(`Nature 建議 → ${nat}`)}
+    const largeHint=e.amount>=30000 && !e.oneOff && (nat==="資本支出" || e.project!=="日常生活" || /裝潢|交屋|醫療|手術|旅行|旅遊|家電|家具/.test(`${e.legacyCategory} ${e.note} ${e.project}`));
+    if(largeHint){suggestion.oneOff=true;reasons.push("大額支出建議標記 One-off")}
+    if(reasons.length)issues.push({entry:e,suggestion,reasons,score:Object.keys(suggestion).length});
+  }
+  return issues.sort((a,b)=>b.score-a.score||b.entry.amount-a.entry.amount);
+}
+async function applyDoctorFix(id){
+  const issue=doctorIssues(effectiveEntries()).find(x=>x.entry.id===id);
+  if(!issue)return;
+  const e=issue.entry,updated=normalizeEntry({...e,...issue.suggestion,updatedAt:nowIso()});
+  await syncMutation(n=>{
+    const i=n.entries.findIndex(x=>x.id===e.id);
+    if(i>=0)n.entries[i]=updated;else n.entries.push(updated);
+  });
+}
+
+
 function nav(){ $$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===state.tab)) }
 function setTab(tab){state.tab=tab;state.listLimit=80;render();window.scrollTo({top:0,behavior:"smooth"})}
 function periodNav(){return `<div class="period-nav"><button data-period="-1">←</button><div class="period-title">${state.viewDate.getFullYear()} 年 ${state.viewDate.getMonth()+1} 月</div><button data-period="1">→</button></div>`}
@@ -94,7 +195,48 @@ function formOptions(values,selected){return values.map(x=>`<option value="${esc
 function renderAdd(entries){const e=editId?entries.find(x=>x.id===editId):null;const accounts=data.settings.accounts.length?data.settings.accounts:DEFAULT_ACCOUNTS;const projects=[...new Set([...data.settings.projects,...entries.map(x=>x.project).filter(Boolean)])];const d=e||{amount:"",category:"食",account:accounts[0],nature:"生活消費",project:"日常生活",date:localDate(),note:"",oneOff:false,legacyCategory:""};$("#content").innerHTML=`<section class="card"><div class="section-head"><h2>${e?"編輯紀錄":"記一筆"}</h2><span>快速、夠用就好</span></div><div class="amount-row"><span>$</span><input id="amount" class="amount-input" inputmode="decimal" placeholder="0" value="${e?e.amount:""}"></div><div class="chips">${EXPENSE_CATS.slice(0,6).map(c=>`<button class="chip ${d.category===c?"active":""}" data-cat="${c}">${c}</button>`).join("")}</div><div class="form-grid"><label class="field"><span>分類</span><select id="category">${formOptions(EXPENSE_CATS,d.category)}</select></label><label class="field"><div class="field-head"><span>付款帳戶</span><button class="mini-link" data-edit-accounts>編輯</button></div><select id="account">${formOptions(accounts,d.account)}</select></label><label class="field"><span>Nature｜支出性質</span><select id="nature">${formOptions(NATURES,d.nature)}</select></label><label class="field"><div class="field-head"><span>Project</span><button class="mini-link" data-edit-projects>編輯</button></div><select id="project">${formOptions(projects,d.project)}</select></label><label class="field"><span>日期</span><input id="date" type="date" value="${d.date}"></label><label class="field"><span>項目 / 舊分類</span><input id="legacyCategory" maxlength="80" value="${esc(d.legacyCategory||"")}" placeholder="例：全聯、加油、房貸"></label><label class="field" style="grid-column:1/-1"><span>備註</span><input id="note" maxlength="240" value="${esc(d.note||"")}" placeholder="店家、用途、補充"></label><label class="toggle-row" style="grid-column:1/-1"><span><b>One-off</b><br><small>裝潢、交屋、大型醫療等一次性支出</small></span><input id="oneOff" type="checkbox" ${d.oneOff?"checked":""}></label></div><div class="form-actions"><button id="saveEntry" class="primary">${e?"儲存修改":"＋ 記一筆"}</button>${e?'<button class="outline" data-cancel-edit>取消</button>':""}</div></section><section class="card"><div class="section-head"><h3>Nature 怎麼用？</h3><span>核心</span></div><p class="tiny">生活消費 / 固定義務 / 房貸本金 / 利息 / 資本支出 / 資金移轉。Home Flow 會用它把「現金流出」拆成真正消費與資產移轉，Base Burn 會排除資本支出、房貸本金、資金移轉與 One-off。</p></section>`}
 
 function monthlySeries(entries,end=state.viewDate,n=12){const arr=[];for(let i=n-1;i>=0;i--){const d=addMonths(end,-i);arr.push([monthKey(d),cashOut(monthRows(entries,d))])}return arr}
-function renderAnalysis(entries){const m=monthRows(entries),ins=localInsights(entries),series=monthlySeries(entries),max=Math.max(...series.map(x=>x[1]),1),cats=byField(m,"category"),nature=byField(m,"nature");$("#content").innerHTML=`${periodNav()}<section class="card ai-card"><span class="badge">✨ AI 家庭現金流分析</span><div class="insight-list">${ins.map(x=>`<div class="insight">${esc(x)}</div>`).join("")}</div><p class="tiny">這是規則＋統計式本機分析，不把你的 8 年明細傳給外部 AI。</p></section><section class="card"><div class="section-head"><h2>12 個月趨勢</h2><span>現金流出</span></div><div class="month-bars">${series.map(([k,v])=>`<div class="month-col" title="${k} ${money(v)}"><i style="height:${Math.max(2,v/max*105)}px"></i><span>${k.slice(5)}</span></div>`).join("")}</div></section><section class="card"><div class="section-head"><h2>本月類別</h2><span>Top Categories</span></div>${barsHtml(cats,cashOut(m),7)}</section><section class="card"><div class="section-head"><h2>Nature</h2><span>支出性質</span></div>${barsHtml(nature,cashOut(m),8)}</section><section class="card"><div class="section-head"><h2>Base Burn</h2><span>${shortMoney(baseBurn(entries))} / 年</span></div><p class="tiny">以最近 12 個月可辨識支出年化；排除資本支出、資金移轉、房貸本金與 One-off。它比較接近家庭「維持現在生活真正需要燒多少錢」。</p></section>`}
+function renderAnalysis(entries){
+  const mode=state.analysisMode;
+  const tabs=`<div class="analysis-tabs">
+    <button data-analysis-mode="cockpit" class="${mode==="cockpit"?"active":""}">年度</button>
+    <button data-analysis-mode="ai" class="${mode==="ai"?"active":""}">AI 判讀</button>
+    <button data-analysis-mode="doctor" class="${mode==="doctor"?"active":""}">Data Doctor</button>
+  </div>`;
+
+  if(mode==="cockpit"){
+    const stats=annualStats(entries),cagr=completedAnnualCagr(stats),peak=Math.max(...stats.map(x=>x.adjusted),1);
+    const rows=stats.map(x=>`<div class="annual-row">
+      <div><b>${x.year}${x.year===String(new Date().getFullYear())?" YTD":""}</b><small>${x.count.toLocaleString()} 筆</small></div>
+      <div class="annual-bar"><i style="width:${Math.max(2,x.adjusted/peak*100)}%"></i></div>
+      <div><strong>${shortMoney(x.adjusted)}</strong><small>帳面 ${shortMoney(x.cash)}</small></div>
+    </div>`).join("");
+    const latest=stats[stats.length-1]||{cash:0,adjusted:0,capital:0,oneOff:0};
+    $("#content").innerHTML=`${tabs}<section class="card hero"><div class="section-head"><h2>年度財務 Cockpit</h2><span>2019 → ${new Date().getFullYear()}</span></div>
+      <div class="stats"><div class="stat"><span>今年帳面支出</span><strong>${shortMoney(latest.cash)}</strong></div><div class="stat"><span>Adjusted Burn</span><strong>${shortMoney(latest.adjusted)}</strong></div><div class="stat"><span>長期 CAGR</span><strong>${cagr?`${(cagr.value*100).toFixed(1)}%`:"—"}</strong><small>${cagr?`${cagr.from}–${cagr.to}`:"完整年度不足"}</small></div></div>
+    </section><section class="card"><div class="section-head"><h2>年度生活成本</h2><span>排除資本 / 移轉 / One-off</span></div><div class="annual-list">${rows}</div></section>
+    <section class="card"><div class="section-head"><h2>今年結構</h2><span>YTD</span></div><div class="metric-grid"><div class="metric"><span>Adjusted Burn</span><b>${money(latest.adjusted)}</b></div><div class="metric"><span>資本支出</span><b>${money(latest.capital)}</b></div><div class="metric"><span>One-off</span><b>${money(latest.oneOff)}</b></div><div class="metric"><span>Cash Outflow</span><b>${money(latest.cash)}</b></div></div></section>`;
+    return;
+  }
+
+  if(mode==="doctor"){
+    const issues=doctorIssues(entries),other=expenseRows(entries).filter(e=>e.category==="其他").length,large=expenseRows(entries).filter(e=>e.amount>=30000&&!e.oneOff).length;
+    $("#content").innerHTML=`${tabs}<section class="card"><div class="section-head"><h2>Data Doctor</h2><span>${issues.length.toLocaleString()} 個可修正項目</span></div>
+      <div class="doctor-summary"><div><b>${other}</b><span>其他分類</span></div><div><b>${large}</b><span>大額未 One-off</span></div><div><b>${issues.length}</b><span>有明確建議</span></div></div>
+      <p class="tiny">只在規則有明確線索時提出建議；Home Flow 不會自動亂改 8 年舊帳。</p></section>
+      <section class="card"><div class="section-head"><h2>待檢查</h2><span>先顯示 60 筆</span></div>
+      ${issues.length?issues.slice(0,60).map(x=>`<div class="doctor-item"><div><b>${esc(x.entry.legacyCategory||x.entry.category)}</b><small>${x.entry.date} · ${money(x.entry.amount)} · ${esc(x.entry.account)}</small><p>${x.reasons.map(esc).join(" · ")}</p></div><button data-doctor-fix="${esc(x.entry.id)}">採用建議</button></div>`).join(""):'<div class="empty">目前沒有高信心修正建議。</div>'}</section>`;
+    return;
+  }
+
+  const m=monthRows(entries),judges=aiJudgement(entries),series=monthlySeries(entries),max=Math.max(...series.map(x=>x[1]),1),cats=byField(m,"category"),nature=byField(m,"nature");
+  $("#content").innerHTML=`${tabs}${periodNav()}<section class="card ai-card"><span class="badge">✨ AI 家庭財務判讀</span>
+    <div class="judgement-list">${judges.map(j=>`<div class="judgement ${j.tone}"><b>${esc(j.title)}</b><p>${esc(j.text)}</p></div>`).join("")}</div>
+    <p class="tiny">規則＋統計式本機分析；重點是判斷「支出變動是不是生活成本惡化」，不把 8 年明細傳給外部 AI。</p></section>
+    <section class="card"><div class="section-head"><h2>12 個月趨勢</h2><span>現金流出</span></div><div class="month-bars">${series.map(([k,v])=>`<div class="month-col" title="${k} ${money(v)}"><i style="height:${Math.max(2,v/max*105)}px"></i><span>${k.slice(5)}</span></div>`).join("")}</div></section>
+    <section class="card"><div class="section-head"><h2>本月類別</h2><span>Top Categories</span></div>${barsHtml(cats,cashOut(m),7)}</section>
+    <section class="card"><div class="section-head"><h2>Nature</h2><span>支出性質</span></div>${barsHtml(nature,cashOut(m),8)}</section>`;
+}
+
 
 function renderProjects(entries){const groups={};for(const e of expenseRows(entries)){if(e.project==="日常生活")continue;(groups[e.project]??={sum:0,count:0}).sum+=e.amount;groups[e.project].count++}const cards=Object.entries(groups).sort((a,b)=>b[1].sum-a[1].sum).map(([name,g])=>`<div class="project-card"><button class="project-open" data-project-open="${esc(name)}"><div class="project-head"><div><b>${esc(name)}</b><span>主帳 ${g.count} 筆 · 點一下看明細</span></div><strong>${money(g.sum)}</strong></div></button></div>`).join("");const refs=(historyPayload.projectDetails||[]).map(p=>`<details class="project-card ref"><summary><div class="project-head"><div><b>${esc(p.name)}</b><span>${esc(p.kind)} · 專案參考明細，不重複加入主帳</span></div><strong>${money(p.referenceTotal)}</strong></div></summary>${p.items.map(i=>`<div class="ref-row"><span>${esc(i.name)}${i.memo?`<div class="ref-note">${esc(i.memo)}</div>`:""}</span><b>${money(i.amount)}</b></div>`).join("")}</details>`).join("");$("#content").innerHTML=`<section class="card"><div class="section-head"><h2>Project 專案帳</h2><span>同一筆只算一次</span></div><p class="tiny">主帳是唯一交易來源；東京行、裝潢原始獨立表只作為專案參考明細，避免重複計算。</p></section>${cards||'<div class="empty">目前沒有專案交易</div>'}<section class="card"><div class="section-head"><h2>原始專案表</h2><span>Reference</span></div>${refs||'<div class="empty">歷史專案資料尚未解鎖</div>'}</section>`}
 
@@ -114,7 +256,29 @@ function exportBackup(){const a=document.createElement("a");a.href=URL.createObj
 function importBackup(file){if(!file)return;const r=new FileReader();r.onload=async()=>{try{const j=JSON.parse(r.result);if(j.format!=="homeflow-backup-v1")throw new Error();if(!confirm("匯入會合併這份 Home Flow 修改資料，確定？"))return;await syncMutation(n=>Object.assign(n,mergeData(n,j.data)));}catch{alert("備份格式不正確")}};r.readAsText(file)}
 async function shareBook(){try{const url=location.href;if(navigator.share)await navigator.share({title:"Home Flow",text:"我們的家庭現金流帳本。完整網址包含解密鑰匙，請勿公開轉傳。",url});else{await navigator.clipboard.writeText(url);setStatus("完整共用網址已複製","ok")}}catch{}}
 
-function bindViewEvents(entries){$$('[data-period]').forEach(b=>b.onclick=()=>{state.viewDate=addMonths(state.viewDate,Number(b.dataset.period));render()});$$('[data-edit]').forEach(b=>b.onclick=()=>startEdit(b.dataset.edit));$$('[data-delete]').forEach(b=>b.onclick=()=>removeEntry(b.dataset.delete));$$('[data-cat]').forEach(b=>b.onclick=()=>{$("#category").value=b.dataset.cat;$$('[data-cat]').forEach(x=>x.classList.toggle("active",x===b))});$('[data-edit-accounts]')?.addEventListener('click',e=>{e.preventDefault();editAccounts()});$('[data-edit-projects]')?.addEventListener('click',e=>{e.preventDefault();editProjects()});$("#saveEntry")?.addEventListener("click",saveEntry);$('[data-cancel-edit]')?.addEventListener('click',()=>{editId=null;setTab('home')});$('[data-go-analysis]')?.addEventListener('click',()=>setTab('analysis'));$('[data-go-list]')?.addEventListener('click',()=>setTab('list'));$$('[data-project-open]').forEach(b=>b.onclick=()=>{state.filters.project=b.dataset.projectOpen;state.tab='list';render()});const sb=$("#searchBox");if(sb)sb.oninput=()=>{state.search=sb.value;state.listLimit=80;renderList(effectiveEntries());bindViewEvents(effectiveEntries());$("#searchBox")?.focus();try{$("#searchBox").setSelectionRange(state.search.length,state.search.length)}catch{}};for(const[id,key]of[["yearFilter","year"],["categoryFilter","category"],["natureFilter","nature"],["projectFilter","project"]])$("#"+id)?.addEventListener("change",e=>{state.filters[key]=e.target.value;state.listLimit=80;render()});$('[data-load-more]')?.addEventListener('click',()=>{state.listLimit+=80;render()});$('[data-export-csv]')?.addEventListener('click',exportCsv);$('[data-export-json]')?.addEventListener('click',exportBackup);$("#importBackup")?.addEventListener("change",e=>importBackup(e.target.files?.[0]))}
+function bindViewEvents(entries){
+  $$('[data-period]').forEach(b=>b.onclick=()=>{state.viewDate=addMonths(state.viewDate,Number(b.dataset.period));render()});
+  $$('[data-edit]').forEach(b=>b.onclick=()=>startEdit(b.dataset.edit));
+  $$('[data-delete]').forEach(b=>b.onclick=()=>removeEntry(b.dataset.delete));
+  $$('[data-cat]').forEach(b=>b.onclick=()=>{$("#category").value=b.dataset.cat;$$('[data-cat]').forEach(x=>x.classList.toggle("active",x===b))});
+  $$('[data-analysis-mode]').forEach(b=>b.onclick=()=>{state.analysisMode=b.dataset.analysisMode;render()});
+  $$('[data-doctor-fix]').forEach(b=>b.onclick=()=>applyDoctorFix(b.dataset.doctorFix));
+  $('[data-edit-accounts]')?.addEventListener('click',e=>{e.preventDefault();editAccounts()});
+  $('[data-edit-projects]')?.addEventListener('click',e=>{e.preventDefault();editProjects()});
+  $("#saveEntry")?.addEventListener("click",saveEntry);
+  $('[data-cancel-edit]')?.addEventListener('click',()=>{editId=null;setTab('home')});
+  $('[data-go-analysis]')?.addEventListener('click',()=>setTab('analysis'));
+  $('[data-go-list]')?.addEventListener('click',()=>setTab('list'));
+  $$('[data-project-open]').forEach(b=>b.onclick=()=>{state.filters.project=b.dataset.projectOpen;state.tab='list';render()});
+  const sb=$("#searchBox");
+  if(sb)sb.oninput=()=>{state.search=sb.value;state.listLimit=80;renderList(effectiveEntries());bindViewEvents(effectiveEntries());$("#searchBox")?.focus();try{$("#searchBox").setSelectionRange(state.search.length,state.search.length)}catch{}};
+  for(const[id,key]of[["yearFilter","year"],["categoryFilter","category"],["natureFilter","nature"],["projectFilter","project"]])$("#"+id)?.addEventListener("change",e=>{state.filters[key]=e.target.value;state.listLimit=80;render()});
+  $('[data-load-more]')?.addEventListener('click',()=>{state.listLimit+=80;render()});
+  $('[data-export-csv]')?.addEventListener('click',exportCsv);
+  $('[data-export-json]')?.addEventListener('click',exportBackup);
+  $("#importBackup")?.addEventListener("change",e=>importBackup(e.target.files?.[0]))
+}
+
 
 async function init(){if(!window.crypto?.subtle){setStatus("此瀏覽器不支援加密功能","error");return}setStatus("正在解鎖 2019–2026 歷史帳本…");try{await loadHistory()}catch(e){console.error(e);setStatus("歷史資料尚未完整發布；新帳仍可使用","warn")}try{await bootRemote();setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 加密共用`:"Home Flow 已同步 · 歷史資料未解鎖","ok")}catch(e){console.error(e);remoteReady=false;data=normalizeData(JSON.parse(localStorage.getItem("homeflow-local-overrides")||"null"));setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 本機模式`:"本機模式 · 歷史資料未解鎖","warn")}render();setInterval(()=>{if(document.visibilityState==="visible")refreshRemote(true)},15000)}
 
