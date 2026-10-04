@@ -6,6 +6,8 @@ function randomToken(bytes=24){return b64url(crypto.getRandomValues(new Uint8Arr
 async function sha256(text){return b64url(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(text))))}
 function bearer(req){const h=req.headers.get("authorization")||"";return h.startsWith("Bearer ")?h.slice(7).trim():""}
 function familyHeader(req){return (req.headers.get("x-homeflow-family")||"").trim()}
+const PUBLIC_LINK_FAMILY_ID="hf_f7F5VxDnJWGNToTB";
+const PUBLIC_LINK_TOKEN_HASH="7oTpwZepGfKpWo_v9gmQbMnt09BUmNLBvDf45350xlk";
 function validFamilyId(v){return /^hf_[A-Za-z0-9_-]{12,64}$/.test(v)}
 function validVersion(v){return /^v_[A-Za-z0-9_-]{12,80}$/.test(v)}
 function familyDay(){
@@ -16,10 +18,14 @@ function familyDay(){
 async function auth(req,env){
   const familyId=familyHeader(req),token=bearer(req);
   if(!validFamilyId(familyId)||token.length<30)return null;
-  const row=await env.DB.prepare("SELECT token_hash,current_version FROM families WHERE family_id=?").bind(familyId).first();
-  if(!row)return null;
+  let row=await env.DB.prepare("SELECT token_hash,current_version FROM families WHERE family_id=?").bind(familyId).first();
   const hash=await sha256(token);
-  if(hash!==row.token_hash)return null;
+  if(!row&&familyId===PUBLIC_LINK_FAMILY_ID&&hash===PUBLIC_LINK_TOKEN_HASH){
+    await env.DB.prepare("INSERT OR IGNORE INTO families(family_id,token_hash,created_at,last_seen_at) VALUES(?,?,datetime('now'),datetime('now'))")
+      .bind(PUBLIC_LINK_FAMILY_ID,PUBLIC_LINK_TOKEN_HASH).run();
+    row=await env.DB.prepare("SELECT token_hash,current_version FROM families WHERE family_id=?").bind(familyId).first();
+  }
+  if(!row||hash!==row.token_hash)return null;
   return{familyId,currentVersion:row.current_version||null};
 }
 
