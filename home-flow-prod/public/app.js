@@ -16,6 +16,7 @@ let storageId = null;
 let keyText = null;
 let cryptoKey = null;
 let remoteReady = false;
+let bootingRemote = false;
 let cloudClient = null;
 let remoteVersion = null;
 let saving = false;
@@ -81,22 +82,53 @@ async function writeRemote(next){
 function saveLocal(){localStorage.setItem("homeflow-local-overrides",JSON.stringify(data));window.HomeFlowLocal?.save(data).catch?.(()=>{})}
 async function loadLocal(){try{const idb=window.HomeFlowLocal?.load?await withTimeout(window.HomeFlowLocal.load(),1500,"IndexedDB"):null;if(idb)return idb}catch(e){console.warn("IndexedDB unavailable",e)}try{return JSON.parse(localStorage.getItem("homeflow-local-overrides")||"null")}catch{return null}}
 async function bootRemote(){
+  if(bootingRemote)return;
   if(!window.HomeFlowCloud)throw new Error("cloud client missing");
-  cloudClient=await withTimeout(window.HomeFlowCloud.connect({createIfMissing:true}),8000,"cloud connect");
-  const local=normalizeData(await loadLocal());
-  const hk=historyKeyText();if(hk)local.sharedHistoryKey=hk;
-  const remote=await withTimeout(cloudClient.read(),8000,"cloud read");
-  const remoteData=remote.data?normalizeData(remote.data):null;
-  data=remoteData?mergeData(local,remoteData):local;
-  const needsUpload=!remoteData||JSON.stringify(data)!==JSON.stringify(remoteData);
-  if(needsUpload){
-    const written=await cloudClient.write(data,remoteVersion);
-    if(written.conflict){
-      const latest=await cloudClient.read();remoteVersion=latest.version||null;data=mergeData(data,latest.data||defaultData());
-      const retry=await cloudClient.write(data,remoteVersion);if(retry.conflict)throw new Error("initial sync conflict");remoteVersion=retry.version;
-    }else remoteVersion=written.version;
+  bootingRemote=true;
+  try{
+    cloudClient=await withTimeout(window.HomeFlowCloud.connect({createIfMissing:true}),8000,"cloud connect");
+
+    let local=mergeData(normalizeData(await loadLocal()),normalizeData(data));
+    const hk=historyKeyText();if(hk)local.sharedHistoryKey=hk;
+
+    const remote=await withTimeout(cloudClient.read(),8000,"cloud read");
+    remoteVersion=remote.version||null;
+    const remoteData=remote.data?normalizeData(remote.data):null;
+
+    local=mergeData(local,normalizeData(await loadLocal()));
+    local=mergeData(local,normalizeData(data));
+    data=remoteData?mergeData(local,remoteData):local;
+
+    const needsUpload=!remoteData||JSON.stringify(data)!==JSON.stringify(remoteData);
+    if(needsUpload){
+      const written=await cloudClient.write(data,remoteVersion);
+      if(written.conflict){
+        const latest=await cloudClient.read();remoteVersion=latest.version||null;
+        data=mergeData(data,latest.data||defaultData());
+        const retry=await cloudClient.write(data,remoteVersion);
+        if(retry.conflict)throw new Error("initial sync conflict");
+        remoteVersion=retry.version;
+      }else remoteVersion=written.version;
+    }
+
+    const newestLocal=mergeData(normalizeData(await loadLocal()),normalizeData(data));
+    if(JSON.stringify(newestLocal)!==JSON.stringify(data)){
+      data=newestLocal;
+      const finalWrite=await cloudClient.write(data,remoteVersion);
+      if(finalWrite.conflict){
+        const latest=await cloudClient.read();remoteVersion=latest.version||null;
+        data=mergeData(data,latest.data||defaultData());
+        const retry=await cloudClient.write(data,remoteVersion);
+        if(retry.conflict)throw new Error("startup final sync conflict");
+        remoteVersion=retry.version;
+      }else remoteVersion=finalWrite.version;
+    }
+
+    remoteReady=true;
+    saveLocal();
+  }finally{
+    bootingRemote=false;
   }
-  remoteReady=true;saveLocal();
 }
 async function syncMutation(mutator){
   if(saving)return false;saving=true;setStatus(remoteReady?"加密同步中…":"本機儲存中…");
@@ -129,7 +161,7 @@ async function refreshRemote(silent=true){
   finally{refreshing=false}
 }
 async function ensureRemote(silent=true){
-  if(saving||refreshing)return;
+  if(saving||refreshing||bootingRemote)return;
   if(remoteReady)return refreshRemote(silent);
   try{await bootRemote();render();if(!silent)setStatus("已重新連線並同步","ok")}
   catch(e){console.warn("cloud reconnect failed",e);if(!silent)setStatus("離線模式 · 資料仍可使用","warn")}
