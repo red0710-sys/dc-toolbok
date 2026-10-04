@@ -2,9 +2,9 @@ const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 
 const STORE_API = "https://superjsonblob.com/api/jsonBlob";
-const categoriesExpense = ["食","衣","住","行","育樂","其他"];
+const categoriesExpense = ["食","衣","住","行","育","樂","其他"];
 const categoriesIncome = ["薪資","獎金","投資","退款","其他收入"];
-const quickExpense = ["食","衣","住","行","育樂"];
+const quickExpense = ["食","衣","住","行","育","樂"];
 const accounts = ["Cash","國泰","台新","富邦","UBOT","其他"];
 const projects = ["日常生活","旅行","裝潢","其他"];
 
