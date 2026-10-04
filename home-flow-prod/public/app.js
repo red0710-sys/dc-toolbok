@@ -83,12 +83,16 @@ async function bootRemote(){
   cloudClient=await window.HomeFlowCloud.connect({createIfMissing:true});
   const local=normalizeData(JSON.parse(localStorage.getItem("homeflow-local-overrides")||"null"));
   const remote=await cloudClient.read();remoteVersion=remote.version||null;
-  data=remote.data?mergeData(local,remote.data):local;
-  const written=await cloudClient.write(data,remoteVersion);
-  if(written.conflict){
-    const latest=await cloudClient.read();remoteVersion=latest.version||null;data=mergeData(data,latest.data||defaultData());
-    const retry=await cloudClient.write(data,remoteVersion);if(retry.conflict)throw new Error("initial sync conflict");remoteVersion=retry.version;
-  }else remoteVersion=written.version;
+  const remoteData=remote.data?normalizeData(remote.data):null;
+  data=remoteData?mergeData(local,remoteData):local;
+  const needsUpload=!remoteData||JSON.stringify(data)!==JSON.stringify(remoteData);
+  if(needsUpload){
+    const written=await cloudClient.write(data,remoteVersion);
+    if(written.conflict){
+      const latest=await cloudClient.read();remoteVersion=latest.version||null;data=mergeData(data,latest.data||defaultData());
+      const retry=await cloudClient.write(data,remoteVersion);if(retry.conflict)throw new Error("initial sync conflict");remoteVersion=retry.version;
+    }else remoteVersion=written.version;
+  }
   remoteReady=true;saveLocal();
 }
 async function syncMutation(mutator){
@@ -110,9 +114,22 @@ async function syncMutation(mutator){
 }
 async function refreshRemote(silent=true){
   if(!remoteReady||saving||refreshing)return;refreshing=true;
-  try{const r=await readRemote(),m=mergeData(data,r);data=m;saveLocal();render();if(!silent)setStatus("已收到另一台裝置的更新","ok")}
-  catch(e){console.warn("refresh failed",e)}
+  try{
+    const r=await readRemote(),m=mergeData(data,r),needsUpload=JSON.stringify(m)!==JSON.stringify(r);
+    data=m;saveLocal();
+    if(needsUpload){
+      try{await writeRemote(m)}
+      catch(e){if(e.code==="VERSION_CONFLICT"){const latest=await readRemote();data=mergeData(data,latest);saveLocal()}else throw e}
+    }
+    render();if(!silent)setStatus("已同步最新家庭帳本","ok");
+  }catch(e){console.warn("refresh failed",e);remoteReady=false;if(!silent)setStatus("離線模式 · 變更會先保留在本機","warn")}
   finally{refreshing=false}
+}
+async function ensureRemote(silent=true){
+  if(saving||refreshing)return;
+  if(remoteReady)return refreshRemote(silent);
+  try{await bootRemote();render();if(!silent)setStatus("已重新連線並同步","ok")}
+  catch(e){console.warn("cloud reconnect failed",e);if(!silent)setStatus("離線模式 · 資料仍可使用","warn")}
 }
 
 async function loadHistory(){const hk=historyKeyText();if(!hk){setStatus("已開啟 · 歷史資料尚未解鎖","warn");return}storeHistoryKey(hk);if(typeof DecompressionStream==="undefined")throw new Error("Browser does not support gzip stream");const key=await importAesKey(hk);const urls=Array.from({length:HISTORY.chunks},(_,i)=>`./data/history-${String(i).padStart(2,"0")}.txt?v=1`);const parts=await Promise.all(urls.map(async u=>{const r=await fetch(u,{cache:"force-cache"});if(!r.ok)throw new Error(`history chunk ${u} missing`);return(await r.text()).trim()}));const encrypted=fromB64url(parts.join(""));const plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:fromB64url(HISTORY.iv),additionalData:new TextEncoder().encode(HISTORY.aad)},key,encrypted);const ds=new DecompressionStream("gzip"),stream=new Blob([plain]).stream().pipeThrough(ds),buf=await new Response(stream).arrayBuffer();historyPayload=JSON.parse(new TextDecoder().decode(buf));historyEntries=(historyPayload.entries||[]).map(row=>{const[d,a,t,c,lc,acc,nat,proj,note,src,srow,flags]=row;return normalizeEntry({id:`hist-${src.replace(/\W+/g,"-")}-${srow}`,date:d,amount:a,type:t,category:c,legacyCategory:lc,account:acc,nature:nat,project:proj,note,source:src,sourceRow:srow,oneOff:!!(flags&1),imported:true,createdAt:`${d}T00:00:00.000Z`,updatedAt:`${d}T00:00:00.000Z`})});}
@@ -508,6 +525,6 @@ function bindViewEvents(entries){
 }
 
 
-async function init(){if(!window.crypto?.subtle){setStatus("此瀏覽器不支援加密功能","error");return}setStatus("正在解鎖 2019–2026 歷史帳本…");try{await loadHistory()}catch(e){console.error(e);setStatus("歷史資料尚未完整發布；新帳仍可使用","warn")}try{await bootRemote();setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 加密共用`:"Home Flow 已同步 · 歷史資料未解鎖","ok")}catch(e){console.error(e);remoteReady=false;data=normalizeData(JSON.parse(localStorage.getItem("homeflow-local-overrides")||"null"));setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 本機模式`:"本機模式 · 歷史資料未解鎖","warn")}render();setInterval(()=>{if(document.visibilityState==="visible")refreshRemote(true)},15000)}
+async function init(){if(!window.crypto?.subtle){setStatus("此瀏覽器不支援加密功能","error");return}setStatus("正在解鎖 2019–2026 歷史帳本…");try{await loadHistory()}catch(e){console.error(e);setStatus("歷史資料尚未完整發布；新帳仍可使用","warn")}try{await bootRemote();setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 加密共用`:"Home Flow 已同步 · 歷史資料未解鎖","ok")}catch(e){console.error(e);remoteReady=false;data=normalizeData(JSON.parse(localStorage.getItem("homeflow-local-overrides")||"null"));setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 本機模式`:"本機模式 · 歷史資料未解鎖","warn")}render();setInterval(()=>{if(document.visibilityState==="visible")ensureRemote(true)},15000)}
 
-$$('.nav button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));$("#shareBtn").onclick=shareBook;document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")refreshRemote(false)});init();
+$$('.nav button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));$("#shareBtn").onclick=shareBook;document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")ensureRemote(false)});init();
