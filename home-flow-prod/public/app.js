@@ -500,8 +500,11 @@ async function manageCloudBackups(){
   try{
     const list=await cloudClient.backups();
     if(!list.length){alert("目前尚無每日雲端備份。完成幾次同步後會自動建立。");return}
-    const shown=list.slice(0,10);
-    const menu=shown.map((b,i)=>`${i+1}. ${b.backup_day||b.created_at||b.version_id}`).join("\n");
+    const now=Date.now(),day=86400000;
+    const recent=list.filter(b=>{const t=Date.parse((b.backup_day||"")+"T00:00:00Z");return Number.isFinite(t)&&now-t<=31*day}).slice(0,10);
+    const monthly=list.filter(b=>{const t=Date.parse((b.backup_day||"")+"T00:00:00Z");return Number.isFinite(t)&&now-t>31*day}).slice(0,24);
+    const shown=[...recent,...monthly];
+    const menu=shown.map((b,i)=>`${i+1}. ${i<recent.length?"每日":"每月"} · ${b.backup_day||b.created_at||b.version_id}`).join("\n");
     const pick=prompt("選擇要復原的備份編號（取消則不變更）\n\n"+menu);
     if(pick===null)return;
     const idx=Number(pick)-1;if(!Number.isInteger(idx)||idx<0||idx>=shown.length){alert("編號不正確");return}
