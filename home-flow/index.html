@@ -9,7 +9,23 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Home Flow">
   <title>Home Flow｜家庭現金流控制台</title>
-  <link rel="stylesheet" href="./style.css?v=20261004m">
+  <link rel="stylesheet" href="./style.css?v=20261004n">
+  <style id="hero-hotfix">
+    .hero{
+      background:linear-gradient(145deg,#f1e8dc 0%,#f7efe5 62%,#eee8dc 100%) !important;
+      color:#25231f !important;
+      border:1px solid #ddd1c2 !important;
+      box-shadow:0 12px 30px rgba(79,59,39,.08) !important;
+      position:relative;
+      overflow:hidden;
+    }
+    .hero::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:#ef6a3a}
+    .hero .hero-head small{color:#d95225 !important;font-weight:800;letter-spacing:.08em}
+    .hero .hero-head>span,.hero .stat span,.hero .stat small{color:#746f67 !important;opacity:1 !important}
+    .hero .stat{border-right:1px solid rgba(92,75,57,.11)}
+    .hero .stat:last-child{border-right:0}
+    .hero .stat strong{color:#25231f !important}
+  </style>
 </head>
 <body>
   <div id="app" class="app">
