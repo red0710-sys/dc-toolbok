@@ -11,7 +11,7 @@ const DEFAULT_PROJECTS = ["日常生活","旅行","東京 2026","聯悅臻裝潢
 
 let historyPayload = { meta:{count:0,annual:{}}, entries:[], projectDetails:[] };
 let historyEntries = [];
-let data = null;
+let data = defaultData();
 let storageId = null;
 let keyText = null;
 let cryptoKey = null;
@@ -41,6 +41,7 @@ function shortMoney(n){n=Number(n)||0;if(Math.abs(n)>=1000000)return `$${(n/1000
 function nowIso(){return new Date().toISOString()}
 function localDate(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 function uid(){return `m-${Date.now().toString(36)}-${crypto.randomUUID()}`}
+async function withTimeout(promise,ms=5000,label="operation"){let id;const timeout=new Promise((_,reject)=>{id=setTimeout(()=>reject(new Error(label+" timeout")),ms)});try{return await Promise.race([promise,timeout])}finally{clearTimeout(id)}}
 function monthKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`}
 function setStatus(text,kind=""){const el=$("#status");if(!el)return;el.textContent=text;el.className=`status ${kind}`}
 function b64url(bytes){let binary="";for(const b of bytes)binary+=String.fromCharCode(b);return btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"")}
@@ -78,13 +79,13 @@ async function writeRemote(next){
   remoteVersion=r.version;return r;
 }
 function saveLocal(){localStorage.setItem("homeflow-local-overrides",JSON.stringify(data));window.HomeFlowLocal?.save(data).catch?.(()=>{})}
-async function loadLocal(){const idb=await window.HomeFlowLocal?.load?.();if(idb)return idb;try{return JSON.parse(localStorage.getItem("homeflow-local-overrides")||"null")}catch{return null}}
+async function loadLocal(){try{const idb=window.HomeFlowLocal?.load?await withTimeout(window.HomeFlowLocal.load(),1500,"IndexedDB"):null;if(idb)return idb}catch(e){console.warn("IndexedDB unavailable",e)}try{return JSON.parse(localStorage.getItem("homeflow-local-overrides")||"null")}catch{return null}}
 async function bootRemote(){
   if(!window.HomeFlowCloud)throw new Error("cloud client missing");
-  cloudClient=await window.HomeFlowCloud.connect({createIfMissing:true});
+  cloudClient=await withTimeout(window.HomeFlowCloud.connect({createIfMissing:true}),8000,"cloud connect");
   const local=normalizeData(await loadLocal());
   const hk=historyKeyText();if(hk)local.sharedHistoryKey=hk;
-  const remote=await cloudClient.read();remoteVersion=remote.version||null;
+  const remote=await withTimeout(cloudClient.read(),8000,"cloud read");
   const remoteData=remote.data?normalizeData(remote.data):null;
   data=remoteData?mergeData(local,remoteData):local;
   const needsUpload=!remoteData||JSON.stringify(data)!==JSON.stringify(remoteData);
@@ -134,7 +135,7 @@ async function ensureRemote(silent=true){
   catch(e){console.warn("cloud reconnect failed",e);if(!silent)setStatus("離線模式 · 資料仍可使用","warn")}
 }
 
-async function loadHistory(){const hk=historyKeyText();if(!hk){setStatus("已開啟 · 歷史資料尚未解鎖","warn");return}storeHistoryKey(hk);if(typeof DecompressionStream==="undefined")throw new Error("Browser does not support gzip stream");const key=await importAesKey(hk);const urls=Array.from({length:HISTORY.chunks},(_,i)=>`./data/history-${String(i).padStart(2,"0")}.txt?v=1`);const parts=await Promise.all(urls.map(async u=>{const r=await fetch(u,{cache:"force-cache"});if(!r.ok)throw new Error(`history chunk ${u} missing`);return(await r.text()).trim()}));const encrypted=fromB64url(parts.join(""));const plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:fromB64url(HISTORY.iv),additionalData:new TextEncoder().encode(HISTORY.aad)},key,encrypted);const ds=new DecompressionStream("gzip"),stream=new Blob([plain]).stream().pipeThrough(ds),buf=await new Response(stream).arrayBuffer();historyPayload=JSON.parse(new TextDecoder().decode(buf));historyEntries=(historyPayload.entries||[]).map(row=>{const[d,a,t,c,lc,acc,nat,proj,note,src,srow,flags]=row;return normalizeEntry({id:`hist-${src.replace(/\W+/g,"-")}-${srow}`,date:d,amount:a,type:t,category:c,legacyCategory:lc,account:acc,nature:nat,project:proj,note,source:src,sourceRow:srow,oneOff:!!(flags&1),imported:true,createdAt:`${d}T00:00:00.000Z`,updatedAt:`${d}T00:00:00.000Z`})});}
+async function loadHistory(){const hk=historyKeyText();if(!hk){setStatus("已開啟 · 歷史資料尚未解鎖","warn");return}storeHistoryKey(hk);if(typeof DecompressionStream==="undefined")throw new Error("Browser does not support gzip stream");const key=await importAesKey(hk);const urls=Array.from({length:HISTORY.chunks},(_,i)=>`./data/history-${String(i).padStart(2,"0")}.txt?v=1`);const parts=await withTimeout(Promise.all(urls.map(async u=>{const r=await fetch(u,{cache:"force-cache"});if(!r.ok)throw new Error(`history chunk ${u} missing`);return(await r.text()).trim()})),8000,"history fetch");const encrypted=fromB64url(parts.join(""));const plain=await crypto.subtle.decrypt({name:"AES-GCM",iv:fromB64url(HISTORY.iv),additionalData:new TextEncoder().encode(HISTORY.aad)},key,encrypted);const ds=new DecompressionStream("gzip"),stream=new Blob([plain]).stream().pipeThrough(ds),buf=await new Response(stream).arrayBuffer();historyPayload=JSON.parse(new TextDecoder().decode(buf));historyEntries=(historyPayload.entries||[]).map(row=>{const[d,a,t,c,lc,acc,nat,proj,note,src,srow,flags]=row;return normalizeEntry({id:`hist-${src.replace(/\W+/g,"-")}-${srow}`,date:d,amount:a,type:t,category:c,legacyCategory:lc,account:acc,nature:nat,project:proj,note,source:src,sourceRow:srow,oneOff:!!(flags&1),imported:true,createdAt:`${d}T00:00:00.000Z`,updatedAt:`${d}T00:00:00.000Z`})});}
 function effectiveEntries(){const map=new Map(historyEntries.map(e=>[e.id,e]));for(const e of(data?.entries||[]))map.set(e.id,e);const tomb=data?.tombstones||{};return[...map.values()].filter(e=>!tomb[e.id]||e.updatedAt>tomb[e.id]).sort((a,b)=>b.date.localeCompare(a.date)||b.updatedAt.localeCompare(a.updatedAt))}
 function expenseRows(rows){return rows.filter(e=>e.type==="expense")}
 function cashOut(rows){return expenseRows(rows).reduce((s,e)=>s+e.amount,0)}
@@ -550,6 +551,21 @@ function bindViewEvents(entries){
 }
 
 
-async function init(){await window.HomeFlowMigrationReady?.catch?.(()=>null);if(!window.crypto?.subtle){setStatus("此瀏覽器不支援加密功能","error");return}setStatus("正在解鎖 2019–2026 歷史帳本…");try{await loadHistory()}catch(e){console.error(e);setStatus("歷史資料尚未完整發布；新帳仍可使用","warn")}try{await bootRemote();if(!historyEntries.length&&data?.sharedHistoryKey){storeHistoryKey(data.sharedHistoryKey);try{await loadHistory()}catch(e){console.warn("shared history unlock failed",e)}}setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 加密共用`:"Home Flow 已同步 · 歷史資料未解鎖","ok")}catch(e){console.error(e);remoteReady=false;data=normalizeData(await loadLocal());setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 本機模式`:"本機模式 · 歷史資料未解鎖","warn")}render();setInterval(()=>{if(document.visibilityState==="visible")ensureRemote(true)},15000)}
-
-$('.nav button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));$("#shareBtn")?.addEventListener("click",shareBook);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")ensureRemote(false)});init();
+async function init(){
+  if(!window.crypto?.subtle){setStatus("此瀏覽器不支援加密功能","error");return}
+  try{data=normalizeData(await loadLocal())}catch(e){console.warn("local boot failed",e);data=defaultData()}
+  render();setStatus("Home Flow 已開啟 · 正在同步…");
+  try{await withTimeout(window.HomeFlowMigrationReady?.catch?.(()=>null)||Promise.resolve(),16000,"migration bridge")}catch(e){console.warn(e)}
+  try{await loadHistory();if(historyEntries.length)render()}catch(e){console.warn("history boot failed",e)}
+  try{
+    await bootRemote();
+    if(!historyEntries.length&&data?.sharedHistoryKey){storeHistoryKey(data.sharedHistoryKey);try{await loadHistory()}catch(e){console.warn("shared history unlock failed",e)}}
+    render();
+    setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 加密共用`:"Home Flow 已同步 · 歷史資料未解鎖","ok");
+  }catch(e){
+    console.warn("cloud boot failed",e);remoteReady=false;render();
+    setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 本機模式`:"本機模式 · 變更會先保留在此裝置","warn");
+  }
+  setInterval(()=>{if(document.visibilityState==="visible")ensureRemote(true)},15000);
+}
+$$('.nav button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));$("#shareBtn")?.addEventListener("click",shareBook);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")ensureRemote(false)});render();init();
