@@ -1,0 +1,10 @@
+{
+  "name": "Home Flow 3.0",
+  "short_name": "Home Flow",
+  "description": "家庭現金流智慧系統",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4efe6",
+  "theme_color": "#f4efe6",
+  "icons": []
+}
