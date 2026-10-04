@@ -35,3 +35,74 @@
 .hf3-doctor h3{font-size:14px;margin:12px 0 5px}
 .hf3-doctor p{font-size:10px;line-height:1.55;color:var(--muted);margin:0 0 10px}
 @media(max-width:410px){.hf3-hero .stats{grid-template-columns:repeat(2,1fr)}.hf3-hero .stat{padding:9px 6px}.hf3-hero .stat:nth-child(2){border-right:0}}
+
+/* Home Flow readability v2 */
+html{font-size:16px}
+.app{padding-bottom:122px}
+.status{font-size:12px;line-height:1.5}
+h2{font-size:18px}
+h3{font-size:15px}
+
+.nav{
+  padding:9px 7px max(10px,env(safe-area-inset-bottom));
+}
+.nav button{
+  min-height:56px;
+  gap:4px;
+  padding:5px 2px;
+  font-size:12px;
+  font-weight:800;
+}
+.nav button b{font-size:12px;line-height:1.15}
+.nav button span{font-size:23px;line-height:24px}
+
+.hero .hero-head>span{font-size:11px}
+.stat span{font-size:10px}
+.stat small{font-size:9px}
+.metric span{font-size:10px}
+.metric small{font-size:9px}
+.bucket span{font-size:10px}
+.bucket b{font-size:12px}
+
+.section-head span,.section-head small{font-size:10px}
+.link-btn,.mini-link{font-size:11px}
+.field{font-size:11px}
+.toggle-row{font-size:12px}
+.chip{font-size:12px}
+
+.entry-title{font-size:13px}
+.tag{font-size:9px}
+.entry-meta{font-size:10px}
+.entry-amount{font-size:13px}
+.entry-actions button{font-size:10px}
+.empty{font-size:12px}
+
+.result-note{font-size:10px}
+.load-more{font-size:11px}
+.bar-row{font-size:10px}
+.bar-row b{font-size:11px}
+.insight{font-size:11px}
+.rank-label b{font-size:13px}
+.rank-label span{font-size:10px}
+.zero-cats{font-size:9px}
+.flow-status-head b{font-size:13px}
+.flow-status-head small{font-size:9px}
+.flow-status p{font-size:12px}
+.tiny{font-size:9px}
+.warning{font-size:11px}
+
+.analysis-tabs button{font-size:11px}
+.annual-row>div:first-child b{font-size:12px}
+.annual-row small{font-size:9px}
+.annual-row strong{font-size:12px}
+
+.chat-examples button{font-size:10px}
+.chat-msg{font-size:12px}
+.chat-msg.assistant b{font-size:12px}
+.chat-input-wrap{bottom:80px}
+label{font-size:10px}
+
+@media(max-width:410px){
+  .nav button b{font-size:11px}
+  .nav button span{font-size:22px}
+}
