@@ -281,10 +281,19 @@ function addChatMessage(role,payload){
 function askFinanceAI(text){
   const q=String(text||"").trim();
   if(!q)return;
-  addChatMessage("user",{text:q});
-  addChatMessage("assistant",chatAnswer(q,effectiveEntries()));
+  try{
+    addChatMessage("user",{text:q});
+    addChatMessage("assistant",chatAnswer(q,effectiveEntries()));
+  }catch(err){
+    console.error("Home Flow AI error",err);
+    addChatMessage("assistant",{title:"AI 查詢發生錯誤",text:"這次查詢沒有完成，請再試一次。"});
+  }
   render();
-  requestAnimationFrame(()=>document.querySelector(".chat-thread")?.scrollTo({top:99999,behavior:"smooth"}));
+  requestAnimationFrame(()=>{
+    const thread=document.querySelector(".chat-thread");
+    if(thread)thread.scrollTo({top:thread.scrollHeight,behavior:"smooth"});
+    document.querySelector("#aiChatInput")?.focus();
+  });
 }
 
 function nav(){ $$(".nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===state.tab)) }
@@ -373,7 +382,7 @@ function renderChat(entries){
   $("#content").innerHTML=`<section class="ai-chat-head"><div><span class="ai-orb">✦</span><div><h2>Home Flow AI</h2><small>問你的 ${effectiveEntries().length.toLocaleString()} 筆家庭金流</small></div></div><span class="local-badge">LOCAL</span></section>
     <div class="chat-examples">${examples.map(x=>`<button data-ai-example="${esc(x)}">${esc(x)}</button>`).join("")}</div>
     <section class="chat-thread">${state.aiMessages.map(m=>m.role==="user"?`<div class="chat-msg user">${esc(m.text)}</div>`:`<div class="chat-msg assistant"><b>${esc(m.title||"Home Flow AI")}</b><p>${esc(m.text||"")}</p>${m.chart||""}</div>`).join("")}</section>
-    <form id="aiChatForm" class="chat-input-wrap"><input id="aiChatInput" autocomplete="off" placeholder="問：3 個月內的食費用？"><button type="submit">↑</button></form>
+    <form id="aiChatForm" class="chat-input-wrap"><input id="aiChatInput" autocomplete="off" enterkeyhint="send" placeholder="問：3 個月內的食費用？"><button id="aiSendBtn" type="button" aria-label="送出問題">↑</button></form>
     <p class="chat-privacy">目前為本機資料分析器：免 API、免登入、帳務明細不離開裝置。</p>`;
 }
 
@@ -418,7 +427,10 @@ function bindViewEvents(entries){
   $('[data-export-json]')?.addEventListener('click',exportBackup);
   $("#importBackup")?.addEventListener("change",e=>importBackup(e.target.files?.[0]));
   $('[data-ai-example]').forEach(b=>b.onclick=()=>askFinanceAI(b.dataset.aiExample));
-  $("#aiChatForm")?.addEventListener("submit",e=>{e.preventDefault();const input=$("#aiChatInput");askFinanceAI(input?.value);if(input)input.value=""});
+  const sendAi=()=>{const input=$("#aiChatInput");const q=input?.value||"";if(!q.trim())return;askFinanceAI(q)};
+  $("#aiSendBtn")?.addEventListener("click",sendAi);
+  $("#aiChatInput")?.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendAi()}});
+  $("#aiChatForm")?.addEventListener("submit",e=>{e.preventDefault();sendAi()});
 }
 
 
