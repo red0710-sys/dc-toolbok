@@ -51,7 +51,7 @@ async function readSnapshot(req,env,user){
 }
 
 async function listBackups(env,user){
-  const rows=await env.DB.prepare("SELECT version_id,backup_day,created_at,byte_size FROM snapshots WHERE family_id=? AND backup_day IS NOT NULL ORDER BY backup_day DESC LIMIT 31")
+  const rows=await env.DB.prepare("SELECT version_id,backup_day,created_at,byte_size FROM snapshots WHERE family_id=? AND backup_day IS NOT NULL ORDER BY backup_day DESC LIMIT 60")
     .bind(user.familyId).all();
   return json({backups:rows.results||[]});
 }
@@ -128,7 +128,19 @@ async function restoreBackup(req,env,user){
 }
 
 async function cleanup(env){
-  await env.DB.prepare("DELETE FROM snapshots WHERE backup_day IS NOT NULL AND backup_day < date('now','-30 days')").run();
+  await env.DB.prepare(`DELETE FROM snapshots
+    WHERE backup_day IS NOT NULL
+      AND backup_day < date('now','-30 days')
+      AND (
+        backup_day < date('now','-24 months')
+        OR backup_day <> (
+          SELECT MIN(s2.backup_day)
+          FROM snapshots s2
+          WHERE s2.family_id=snapshots.family_id
+            AND s2.backup_day IS NOT NULL
+            AND substr(s2.backup_day,1,7)=substr(snapshots.backup_day,1,7)
+        )
+      )`).run();
   await env.DB.prepare("DELETE FROM snapshots WHERE backup_day IS NULL AND created_at < datetime('now','-1 day') AND version_id NOT IN (SELECT current_version FROM families WHERE current_version IS NOT NULL)").run();
 }
 
