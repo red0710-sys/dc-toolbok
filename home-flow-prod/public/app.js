@@ -479,7 +479,7 @@ function renderChat(entries){
 function renderProjects(entries){const groups={};for(const e of expenseRows(entries)){if(e.project==="日常生活")continue;(groups[e.project]??={sum:0,count:0}).sum+=e.amount;groups[e.project].count++}const cards=Object.entries(groups).sort((a,b)=>b[1].sum-a[1].sum).map(([name,g])=>`<div class="project-card"><button class="project-open" data-project-open="${esc(name)}"><div class="project-head"><div><b>${esc(name)}</b><span>主帳 ${g.count} 筆 · 點一下看明細</span></div><strong>${money(g.sum)}</strong></div></button></div>`).join("");const refs=(historyPayload.projectDetails||[]).map(p=>`<details class="project-card ref"><summary><div class="project-head"><div><b>${esc(p.name)}</b><span>${esc(p.kind)} · 專案參考明細，不重複加入主帳</span></div><strong>${money(p.referenceTotal)}</strong></div></summary>${p.items.map(i=>`<div class="ref-row"><span>${esc(i.name)}${i.memo?`<div class="ref-note">${esc(i.memo)}</div>`:""}</span><b>${money(i.amount)}</b></div>`).join("")}</details>`).join("");$("#content").innerHTML=`<section class="card"><div class="section-head"><h2>Project 專案帳</h2><span>同一筆只算一次</span></div><p class="tiny">主帳是唯一交易來源；東京行、裝潢原始獨立表只作為專案參考明細，避免重複計算。</p></section>${cards||'<div class="empty">目前沒有專案交易</div>'}<section class="card"><div class="section-head"><h2>原始專案表</h2><span>Reference</span></div>${refs||'<div class="empty">歷史專案資料尚未解鎖</div>'}</section>`}
 
 function filteredList(entries){let r=entries;const q=state.search.trim().toLowerCase();if(q)r=r.filter(e=>[e.legacyCategory,e.note,e.account,e.project,e.category,e.nature,e.date].join(" ").toLowerCase().includes(q));const f=state.filters;if(f.year!=="全部")r=r.filter(e=>e.date.startsWith(f.year+"-"));if(f.category!=="全部")r=r.filter(e=>e.category===f.category);if(f.nature!=="全部")r=r.filter(e=>e.nature===f.nature);if(f.project!=="全部")r=r.filter(e=>e.project===f.project);return r}
-function renderList(entries){const years=["全部",...new Set(entries.map(e=>e.date.slice(0,4)))].sort((a,b)=>a==="全部"?-1:b.localeCompare(a)),projects=["全部",...new Set(entries.map(e=>e.project).filter(Boolean))],rows=filteredList(entries);$("#content").innerHTML=`<section class="search"><span>⌕</span><input id="searchBox" placeholder="搜尋 Costco、日本、房貸、店家…" value="${esc(state.search)}"></section><div class="filter-grid"><div class="filter"><select id="yearFilter">${formOptions(years,state.filters.year)}</select></div><div class="filter"><select id="categoryFilter">${formOptions(["全部",...EXPENSE_CATS],state.filters.category)}</select></div><div class="filter"><select id="natureFilter">${formOptions(["全部",...new Set([...(data.settings.natures||NATURES),...entries.map(e=>e.nature).filter(x=>x&&!["房貸本金","利息","資本支出","資金移轉","固定義務"].includes(x))])],state.filters.nature)}</select></div><div class="filter"><select id="projectFilter">${formOptions(projects,state.filters.project)}</select></div></div><div class="result-note">找到 ${rows.length.toLocaleString()} 筆 · 合計 ${money(cashOut(rows))}</div><section class="card">${entriesHtml(rows,state.listLimit)}${rows.length>state.listLimit?'<button class="load-more" data-load-more>再顯示 80 筆</button>':""}</section><section class="card"><div class="section-head"><h2>資料工具</h2><span>你的資料可帶走</span></div><div class="tools"><button data-export-csv>匯出全部 CSV</button><button data-export-json>備份修改資料</button><label>匯入備份<input id="importBackup" type="file" accept="application/json" hidden></label></div><p class="tiny">歷史原始資料已加密內建；JSON 備份主要保存你之後新增、修改、刪除的差異與自訂帳戶/專案。</p></section>`}
+function renderList(entries){const years=["全部",...new Set(entries.map(e=>e.date.slice(0,4)))].sort((a,b)=>a==="全部"?-1:b.localeCompare(a)),projects=["全部",...new Set(entries.map(e=>e.project).filter(Boolean))],rows=filteredList(entries);$("#content").innerHTML=`<section class="search"><span>⌕</span><input id="searchBox" placeholder="搜尋 Costco、日本、房貸、店家…" value="${esc(state.search)}"></section><div class="filter-grid"><div class="filter"><select id="yearFilter">${formOptions(years,state.filters.year)}</select></div><div class="filter"><select id="categoryFilter">${formOptions(["全部",...EXPENSE_CATS],state.filters.category)}</select></div><div class="filter"><select id="natureFilter">${formOptions(["全部",...new Set([...(data.settings.natures||NATURES),...entries.map(e=>e.nature).filter(x=>x&&!["房貸本金","利息","資本支出","資金移轉","固定義務"].includes(x))])],state.filters.nature)}</select></div><div class="filter"><select id="projectFilter">${formOptions(projects,state.filters.project)}</select></div></div><div class="result-note">找到 ${rows.length.toLocaleString()} 筆 · 合計 ${money(cashOut(rows))}</div><section class="card">${entriesHtml(rows,state.listLimit)}${rows.length>state.listLimit?'<button class="load-more" data-load-more>再顯示 80 筆</button>':""}</section><section class="card"><div class="section-head"><h2>資料工具</h2><span>你的資料可帶走</span></div><div class="tools"><button data-export-csv>匯出全部 CSV</button><button data-export-json>備份修改資料</button><button data-cloud-backups>雲端備份 / 復原</button><label>匯入備份<input id="importBackup" type="file" accept="application/json" hidden></label></div><p class="tiny">歷史原始資料已加密內建；JSON 備份主要保存你之後新增、修改、刪除的差異與自訂帳戶/專案。</p></section>`}
 
 function render(){nav();const entries=effectiveEntries();if(state.tab==="home")renderHome(entries);else if(state.tab==="add")renderAdd(entries);else if(state.tab==="analysis")renderAnalysis(entries);else if(state.tab==="chat")renderChat(entries);else if(state.tab==="projects")renderProjects(entries);else renderList(entries);bindViewEvents(entries)}
 
@@ -493,7 +493,29 @@ function csvValue(v){return `"${String(v??"").replaceAll('"','""')}"`}
 function exportCsv(){const rows=[["日期","類型","分類","原始項目","付款帳戶","Nature","Project","One-off","金額","備註","來源"]];effectiveEntries().slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>rows.push([e.date,e.type,e.category,e.legacyCategory,e.account,e.nature,e.project,e.oneOff?"Y":"",e.amount,e.note,e.source]));const csv="\ufeff"+rows.map(r=>r.map(csvValue).join(",")).join("\n"),a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download=`home-flow-all-${localDate()}.csv`;a.click();URL.revokeObjectURL(a.href)}
 function exportBackup(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify({format:"homeflow-backup-v1",data},null,2)],{type:"application/json"}));a.download=`home-flow-backup-${localDate()}.json`;a.click();URL.revokeObjectURL(a.href)}
 function importBackup(file){if(!file)return;const r=new FileReader();r.onload=async()=>{try{const j=JSON.parse(r.result);if(j.format!=="homeflow-backup-v1")throw new Error();if(!confirm("匯入會合併這份 Home Flow 修改資料，確定？"))return;await syncMutation(n=>Object.assign(n,mergeData(n,j.data)));}catch{alert("備份格式不正確")}};r.readAsText(file)}
-async function shareBook(){try{const url=location.href;if(navigator.share)await navigator.share({title:"Home Flow",text:"我們的家庭現金流帳本。完整網址包含解密鑰匙，請勿公開轉傳。",url});else{await navigator.clipboard.writeText(url);setStatus("完整共用網址已複製","ok")}}catch{}}
+async function manageCloudBackups(){
+  if(!cloudClient){alert("目前是本機模式，尚未連上雲端");return}
+  try{
+    const list=await cloudClient.backups();
+    if(!list.length){alert("目前尚無每日雲端備份。完成幾次同步後會自動建立。");return}
+    const shown=list.slice(0,10);
+    const menu=shown.map((b,i)=>`${i+1}. ${b.backup_day||b.created_at||b.version_id}`).join("\n");
+    const pick=prompt("選擇要復原的備份編號（取消則不變更）\n\n"+menu);
+    if(pick===null)return;
+    const idx=Number(pick)-1;if(!Number.isInteger(idx)||idx<0||idx>=shown.length){alert("編號不正確");return}
+    const chosen=shown[idx];
+    if(!confirm(`確定復原到 ${chosen.backup_day||chosen.created_at}？目前版本會先保留成備份。`))return;
+    await cloudClient.restore(chosen.version_id);
+    await ensureRemote(false);
+    alert("雲端備份已復原");
+  }catch(e){console.error(e);alert("讀取或復原雲端備份失敗")}
+}
+async function shareBook(){try{
+  if(!cloudClient?.inviteUrl){setStatus("目前為本機模式，尚無夫妻共用連結","warn");return}
+  const url=cloudClient.inviteUrl();
+  if(navigator.share)await navigator.share({title:"Home Flow",text:"我們的家庭現金流帳本。此邀請連結包含家庭解密金鑰，請只傳給家庭成員。",url});
+  else{await navigator.clipboard.writeText(url);setStatus("夫妻共用邀請連結已複製","ok")}
+}catch{}}
 
 function bindViewEvents(entries){
   $$('[data-period]').forEach(b=>b.onclick=()=>{state.viewDate=addMonths(state.viewDate,Number(b.dataset.period));render()});
@@ -518,6 +540,7 @@ function bindViewEvents(entries){
   $('[data-export-csv]')?.addEventListener('click',exportCsv);
   $('[data-export-json]')?.addEventListener('click',exportBackup);
   $("#importBackup")?.addEventListener("change",e=>importBackup(e.target.files?.[0]));
+  $('[data-cloud-backups]')?.addEventListener('click',manageCloudBackups);
   $$('[data-ai-example]').forEach(b=>b.addEventListener("click",()=>askFinanceAI(b.dataset.aiExample)));
   const sendAi=()=>{const input=$("#aiChatInput");const q=input?.value||"";if(!q.trim())return;askFinanceAI(q)};
   $("#aiSendBtn")?.addEventListener("click",sendAi);
@@ -526,6 +549,6 @@ function bindViewEvents(entries){
 }
 
 
-async function init(){if(!window.crypto?.subtle){setStatus("此瀏覽器不支援加密功能","error");return}setStatus("正在解鎖 2019–2026 歷史帳本…");try{await loadHistory()}catch(e){console.error(e);setStatus("歷史資料尚未完整發布；新帳仍可使用","warn")}try{await bootRemote();setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 加密共用`:"Home Flow 已同步 · 歷史資料未解鎖","ok")}catch(e){console.error(e);remoteReady=false;data=normalizeData(await loadLocal());setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 本機模式`:"本機模式 · 歷史資料未解鎖","warn")}render();setInterval(()=>{if(document.visibilityState==="visible")ensureRemote(true)},15000)}
+async function init(){await window.HomeFlowMigrationReady?.catch?.(()=>null);if(!window.crypto?.subtle){setStatus("此瀏覽器不支援加密功能","error");return}setStatus("正在解鎖 2019–2026 歷史帳本…");try{await loadHistory()}catch(e){console.error(e);setStatus("歷史資料尚未完整發布；新帳仍可使用","warn")}try{await bootRemote();setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 加密共用`:"Home Flow 已同步 · 歷史資料未解鎖","ok")}catch(e){console.error(e);remoteReady=false;data=normalizeData(await loadLocal());setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 本機模式`:"本機模式 · 歷史資料未解鎖","warn")}render();setInterval(()=>{if(document.visibilityState==="visible")ensureRemote(true)},15000)}
 
 $$('.nav button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));$("#shareBtn").onclick=shareBook;document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")ensureRemote(false)});init();
