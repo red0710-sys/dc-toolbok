@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#f7f2e9" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>兩個人的帳本</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,650;9..144,750&family=IBM+Plex+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">HOUSEHOLD LEDGER</div>
+        <h1>兩個人的帳本</h1>
+      </div>
+      <button id="shareBtn" class="icon-btn" aria-label="分享帳本連結">↗</button>
+    </header>
+
+    <section id="status" class="status">正在連上共用帳本…</section>
+
+    <section class="hero">
+      <div class="month-nav">
+        <button id="prevMonth" class="quiet-btn" aria-label="上個月">←</button>
+        <button id="monthLabel" class="month-label"></button>
+        <button id="nextMonth" class="quiet-btn" aria-label="下個月">→</button>
+      </div>
+      <div class="hero-grid">
+        <div><span>本月支出</span><strong id="expenseTotal">$0</strong></div>
+        <div><span>本月收入</span><strong id="incomeTotal">$0</strong></div>
+        <div><span>本月結餘</span><strong id="balanceTotal">$0</strong></div>
+      </div>
+      <div id="budgetWrap" class="budget-wrap hidden">
+        <div class="budget-copy"><span>預算使用</span><b id="budgetText"></b></div>
+        <div class="budget-track"><i id="budgetBar"></i></div>
+      </div>
+    </section>
+
+    <section class="entry-card">
+      <div class="type-toggle" role="group" aria-label="收支類型">
+        <button class="type-btn active" data-type="expense">支出</button>
+        <button class="type-btn" data-type="income">收入</button>
+      </div>
+      <div class="amount-row">
+        <span class="currency">$</span>
+        <input id="amount" class="amount-input" inputmode="decimal" placeholder="0" aria-label="金額" />
+      </div>
+      <div class="form-grid">
+        <label>誰記的
+          <select id="member"></select>
+        </label>
+        <label>分類
+          <select id="category"></select>
+        </label>
+        <label>日期
+          <input id="date" type="date" />
+        </label>
+        <label>備註
+          <input id="note" maxlength="200" placeholder="早餐、超市、加油…" />
+        </label>
+      </div>
+      <button id="saveEntry" class="primary-btn">＋ 記一筆</button>
+      <button id="cancelEdit" class="text-btn hidden">取消編輯</button>
+    </section>
+
+    <section class="split-card">
+      <div class="section-head"><h2>本月誰花多少</h2><span id="entryCount"></span></div>
+      <div id="memberSplit" class="split-grid"></div>
+    </section>
+
+    <section class="category-card">
+      <div class="section-head"><h2>花在哪裡</h2><span>支出分類</span></div>
+      <div id="categoryBars" class="category-bars"></div>
+    </section>
+
+    <section class="list-card">
+      <div class="section-head"><h2>明細</h2><button id="exportBtn" class="text-btn">匯出 CSV</button></div>
+      <div id="entries" class="entries"></div>
+    </section>
+
+    <details class="settings">
+      <summary>帳本設定</summary>
+      <div class="settings-body">
+        <label>成員 A<input id="memberAName" maxlength="30" /></label>
+        <label>成員 B<input id="memberBName" maxlength="30" /></label>
+        <label>每月預算<input id="monthlyBudget" inputmode="numeric" placeholder="例如 50000" /></label>
+        <button id="saveSettings" class="secondary-btn">儲存設定</button>
+        <p>這個帳本免登入。共用網址就是鑰匙，請只傳給家人。</p>
+      </div>
+    </details>
+
+    <footer>D.C · Family tools · Private link ledger</footer>
+  </main>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
