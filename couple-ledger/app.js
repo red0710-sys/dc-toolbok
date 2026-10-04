@@ -38,8 +38,8 @@ function uid() { return `${Date.now().toString(36)}-${crypto.randomUUID()}`; }
 
 function defaultData() {
   return {
-    version: 3,
-    settings: { memberA: "老公", memberB: "老婆", monthlyBudget: 0 },
+    version: 4,
+    settings: { memberA: "老公", memberB: "老婆", accounts: [...defaultAccounts], monthlyBudget: 0 },
     settingsUpdatedAt: "1970-01-01T00:00:00.000Z",
     entries: [],
     tombstones: {},
@@ -318,6 +318,7 @@ function render() {
   if (!data) return;
   renderMonthLabel();
   renderMembers();
+  renderAccountOptions();
   renderProjectFilter();
 
   const monthRows = visibleEntries();
