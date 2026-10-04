@@ -1,16 +1,19 @@
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
 
+const STORE_API = "https://superjsonblob.com/api/jsonBlob";
 const categoriesExpense = ["餐飲","日用品","交通","家庭","育兒","購物","娛樂","醫療","住房","旅行","保險","其他"];
 const categoriesIncome = ["薪資","獎金","投資","退款","其他收入"];
 
 let data = null;
-let etag = null;
-let book = null;
+let storageId = null;
+let keyText = null;
+let cryptoKey = null;
 let entryType = "expense";
 let editId = null;
 let viewMonth = new Date();
 let saving = false;
+let refreshing = false;
 
 function money(n) {
   return new Intl.NumberFormat("zh-TW", {
@@ -18,6 +21,10 @@ function money(n) {
     currency: "TWD",
     maximumFractionDigits: 0
   }).format(Number(n) || 0);
+}
+
+function nowIso() {
+  return new Date().toISOString();
 }
 
 function localDate() {
@@ -29,20 +36,15 @@ function uid() {
   return `${Date.now().toString(36)}-${crypto.randomUUID()}`;
 }
 
-function makeBook() {
-  const bytes = crypto.getRandomValues(new Uint8Array(16));
-  return [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-function ensureBook() {
-  const url = new URL(location.href);
-  let key = url.searchParams.get("book");
-  if (!/^[a-f0-9]{32}$/.test(key || "")) {
-    key = makeBook();
-    url.searchParams.set("book", key);
-    history.replaceState(null, "", url);
-  }
-  return key;
+function defaultData() {
+  return {
+    version: 2,
+    settings: { memberA: "David", memberB: "太太", monthlyBudget: 0 },
+    settingsUpdatedAt: "1970-01-01T00:00:00.000Z",
+    entries: [],
+    tombstones: {},
+    modifiedAt: nowIso()
+  };
 }
 
 function setStatus(text, kind = "") {
@@ -65,6 +67,194 @@ function renderMonthLabel() {
 function escapeHtml(value = "") {
   const map = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" };
   return String(value).replace(/[&<>"']/g, (m) => map[m]);
+}
+
+function b64url(bytes) {
+  let binary = "";
+  for (const b of bytes) binary += String.fromCharCode(b);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function fromB64url(text) {
+  const padded = text.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((text.length + 3) % 4);
+  const binary = atob(padded);
+  return Uint8Array.from(binary, (c) => c.charCodeAt(0));
+}
+
+async function makeKey() {
+  const raw = crypto.getRandomValues(new Uint8Array(32));
+  const key = await crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+  return { key, text: b64url(raw) };
+}
+
+async function importKey(text) {
+  const raw = fromB64url(text);
+  if (raw.length !== 32) throw new Error("Invalid key");
+  return crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+}
+
+async function encryptData(value) {
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const plain = new TextEncoder().encode(JSON.stringify(value));
+  const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, cryptoKey, plain);
+  return {
+    format: "dc-ledger-aesgcm-v1",
+    iv: b64url(iv),
+    ciphertext: b64url(new Uint8Array(encrypted))
+  };
+}
+
+async function decryptData(envelope) {
+  if (!envelope || envelope.format !== "dc-ledger-aesgcm-v1") throw new Error("Unknown ledger format");
+  const iv = fromB64url(envelope.iv);
+  const ciphertext = fromB64url(envelope.ciphertext);
+  const plain = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, cryptoKey, ciphertext);
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+
+function normalizeData(input) {
+  const base = defaultData();
+  if (!input || typeof input !== "object") return base;
+
+  const settings = input.settings || {};
+  base.settings = {
+    memberA: String(settings.memberA || "David").slice(0, 30),
+    memberB: String(settings.memberB || "太太").slice(0, 30),
+    monthlyBudget: Math.max(0, Number(settings.monthlyBudget) || 0)
+  };
+  base.settingsUpdatedAt = String(input.settingsUpdatedAt || "1970-01-01T00:00:00.000Z");
+  base.modifiedAt = String(input.modifiedAt || base.modifiedAt);
+  base.tombstones = input.tombstones && typeof input.tombstones === "object" ? { ...input.tombstones } : {};
+  base.entries = Array.isArray(input.entries)
+    ? input.entries
+        .map((e) => ({
+          id: String(e.id || ""),
+          type: e.type === "income" ? "income" : "expense",
+          amount: Math.max(0, Number(e.amount) || 0),
+          category: String(e.category || "其他").slice(0, 30),
+          member: e.member === "B" ? "B" : "A",
+          note: String(e.note || "").slice(0, 200),
+          date: /^\d{4}-\d{2}-\d{2}$/.test(String(e.date || "")) ? String(e.date) : localDate(),
+          createdAt: String(e.createdAt || nowIso()),
+          updatedAt: String(e.updatedAt || e.createdAt || nowIso())
+        }))
+        .filter((e) => e.id && e.amount > 0)
+    : [];
+
+  return base;
+}
+
+function maxIso(a, b) {
+  return String(a || "") >= String(b || "") ? String(a || "") : String(b || "");
+}
+
+function mergeData(leftInput, rightInput) {
+  const left = normalizeData(leftInput);
+  const right = normalizeData(rightInput);
+  const merged = defaultData();
+
+  if (left.settingsUpdatedAt >= right.settingsUpdatedAt) {
+    merged.settings = left.settings;
+    merged.settingsUpdatedAt = left.settingsUpdatedAt;
+  } else {
+    merged.settings = right.settings;
+    merged.settingsUpdatedAt = right.settingsUpdatedAt;
+  }
+
+  merged.tombstones = { ...left.tombstones };
+  for (const [id, deletedAt] of Object.entries(right.tombstones)) {
+    merged.tombstones[id] = maxIso(merged.tombstones[id], deletedAt);
+  }
+
+  const byId = new Map();
+  for (const entry of [...left.entries, ...right.entries]) {
+    const current = byId.get(entry.id);
+    if (!current || entry.updatedAt > current.updatedAt) byId.set(entry.id, entry);
+  }
+
+  merged.entries = [...byId.values()].filter((entry) => {
+    const deletedAt = merged.tombstones[entry.id];
+    return !deletedAt || entry.updatedAt > deletedAt;
+  });
+
+  merged.modifiedAt = maxIso(left.modifiedAt, right.modifiedAt);
+  return merged;
+}
+
+function stableSnapshot(value) {
+  const v = normalizeData(value);
+  v.entries.sort((a, b) => a.id.localeCompare(b.id));
+  v.tombstones = Object.fromEntries(Object.entries(v.tombstones).sort(([a], [b]) => a.localeCompare(b)));
+  return JSON.stringify(v);
+}
+
+function readShareFragment() {
+  const params = new URLSearchParams(location.hash.slice(1));
+  const b = params.get("b");
+  const k = params.get("k");
+  if (!b || !k) return null;
+  if (!/^[A-Za-z0-9_-]{8,120}$/.test(b) || !/^[A-Za-z0-9_-]{40,60}$/.test(k)) return null;
+  return { storageId: b, keyText: k };
+}
+
+function writeShareFragment(id, key) {
+  const url = new URL(location.href);
+  url.hash = new URLSearchParams({ b: id, k: key }).toString();
+  history.replaceState(null, "", url);
+}
+
+async function createRemote(envelope) {
+  const res = await fetch(STORE_API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(envelope)
+  });
+  if (!res.ok) throw new Error("Create failed");
+  const json = await res.json();
+  if (!json.id) throw new Error("Missing blob id");
+  return json.id;
+}
+
+async function readRemote() {
+  const res = await fetch(`${STORE_API}/${encodeURIComponent(storageId)}`, {
+    cache: "no-store",
+    headers: { Accept: "application/json" }
+  });
+  if (!res.ok) throw new Error("Read failed");
+  const envelope = await res.json();
+  return normalizeData(await decryptData(envelope));
+}
+
+async function writeRemote(nextData) {
+  const envelope = await encryptData(nextData);
+  const res = await fetch(`${STORE_API}/${encodeURIComponent(storageId)}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(envelope)
+  });
+  if (!res.ok) throw new Error("Write failed");
+  return res.json().catch(() => ({}));
+}
+
+async function bootStorage() {
+  const shared = readShareFragment();
+
+  if (shared) {
+    storageId = shared.storageId;
+    keyText = shared.keyText;
+    cryptoKey = await importKey(keyText);
+    data = await readRemote();
+    return;
+  }
+
+  setStatus("第一次使用 · 正在建立加密帳本…");
+  const generated = await makeKey();
+  cryptoKey = generated.key;
+  keyText = generated.text;
+  data = defaultData();
+  const envelope = await encryptData(data);
+  storageId = await createRemote(envelope);
+  writeShareFragment(storageId, keyText);
 }
 
 function setType(type) {
@@ -121,9 +311,9 @@ function render() {
   const total = a + b || 1;
 
   $("#memberSplit").innerHTML = [
-    ["A", data.settings.memberA, a],
-    ["B", data.settings.memberB, b]
-  ].map(([, name, value]) =>
+    [data.settings.memberA, a],
+    [data.settings.memberB, b]
+  ].map(([name, value]) =>
     `<div class="person"><span>${escapeHtml(name)} · ${Math.round((value / total) * 100)}%</span><strong>${money(value)}</strong></div>`
   ).join("");
 
@@ -167,56 +357,57 @@ function render() {
   });
 }
 
-async function load() {
-  setStatus("正在連上共用帳本…");
-  const res = await fetch(`/api/ledger?book=${encodeURIComponent(book)}`, { cache: "no-store" });
-  if (!res.ok) throw new Error("無法讀取帳本");
-
-  const json = await res.json();
-  data = json.data;
-  etag = json.etag;
-
-  setType("expense");
-  $("#date").value = localDate();
-  render();
-  setStatus("已同步 · 夫妻共用雲端帳本", "ok");
-}
-
-async function persist(nextData = data) {
+async function syncMutation(mutator) {
   if (saving) return false;
-
   saving = true;
-  setStatus("同步中…");
+  setStatus("加密同步中…");
 
   try {
-    const res = await fetch("/api/ledger", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ book, data: nextData, etag })
-    });
-
-    const json = await res.json();
-
-    if (res.status === 409) {
-      data = json.data || data;
-      etag = json.etag || etag;
-      render();
-      setStatus("另一台裝置剛更新過，已載入最新資料；請再操作一次", "error");
-      return false;
-    }
-
-    if (!res.ok) throw new Error(json.error || "同步失敗");
-
-    data = json.data;
-    etag = json.etag;
+    const remote = await readRemote();
+    const next = mergeData(data, remote);
+    await mutator(next);
+    next.modifiedAt = nowIso();
+    await writeRemote(next);
+    data = next;
     render();
-    setStatus("已同步", "ok");
+    setStatus("已同步 · AES‑256 加密", "ok");
     return true;
-  } catch {
-    setStatus("同步失敗，請檢查網路後再試", "error");
+  } catch (error) {
+    console.error(error);
+    setStatus("同步失敗，資料未送出；請檢查網路後再試", "error");
     return false;
   } finally {
     saving = false;
+  }
+}
+
+async function refreshFromRemote(silent = true) {
+  if (saving || refreshing || !storageId || !cryptoKey) return;
+  refreshing = true;
+
+  try {
+    const remote = await readRemote();
+    const merged = mergeData(data, remote);
+    const localSnap = stableSnapshot(data);
+    const remoteSnap = stableSnapshot(remote);
+    const mergedSnap = stableSnapshot(merged);
+
+    if (mergedSnap !== localSnap) {
+      data = merged;
+      render();
+      if (!silent) setStatus("已收到另一台裝置的更新", "ok");
+    }
+
+    if (mergedSnap !== remoteSnap) {
+      merged.modifiedAt = nowIso();
+      await writeRemote(merged);
+      data = merged;
+      if (!silent) setStatus("已合併兩台裝置的更新", "ok");
+    }
+  } catch (error) {
+    if (!silent) setStatus("目前無法更新，稍後會再試", "error");
+  } finally {
+    refreshing = false;
   }
 }
 
@@ -237,38 +428,39 @@ async function saveEntry() {
     return;
   }
 
-  const now = new Date().toISOString();
-  const next = structuredClone(data);
+  const draft = {
+    type: entryType,
+    amount,
+    category: $("#category").value,
+    member: $("#member").value,
+    note: $("#note").value.trim(),
+    date: $("#date").value || localDate()
+  };
 
-  if (editId) {
-    const index = next.entries.findIndex((e) => e.id === editId);
-    if (index >= 0) {
-      next.entries[index] = {
-        ...next.entries[index],
-        type: entryType,
-        amount,
-        category: $("#category").value,
-        member: $("#member").value,
-        note: $("#note").value.trim(),
-        date: $("#date").value || localDate(),
-        updatedAt: now
-      };
+  const editing = editId;
+  const success = await syncMutation((next) => {
+    const stamp = nowIso();
+
+    if (editing) {
+      const index = next.entries.findIndex((e) => e.id === editing);
+      if (index >= 0) {
+        next.entries[index] = {
+          ...next.entries[index],
+          ...draft,
+          updatedAt: stamp
+        };
+      }
+    } else {
+      next.entries.push({
+        id: uid(),
+        ...draft,
+        createdAt: stamp,
+        updatedAt: stamp
+      });
     }
-  } else {
-    next.entries.push({
-      id: uid(),
-      type: entryType,
-      amount,
-      category: $("#category").value,
-      member: $("#member").value,
-      note: $("#note").value.trim(),
-      date: $("#date").value || localDate(),
-      createdAt: now,
-      updatedAt: now
-    });
-  }
+  });
 
-  if (await persist(next)) resetForm();
+  if (success) resetForm();
 }
 
 function startEdit(id) {
@@ -290,17 +482,22 @@ function startEdit(id) {
 async function removeEntry(id) {
   if (!confirm("刪除這筆紀錄？")) return;
 
-  const next = structuredClone(data);
-  next.entries = next.entries.filter((e) => e.id !== id);
-  await persist(next);
+  await syncMutation((next) => {
+    const stamp = nowIso();
+    next.entries = next.entries.filter((e) => e.id !== id);
+    next.tombstones[id] = stamp;
+  });
 }
 
 async function saveSettings() {
-  const next = structuredClone(data);
-  next.settings.memberA = $("#memberAName").value.trim() || "成員 A";
-  next.settings.memberB = $("#memberBName").value.trim() || "成員 B";
-  next.settings.monthlyBudget = Math.max(0, Number($("#monthlyBudget").value) || 0);
-  await persist(next);
+  const memberA = $("#memberAName").value.trim() || "成員 A";
+  const memberB = $("#memberBName").value.trim() || "成員 B";
+  const monthlyBudget = Math.max(0, Number($("#monthlyBudget").value) || 0);
+
+  await syncMutation((next) => {
+    next.settings = { memberA, memberB, monthlyBudget };
+    next.settingsUpdatedAt = nowIso();
+  });
 }
 
 function exportCsv() {
@@ -334,14 +531,38 @@ function exportCsv() {
 
 async function shareBook() {
   const url = location.href;
+
   try {
     if (navigator.share) {
-      await navigator.share({ title: "兩個人的帳本", text: "我們的共用帳本", url });
+      await navigator.share({
+        title: "兩個人的帳本",
+        text: "我們的加密共用帳本。這個完整網址就是鑰匙，請勿轉傳。",
+        url
+      });
     } else {
       await navigator.clipboard.writeText(url);
-      setStatus("共用連結已複製", "ok");
+      setStatus("共用帳本連結已複製", "ok");
     }
   } catch {}
+}
+
+async function init() {
+  try {
+    if (!window.crypto?.subtle) throw new Error("Web Crypto unavailable");
+
+    await bootStorage();
+    setType("expense");
+    $("#date").value = localDate();
+    render();
+    setStatus("已同步 · AES‑256 加密共用", "ok");
+
+    setInterval(() => {
+      if (document.visibilityState === "visible") refreshFromRemote(true);
+    }, 15000);
+  } catch (error) {
+    console.error(error);
+    setStatus("無法開啟帳本。請確認共用網址完整，或稍後重新整理。", "error");
+  }
 }
 
 $(".type-toggle").onclick = (event) => {
@@ -370,5 +591,8 @@ $("#monthLabel").onclick = () => {
   render();
 };
 
-book = ensureBook();
-load().catch(() => setStatus("帳本暫時連不上，重新整理再試", "error"));
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") refreshFromRemote(false);
+});
+
+init();
