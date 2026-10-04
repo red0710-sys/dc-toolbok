@@ -77,11 +77,12 @@ async function writeRemote(next){
   if(r.conflict){const e=new Error("version conflict");e.code="VERSION_CONFLICT";throw e}
   remoteVersion=r.version;return r;
 }
-function saveLocal(){localStorage.setItem("homeflow-local-overrides",JSON.stringify(data))}
+function saveLocal(){localStorage.setItem("homeflow-local-overrides",JSON.stringify(data));window.HomeFlowLocal?.save(data).catch?.(()=>{})}
+async function loadLocal(){const idb=await window.HomeFlowLocal?.load?.();if(idb)return idb;try{return JSON.parse(localStorage.getItem("homeflow-local-overrides")||"null")}catch{return null}}
 async function bootRemote(){
   if(!window.HomeFlowCloud)throw new Error("cloud client missing");
   cloudClient=await window.HomeFlowCloud.connect({createIfMissing:true});
-  const local=normalizeData(JSON.parse(localStorage.getItem("homeflow-local-overrides")||"null"));
+  const local=normalizeData(await loadLocal());
   const remote=await cloudClient.read();remoteVersion=remote.version||null;
   const remoteData=remote.data?normalizeData(remote.data):null;
   data=remoteData?mergeData(local,remoteData):local;
@@ -525,6 +526,6 @@ function bindViewEvents(entries){
 }
 
 
-async function init(){if(!window.crypto?.subtle){setStatus("此瀏覽器不支援加密功能","error");return}setStatus("正在解鎖 2019–2026 歷史帳本…");try{await loadHistory()}catch(e){console.error(e);setStatus("歷史資料尚未完整發布；新帳仍可使用","warn")}try{await bootRemote();setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 加密共用`:"Home Flow 已同步 · 歷史資料未解鎖","ok")}catch(e){console.error(e);remoteReady=false;data=normalizeData(JSON.parse(localStorage.getItem("homeflow-local-overrides")||"null"));setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 本機模式`:"本機模式 · 歷史資料未解鎖","warn")}render();setInterval(()=>{if(document.visibilityState==="visible")ensureRemote(true)},15000)}
+async function init(){if(!window.crypto?.subtle){setStatus("此瀏覽器不支援加密功能","error");return}setStatus("正在解鎖 2019–2026 歷史帳本…");try{await loadHistory()}catch(e){console.error(e);setStatus("歷史資料尚未完整發布；新帳仍可使用","warn")}try{await bootRemote();setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 加密共用`:"Home Flow 已同步 · 歷史資料未解鎖","ok")}catch(e){console.error(e);remoteReady=false;data=normalizeData(await loadLocal());setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 本機模式`:"本機模式 · 歷史資料未解鎖","warn")}render();setInterval(()=>{if(document.visibilityState==="visible")ensureRemote(true)},15000)}
 
 $$('.nav button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));$("#shareBtn").onclick=shareBook;document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")ensureRemote(false)});init();
