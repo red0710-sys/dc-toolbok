@@ -426,7 +426,7 @@ function bindViewEvents(entries){
   $('[data-export-csv]')?.addEventListener('click',exportCsv);
   $('[data-export-json]')?.addEventListener('click',exportBackup);
   $("#importBackup")?.addEventListener("change",e=>importBackup(e.target.files?.[0]));
-  $('[data-ai-example]').forEach(b=>b.onclick=()=>askFinanceAI(b.dataset.aiExample));
+  $$('[data-ai-example]').forEach(b=>b.addEventListener("click",()=>askFinanceAI(b.dataset.aiExample)));
   const sendAi=()=>{const input=$("#aiChatInput");const q=input?.value||"";if(!q.trim())return;askFinanceAI(q)};
   $("#aiSendBtn")?.addEventListener("click",sendAi);
   $("#aiChatInput")?.addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendAi()}});
