@@ -1,0 +1,22 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "home-flow",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-10-04",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "home-flow",
+      "database_id": "REPLACE_AFTER_D1_CREATE"
+    }
+  ],
+  "triggers": {
+    "crons": ["17 19 * * *"]
+  }
+}
