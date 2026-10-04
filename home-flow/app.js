@@ -154,11 +154,11 @@ function guessCategory(e){
 }
 function guessNature(e){
   const t=`${e.legacyCategory} ${e.note} ${e.project}`.toLowerCase();
-  if(/房貸本金|本金/.test(t))return "房貸本金";
-  if(/利息/.test(t))return "利息";
-  if(/裝潢|交屋|冷氣|冰箱|電視|家具|家電|沙發|床墊|ikea/.test(t))return "資本支出";
-  if(/轉帳|匯款|入金|出金|投資|股票|etf|定存|質押|借款/.test(t))return "資金移轉";
-  if(/保險|保費|房租|管理費|孝親|孲費|幼兒園|托嬰|網路|電信|電話費/.test(t))return "固定義務";
+  if(/房租|管理費|房屋稅|地價稅|住宅|修繕/.test(t))return "房屋相關";
+  if(/孝親|扶養|父母/.test(t))return "家庭孝親";
+  if(/幼兒園|托嬰|學費|教育|才藝|安親/.test(t))return "育兒教育";
+  if(/保險|保費|壽險|醫療險|車險/.test(t))return "保險相關";
+  if(/手機|電信|網路|電話費|訂閱|會費/.test(t))return "手機等服務";
   return null;
 }
 function doctorIssues(entries){
@@ -192,6 +192,34 @@ function categoryRankHtml(rows){
   const zeros=EXPENSE_CATS.filter(k=>(values[k]||0)===0);
   if(!ranked.length)return '<div class="empty">本月尚無支出</div>';
   return `<div class="category-rank">${ranked.map(([name,v])=>`<div class="category-rank-row"><div class="rank-label"><b>${esc(name)}</b><span>${money(v)} · ${total?Math.round(v/total*100):0}%</span></div><div class="rank-track"><i style="width:${Math.max(2,total?v/total*100:0)}%"></i></div></div>`).join("")}</div>${zeros.length?`<div class="zero-cats">$0：${zeros.map(esc).join("・")}</div>`:""}`;
+}
+function flowMetrics3(entries,d=state.viewDate){
+  const months=monthsBack(d,6),fixedNatures=new Set(["房屋相關","家庭孝親","育兒教育","保險相關","手機等服務"]);
+  let fixed=0,flex=0,count=0;
+  for(const md of months){
+    const rows=monthRows(entries,md).filter(e=>e.type==="expense"&&!e.oneOff);
+    if(!rows.length)continue;
+    fixed+=rows.filter(e=>fixedNatures.has(e.nature)).reduce((s,e)=>s+e.amount,0);
+    flex+=rows.filter(e=>e.nature==="生活消費"||!e.nature).reduce((s,e)=>s+e.amount,0);
+    count++;
+  }
+  const div=Math.max(count,1),fixedMonthly=fixed/div,flexMonthly=flex/div,baseMonthly=baseBurn(entries,d)/12;
+  const cur=monthRows(entries,d),curSpend=cashOut(cur),avg=avgPriorMonths(entries,d,6);
+  const deviation=avg>0?(curSpend/avg-1)*100:0;
+  let score=88;
+  if(deviation>25)score-=18;else if(deviation>10)score-=8;else if(deviation<-10)score+=3;
+  const total=fixedMonthly+flexMonthly;if(total>0&&fixedMonthly/total>.7)score-=8;
+  score=Math.max(45,Math.min(98,Math.round(score)));
+  const label=score>=85?"HEALTHY":score>=70?"STABLE":score>=55?"WATCH":"ACTION";
+  return{fixedMonthly,flexMonthly,baseMonthly,score,label,deviation};
+}
+function smartPrompts3(entries,d=state.viewDate){
+  const cur=monthRows(entries,d),cats=byField(cur,"category"),m=flowMetrics3(entries,d);
+  const out=[];
+  if(Math.abs(m.deviation)>=10)out.push("為什麼這個月支出變化這麼大？");
+  if(cats[0])out.push(`本月「${cats[0][0]}」為什麼花最多？`);
+  out.push("今年支出跟去年比","最近 12 個月支出趨勢","哪些支出最容易降低？","我的 Base Burn 是多少？","家庭現金流有異常嗎？");
+  return [...new Set(out)].slice(0,7);
 }
 function flowStatus(entries,d=state.viewDate){
   const cur=monthRows(entries,d),adj=adjustedSpend(cur),avgAdj=avgPriorAdjusted(entries,d,6),pct=avgAdj>0?(adj/avgAdj-1)*100:null;
@@ -305,28 +333,28 @@ function barsHtml(items,total,max=7){if(!items.length)return'<div class="empty">
 
 function renderHome(entries){
   const m=monthRows(entries),mSpend=cashOut(m),bb=baseBurn(entries),avg=avgPriorMonths(entries,state.viewDate,6);
-  const vs=avg>0?(mSpend/avg-1)*100:null,status=flowStatus(entries),bbMonthly=bb/12;
+  const vs=avg>0?(mSpend/avg-1)*100:null,status=flowStatus(entries),fm=flowMetrics3(entries,state.viewDate),doctor=aiJudgement(entries,state.viewDate)[0];
   $("#content").innerHTML=`${periodNav()}
-    <section class="card hero">
-      <div class="hero-head"><div><small>FAMILY CASHFLOW</small><h2>家庭財務，一眼看懂</h2></div></div>
+    <section class="card hero hf3-hero">
+      <div class="hero-head"><div><small>HOME FLOW 3.0 · FAMILY CASHFLOW OS</small><h2>家庭財務，一眼看懂</h2></div><span class="hf3-score">${fm.score}<small>${fm.label}</small></span></div>
       <div class="stats">
-        <div class="stat"><span>本月支出</span><strong>${shortMoney(mSpend)}</strong><small>Cash Outflow</small></div>
-        <div class="stat"><span>vs 6M 平均</span><strong>${vs===null?"—":`${vs>=0?"+":""}${vs.toFixed(1)}%`}</strong><small>${avg?`6M ${shortMoney(avg)}`:"資料不足"}</small></div>
-        <div class="stat"><span>Base Burn</span><strong>${shortMoney(bbMonthly)}</strong><small>/ 月 · ${shortMoney(bb)} / 年</small></div>
+        <div class="stat"><span>本月支出</span><strong>${shortMoney(mSpend)}</strong><small>${vs===null?"Cash Outflow":`vs 6M ${vs>=0?"+":""}${vs.toFixed(1)}%`}</small></div>
+        <div class="stat"><span>Base Burn</span><strong>${shortMoney(fm.baseMonthly)}</strong><small>/ 月</small></div>
+        <div class="stat"><span>Fixed Burn</span><strong>${shortMoney(fm.fixedMonthly)}</strong><small>家庭必要成本</small></div>
+        <div class="stat"><span>Flexible</span><strong>${shortMoney(fm.flexMonthly)}</strong><small>可調整生活費</small></div>
       </div>
+    </section>
+    <section class="card hf3-doctor ${status.tone}">
+      <div class="flow-status-head"><span class="status-dot"></span><b>AI DOCTOR · ${status.code}</b><small>3.0</small></div>
+      <h3>${esc(doctor?.title||"家庭現金流穩定")}</h3><p>${esc(doctor?.text||status.text)}</p>
+      <div class="flow-actions"><button class="link-btn" data-go-chat>追問 Home Flow AI →</button><button class="link-btn" data-go-analysis>完整診斷</button></div>
     </section>
     <section class="card">
       <div class="section-head"><h2>本月結構</h2><span>食・衣・住・行・育・樂</span></div>
       ${categoryRankHtml(m)}
     </section>
-    <section class="card flow-status ${status.tone}">
-      <div class="flow-status-head"><span class="status-dot"></span><b>${status.code}</b><small>AI 現金流狀態</small></div>
-      <p>${esc(status.text)}</p>
-      <div class="flow-actions"><button class="link-btn" data-go-chat>問 Home Flow AI →</button><button class="link-btn" data-go-analysis>完整分析</button></div>
-    </section>
     <section class="card"><div class="section-head"><h2>最近紀錄</h2><button class="link-btn" data-go-list>全部明細</button></div>${entriesHtml(entries,6)}</section>`;
 }
-
 
 function formOptions(values,selected){return values.map(x=>`<option value="${esc(x)}" ${x===selected?"selected":""}>${esc(x)}</option>`).join("")}
 function renderAdd(entries){const e=editId?entries.find(x=>x.id===editId):null;const accounts=data.settings.accounts.length?data.settings.accounts:DEFAULT_ACCOUNTS;const projects=[...new Set([...data.settings.projects,...entries.map(x=>x.project).filter(Boolean)])];const removedNatures=new Set(["房貸本金","利息","資本支出","資金移轉","固定義務"]);const natures=[...new Set([...(data.settings.natures||NATURES),...entries.map(x=>x.nature).filter(x=>x&&!removedNatures.has(x))])];const d=e||{amount:"",category:"食",account:accounts[0],nature:"生活消費",project:"日常生活",date:localDate(),note:"",oneOff:false,legacyCategory:""};$("#content").innerHTML=`<section class="card"><div class="section-head"><h2>${e?"編輯紀錄":"記一筆"}</h2><span>快速、夠用就好</span></div><div class="amount-row"><span>$</span><input id="amount" class="amount-input" inputmode="decimal" placeholder="0" value="${e?e.amount:""}"></div><div class="chips">${EXPENSE_CATS.slice(0,6).map(c=>`<button class="chip ${d.category===c?"active":""}" data-cat="${c}">${c}</button>`).join("")}</div><div class="form-grid"><label class="field"><span>分類</span><select id="category">${formOptions(EXPENSE_CATS,d.category)}</select></label><label class="field"><div class="field-head"><span>付款帳戶</span><button class="mini-link" data-edit-accounts>編輯</button></div><select id="account">${formOptions(accounts,d.account)}</select></label><label class="field"><div class="field-head"><span>Nature｜支出性質</span><button class="mini-link" data-edit-natures>編輯</button></div><select id="nature">${formOptions(natures,d.nature)}</select></label><label class="field"><div class="field-head"><span>Project</span><button class="mini-link" data-edit-projects>編輯</button></div><select id="project">${formOptions(projects,d.project)}</select></label><label class="field"><span>日期</span><input id="date" type="date" value="${d.date}"></label><label class="field"><span>項目 / 舊分類</span><input id="legacyCategory" maxlength="80" value="${esc(d.legacyCategory||"")}" placeholder="例：全聯、加油、房貸"></label><label class="field" style="grid-column:1/-1"><span>備註</span><input id="note" maxlength="240" value="${esc(d.note||"")}" placeholder="店家、用途、補充"></label><label class="toggle-row" style="grid-column:1/-1"><span><b>One-off</b><br><small>裝潢、交屋、大型醫療等一次性支出</small></span><input id="oneOff" type="checkbox" ${d.oneOff?"checked":""}></label></div><div class="form-actions"><button id="saveEntry" class="primary">${e?"儲存修改":"＋ 記一筆"}</button>${e?'<button class="outline" data-cancel-edit>取消</button>':""}</div></section><section class="card"><div class="section-head"><h3>Nature 怎麼用？</h3><span>核心</span></div><p class="tiny">生活消費 / 房屋相關 / 家庭孝親 / 育兒教育 / 保險相關 / 手機等服務 / 房貸本金 / 利息 / 資本支出 / 資金移轉。Base Burn 會排除資本支出、房貸本金、資金移轉與 One-off。</p></section>`}
@@ -379,8 +407,8 @@ function renderChat(entries){
   if(!state.aiMessages.length){
     state.aiMessages=[{role:"assistant",title:"Home Flow AI",text:"直接問你的帳本。我會在裝置端分析 2019–2026 資料，不把明細傳出去。",at:Date.now()}];
   }
-  const examples=["3 個月內的食費用","最近 6 個月花最多什麼？","今年住花多少？","比較最近 3 個月跟前 3 個月","我的 Base Burn 是多少？","最近 12 個月支出趨勢","今年花最多的類別","最近 3 個月交通花多少？","最近 6 個月娛樂花多少？","今年育兒教育花多少？","今年保險相關花多少？","今年手機等服務花多少？","今年支出跟去年比","最近哪個月花最多？","家庭現金流有異常嗎？"];
-  $("#content").innerHTML=`<section class="ai-chat-head"><div><span class="ai-orb">✦</span><div><h2>Home Flow AI</h2><small>問你的 ${effectiveEntries().length.toLocaleString()} 筆家庭金流</small></div></div><span class="local-badge">LOCAL</span></section>
+  const examples=[...smartPrompts3(entries,state.viewDate),"3 個月內的食費用","最近 6 個月花最多什麼？","今年住花多少？","比較最近 3 個月跟前 3 個月","最近 3 個月交通花多少？","最近 6 個月娛樂花多少？","今年育兒教育花多少？","今年保險相關花多少？","今年手機等服務花多少？","最近哪個月花最多？"];
+  $("#content").innerHTML=`<section class="ai-chat-head"><div><span class="ai-orb">✦</span><div><h2>Home Flow AI · 3.0</h2><small>問你的 ${effectiveEntries().length.toLocaleString()} 筆家庭金流</small></div></div><span class="local-badge">LOCAL</span></section>
     <div class="chat-examples">${examples.map(x=>`<button data-ai-example="${esc(x)}">${esc(x)}</button>`).join("")}</div>
     <section class="chat-thread">${state.aiMessages.map(m=>m.role==="user"?`<div class="chat-msg user">${esc(m.text)}</div>`:`<div class="chat-msg assistant"><b>${esc(m.title||"Home Flow AI")}</b><p>${esc(m.text||"")}</p>${m.chart||""}</div>`).join("")}</section>
     <form id="aiChatForm" class="chat-input-wrap"><input id="aiChatInput" autocomplete="off" enterkeyhint="send" placeholder="問：3 個月內的食費用？"><button id="aiSendBtn" type="button" aria-label="送出問題">↑</button></form>
