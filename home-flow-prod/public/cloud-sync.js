@@ -11,7 +11,17 @@ function deviceId(){let id=localStorage.getItem(DEVICE_KEY);if(!id){id="dev_"+ra
 function validCreds(c){return !!c&&/^hf_[A-Za-z0-9_-]{12,64}$/.test(c.familyId||"")&&(c.accessToken||"").length>=30&&(c.keyText||"").length>=40}
 function fragmentCreds(){const p=new URLSearchParams(location.hash.slice(1));const c={familyId:p.get("hf_f")||"",accessToken:p.get("hf_t")||"",keyText:p.get("hf_k")||""};return validCreds(c)?c:null}
 function storedCreds(){try{const c=JSON.parse(localStorage.getItem(CREDS_KEY)||"null");return validCreds(c)?c:null}catch{return null}}
-function persistCreds(c){localStorage.setItem(CREDS_KEY,JSON.stringify(c));const u=new URL(location.href),p=new URLSearchParams(u.hash.slice(1));p.set("hf_f",c.familyId);p.set("hf_t",c.accessToken);p.set("hf_k",c.keyText);u.hash=p.toString();history.replaceState(null,"",u)}
+function persistCreds(c){
+  localStorage.setItem(CREDS_KEY,JSON.stringify(c));
+  const u=new URL(location.href),p=new URLSearchParams(u.hash.slice(1));
+  p.delete("hf_f");p.delete("hf_t");p.delete("hf_k");
+  u.hash=p.toString();history.replaceState(null,"",u);
+}
+function inviteUrlFor(c){
+  const u=new URL(location.href),p=new URLSearchParams();
+  p.set("hf_f",c.familyId);p.set("hf_t",c.accessToken);p.set("hf_k",c.keyText);
+  u.hash=p.toString();return u.toString();
+}
 async function importKey(text){const raw=fromB64url(text);if(raw.length!==32)throw new Error("bad encryption key");return crypto.subtle.importKey("raw",raw,{name:"AES-GCM"},false,["encrypt","decrypt"])}
 async function gzip(bytes){if(typeof CompressionStream==="undefined")return{codec:"raw",bytes};const stream=new Blob([bytes]).stream().pipeThrough(new CompressionStream("gzip"));return{codec:"gzip",bytes:new Uint8Array(await new Response(stream).arrayBuffer())}}
 async function gunzip(bytes,codec){if(codec!=="gzip")return bytes;if(typeof DecompressionStream==="undefined")throw new Error("gzip unsupported");const stream=new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));return new Uint8Array(await new Response(stream).arrayBuffer())}
@@ -42,7 +52,7 @@ async function createFamily(){
 class HomeFlowCloudClient{
   constructor(c){this.creds=c}
   get familyId(){return this.creds.familyId}
-  inviteUrl(){persistCreds(this.creds);return location.href}
+  inviteUrl(){return inviteUrlFor(this.creds)}
   async health(){const r=await request("/api/health",null);return r.ok}
   async read(){
     const r=await request("/api/snapshot",this.creds);if(!r.ok)throw new Error("snapshot read failed");
