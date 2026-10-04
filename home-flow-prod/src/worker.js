@@ -8,7 +8,10 @@ function bearer(req){const h=req.headers.get("authorization")||"";return h.start
 function familyHeader(req){return (req.headers.get("x-homeflow-family")||"").trim()}
 function validFamilyId(v){return /^hf_[A-Za-z0-9_-]{12,64}$/.test(v)}
 function validVersion(v){return /^v_[A-Za-z0-9_-]{12,80}$/.test(v)}
-function dayUTC(){return new Date().toISOString().slice(0,10)}
+function familyDay(){
+  const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Taipei",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date());
+  const o=Object.fromEntries(parts.map(p=>[p.type,p.value]));return `${o.year}-${o.month}-${o.day}`;
+}
 
 async function auth(req,env){
   const familyId=familyHeader(req),token=bearer(req);
@@ -85,12 +88,11 @@ async function writeSnapshot(req,env,user){
 
   if(current){
     const backupExists=await env.DB.prepare("SELECT 1 AS ok FROM snapshots WHERE family_id=? AND backup_day=? LIMIT 1")
-      .bind(user.familyId,dayUTC()).first();
+      .bind(user.familyId,familyDay()).first();
     if(!backupExists){
       await env.DB.prepare("UPDATE snapshots SET backup_day=? WHERE family_id=? AND version_id=? AND backup_day IS NULL")
-        .bind(dayUTC(),user.familyId,current).run();
+        .bind(familyDay(),user.familyId,current).run();
     }else{
-      await env.DB.prepare("DELETE FROM snapshot_chunks WHERE family_id=? AND version_id=?").bind(user.familyId,current).run();
       await env.DB.prepare("DELETE FROM snapshots WHERE family_id=? AND version_id=? AND backup_day IS NULL").bind(user.familyId,current).run();
     }
   }
@@ -114,17 +116,14 @@ async function restoreBackup(req,env,user){
   await env.DB.prepare("INSERT INTO snapshots(family_id,version_id,created_at,device_id,chunk_count,byte_size) SELECT family_id,?,datetime('now'),'restore',chunk_count,byte_size FROM snapshots WHERE family_id=? AND version_id=?")
     .bind(newVersion,user.familyId,source).run();
   for(let i=0;i<(rows.results||[]).length;i++)await env.DB.prepare("INSERT INTO snapshot_chunks(family_id,version_id,chunk_index,payload) VALUES(?,?,?,?)").bind(user.familyId,newVersion,i,rows.results[i].payload).run();
-  if(current)await env.DB.prepare("UPDATE snapshots SET backup_day=COALESCE(backup_day,?) WHERE family_id=? AND version_id=?").bind(dayUTC(),user.familyId,current).run();
+  if(current)await env.DB.prepare("UPDATE snapshots SET backup_day=COALESCE(backup_day,?) WHERE family_id=? AND version_id=?").bind(familyDay(),user.familyId,current).run();
   await env.DB.prepare("UPDATE families SET current_version=?,last_seen_at=datetime('now') WHERE family_id=?").bind(newVersion,user.familyId).run();
   return json({version:newVersion,restoredFrom:source});
 }
 
 async function cleanup(env){
-  const old=await env.DB.prepare("SELECT family_id,version_id FROM snapshots WHERE backup_day IS NOT NULL AND backup_day < date('now','-30 days')").all();
-  for(const r of old.results||[]){
-    await env.DB.prepare("DELETE FROM snapshot_chunks WHERE family_id=? AND version_id=?").bind(r.family_id,r.version_id).run();
-    await env.DB.prepare("DELETE FROM snapshots WHERE family_id=? AND version_id=?").bind(r.family_id,r.version_id).run();
-  }
+  await env.DB.prepare("DELETE FROM snapshots WHERE backup_day IS NOT NULL AND backup_day < date('now','-30 days')").run();
+  await env.DB.prepare("DELETE FROM snapshots WHERE backup_day IS NULL AND created_at < datetime('now','-1 day') AND version_id NOT IN (SELECT current_version FROM families WHERE current_version IS NOT NULL)").run();
 }
 
 export default{
