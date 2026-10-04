@@ -1,0 +1,152 @@
+const JSON_HEADERS={"content-type":"application/json; charset=utf-8","cache-control":"no-store"};
+
+function json(data,status=200,extra={}){return new Response(JSON.stringify(data),{status,headers:{...JSON_HEADERS,...extra}})}
+function b64url(bytes){let s="";for(const b of bytes)s+=String.fromCharCode(b);return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"")}
+function randomToken(bytes=24){return b64url(crypto.getRandomValues(new Uint8Array(bytes)))}
+async function sha256(text){return b64url(new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(text))))}
+function bearer(req){const h=req.headers.get("authorization")||"";return h.startsWith("Bearer ")?h.slice(7).trim():""}
+function familyHeader(req){return (req.headers.get("x-homeflow-family")||"").trim()}
+function validFamilyId(v){return /^hf_[A-Za-z0-9_-]{12,64}$/.test(v)}
+function validVersion(v){return /^v_[A-Za-z0-9_-]{12,80}$/.test(v)}
+function dayUTC(){return new Date().toISOString().slice(0,10)}
+
+async function auth(req,env){
+  const familyId=familyHeader(req),token=bearer(req);
+  if(!validFamilyId(familyId)||token.length<30)return null;
+  const row=await env.DB.prepare("SELECT token_hash,current_version FROM families WHERE family_id=?").bind(familyId).first();
+  if(!row)return null;
+  const hash=await sha256(token);
+  if(hash!==row.token_hash)return null;
+  return{familyId,currentVersion:row.current_version||null};
+}
+
+async function createFamily(env){
+  const familyId="hf_"+randomToken(12),accessToken=randomToken(32),tokenHash=await sha256(accessToken);
+  await env.DB.prepare("INSERT INTO families(family_id,token_hash,created_at,last_seen_at) VALUES(?,?,datetime('now'),datetime('now'))")
+    .bind(familyId,tokenHash).run();
+  return json({familyId,accessToken,version:null},201);
+}
+
+async function readSnapshot(req,env,user){
+  const current=await env.DB.prepare("SELECT current_version FROM families WHERE family_id=?").bind(user.familyId).first();
+  const version=current?.current_version||null;
+  if(!version)return json({version:null,chunks:[],createdAt:null});
+  const meta=await env.DB.prepare("SELECT version_id,created_at,device_id,chunk_count,byte_size FROM snapshots WHERE family_id=? AND version_id=?")
+    .bind(user.familyId,version).first();
+  if(!meta)return json({error:"snapshot metadata missing"},500);
+  const rows=await env.DB.prepare("SELECT chunk_index,payload FROM snapshot_chunks WHERE family_id=? AND version_id=? ORDER BY chunk_index")
+    .bind(user.familyId,version).all();
+  const chunks=(rows.results||[]).map(r=>r.payload);
+  if(chunks.length!==Number(meta.chunk_count))return json({error:"snapshot incomplete"},500);
+  return json({version,createdAt:meta.created_at,deviceId:meta.device_id,chunks});
+}
+
+async function listBackups(env,user){
+  const rows=await env.DB.prepare("SELECT version_id,backup_day,created_at,byte_size FROM snapshots WHERE family_id=? AND backup_day IS NOT NULL ORDER BY backup_day DESC LIMIT 31")
+    .bind(user.familyId).all();
+  return json({backups:rows.results||[]});
+}
+
+async function readBackup(url,env,user){
+  const version=url.searchParams.get("version")||"";
+  if(!validVersion(version))return json({error:"bad version"},400);
+  const meta=await env.DB.prepare("SELECT version_id,backup_day,created_at,chunk_count FROM snapshots WHERE family_id=? AND version_id=? AND backup_day IS NOT NULL")
+    .bind(user.familyId,version).first();
+  if(!meta)return json({error:"backup not found"},404);
+  const rows=await env.DB.prepare("SELECT chunk_index,payload FROM snapshot_chunks WHERE family_id=? AND version_id=? ORDER BY chunk_index")
+    .bind(user.familyId,version).all();
+  return json({version,backupDay:meta.backup_day,createdAt:meta.created_at,chunks:(rows.results||[]).map(r=>r.payload)});
+}
+
+async function writeSnapshot(req,env,user){
+  let body;try{body=await req.json()}catch{return json({error:"invalid json"},400)}
+  const baseVersion=body.baseVersion===null?null:String(body.baseVersion||"");
+  const versionId=String(body.versionId||"");
+  const deviceId=String(body.deviceId||"").slice(0,100);
+  const chunks=Array.isArray(body.chunks)?body.chunks:[];
+  if(!validVersion(versionId)||chunks.length<1||chunks.length>32)return json({error:"invalid snapshot"},400);
+  if(chunks.some(x=>typeof x!=="string"||x.length>900000))return json({error:"invalid chunk"},413);
+  const byteSize=chunks.reduce((n,x)=>n+x.length,0);
+  if(byteSize>12000000)return json({error:"snapshot too large"},413);
+
+  const family=await env.DB.prepare("SELECT current_version FROM families WHERE family_id=?").bind(user.familyId).first();
+  const current=family?.current_version||null;
+  if(current!==baseVersion)return json({error:"version conflict",currentVersion:current},409);
+
+  const existing=await env.DB.prepare("SELECT version_id FROM snapshots WHERE family_id=? AND version_id=?").bind(user.familyId,versionId).first();
+  if(existing)return json({version:versionId,idempotent:true});
+
+  await env.DB.prepare("INSERT INTO snapshots(family_id,version_id,created_at,device_id,chunk_count,byte_size) VALUES(?,?,datetime('now'),?,?,?)")
+    .bind(user.familyId,versionId,deviceId,chunks.length,byteSize).run();
+  for(let i=0;i<chunks.length;i++){
+    await env.DB.prepare("INSERT INTO snapshot_chunks(family_id,version_id,chunk_index,payload) VALUES(?,?,?,?)")
+      .bind(user.familyId,versionId,i,chunks[i]).run();
+  }
+
+  if(current){
+    const backupExists=await env.DB.prepare("SELECT 1 AS ok FROM snapshots WHERE family_id=? AND backup_day=? LIMIT 1")
+      .bind(user.familyId,dayUTC()).first();
+    if(!backupExists){
+      await env.DB.prepare("UPDATE snapshots SET backup_day=? WHERE family_id=? AND version_id=? AND backup_day IS NULL")
+        .bind(dayUTC(),user.familyId,current).run();
+    }else{
+      await env.DB.prepare("DELETE FROM snapshot_chunks WHERE family_id=? AND version_id=?").bind(user.familyId,current).run();
+      await env.DB.prepare("DELETE FROM snapshots WHERE family_id=? AND version_id=? AND backup_day IS NULL").bind(user.familyId,current).run();
+    }
+  }
+
+  const moved=await env.DB.prepare("UPDATE families SET current_version=?,last_seen_at=datetime('now') WHERE family_id=? AND (current_version IS ? OR current_version=?)")
+    .bind(versionId,user.familyId,baseVersion,baseVersion||"").run();
+  if(!moved.meta?.changes){
+    return json({error:"version conflict",currentVersion:(await env.DB.prepare("SELECT current_version FROM families WHERE family_id=?").bind(user.familyId).first())?.current_version||null},409);
+  }
+  return json({version:versionId,backupCreated:!!current});
+}
+
+async function restoreBackup(req,env,user){
+  let body;try{body=await req.json()}catch{return json({error:"invalid json"},400)}
+  const source=String(body.version||"");
+  if(!validVersion(source))return json({error:"bad version"},400);
+  const meta=await env.DB.prepare("SELECT chunk_count FROM snapshots WHERE family_id=? AND version_id=? AND backup_day IS NOT NULL").bind(user.familyId,source).first();
+  if(!meta)return json({error:"backup not found"},404);
+  const rows=await env.DB.prepare("SELECT payload FROM snapshot_chunks WHERE family_id=? AND version_id=? ORDER BY chunk_index").bind(user.familyId,source).all();
+  const newVersion="v_"+randomToken(18),current=(await env.DB.prepare("SELECT current_version FROM families WHERE family_id=?").bind(user.familyId).first())?.current_version||null;
+  await env.DB.prepare("INSERT INTO snapshots(family_id,version_id,created_at,device_id,chunk_count,byte_size) SELECT family_id,?,datetime('now'),'restore',chunk_count,byte_size FROM snapshots WHERE family_id=? AND version_id=?")
+    .bind(newVersion,user.familyId,source).run();
+  for(let i=0;i<(rows.results||[]).length;i++)await env.DB.prepare("INSERT INTO snapshot_chunks(family_id,version_id,chunk_index,payload) VALUES(?,?,?,?)").bind(user.familyId,newVersion,i,rows.results[i].payload).run();
+  if(current)await env.DB.prepare("UPDATE snapshots SET backup_day=COALESCE(backup_day,?) WHERE family_id=? AND version_id=?").bind(dayUTC(),user.familyId,current).run();
+  await env.DB.prepare("UPDATE families SET current_version=?,last_seen_at=datetime('now') WHERE family_id=?").bind(newVersion,user.familyId).run();
+  return json({version:newVersion,restoredFrom:source});
+}
+
+async function cleanup(env){
+  const old=await env.DB.prepare("SELECT family_id,version_id FROM snapshots WHERE backup_day IS NOT NULL AND backup_day < date('now','-30 days')").all();
+  for(const r of old.results||[]){
+    await env.DB.prepare("DELETE FROM snapshot_chunks WHERE family_id=? AND version_id=?").bind(r.family_id,r.version_id).run();
+    await env.DB.prepare("DELETE FROM snapshots WHERE family_id=? AND version_id=?").bind(r.family_id,r.version_id).run();
+  }
+}
+
+export default{
+  async fetch(req,env){
+    const url=new URL(req.url);
+    if(!url.pathname.startsWith("/api/"))return env.ASSETS.fetch(req);
+    if(req.method==="OPTIONS")return new Response(null,{status:204});
+    try{
+      if(url.pathname==="/api/health")return json({ok:true,service:"home-flow",time:new Date().toISOString()});
+      if(url.pathname==="/api/family"&&req.method==="POST")return createFamily(env);
+      const user=await auth(req,env);
+      if(!user)return json({error:"unauthorized"},401);
+      if(url.pathname==="/api/snapshot"&&req.method==="GET")return readSnapshot(req,env,user);
+      if(url.pathname==="/api/snapshot"&&req.method==="PUT")return writeSnapshot(req,env,user);
+      if(url.pathname==="/api/backups"&&req.method==="GET")return listBackups(env,user);
+      if(url.pathname==="/api/backup"&&req.method==="GET")return readBackup(url,env,user);
+      if(url.pathname==="/api/restore"&&req.method==="POST")return restoreBackup(req,env,user);
+      return json({error:"not found"},404);
+    }catch(err){
+      console.error(err);
+      return json({error:"server error"},500);
+    }
+  },
+  async scheduled(_controller,env){await cleanup(env)}
+};
