@@ -2,6 +2,7 @@
 "use strict";
 const CREDS_KEY="homeflow-cloud-creds-v1";
 const DEVICE_KEY="homeflow-device-id-v1";
+const PUBLIC_FAMILY_CREDS={familyId:"hf_f7F5VxDnJWGNToTB",accessToken:"xV2WJcHLeH62nRFddZgEVxoBT07y7JDAa2u8C1R7idY",keyText:"2rCUqK-Q-L7rrrl8iOg2urOSzzrE0Pl_nANpGrO6yM0"};
 const te=new TextEncoder(),td=new TextDecoder();
 
 function b64url(bytes){let s="";for(const b of bytes)s+=String.fromCharCode(b);return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"")}
@@ -70,8 +71,17 @@ class HomeFlowCloudClient{
   async readBackup(version){const r=await request("/api/backup?version="+encodeURIComponent(version),this.creds);if(!r.ok)throw new Error("backup read failed");const j=await r.json();return{version:j.version,backupDay:j.backupDay,data:await decodeSnapshot(j.chunks,this.creds)}}
   async restore(version){const r=await request("/api/restore",this.creds,{method:"POST",body:JSON.stringify({version})});if(!r.ok)throw new Error("restore failed");return r.json()}
 }
-async function connect({createIfMissing=true}={}){
-  let c=fragmentCreds()||storedCreds();if(!c&&createIfMissing)c=await createFamily();if(!c)return null;persistCreds(c);return new HomeFlowCloudClient(c);
+async function connect(){
+  // Home Flow is one fixed shared family. Never let stale per-device credentials split the ledger.
+  const incoming=fragmentCreds();
+  const c=(incoming&&incoming.familyId===PUBLIC_FAMILY_CREDS.familyId)?incoming:PUBLIC_FAMILY_CREDS;
+  persistCreds(c);
+  return new HomeFlowCloudClient(c);
 }
-window.HomeFlowCloud={connect,clear(){localStorage.removeItem(CREDS_KEY)},hasCredentials(){return !!(fragmentCreds()||storedCreds())}};
+window.HomeFlowCloud={
+  connect,
+  clear(){localStorage.removeItem(CREDS_KEY)},
+  hasCredentials(){return true},
+  familyId(){return PUBLIC_FAMILY_CREDS.familyId}
+};
 })();
