@@ -123,6 +123,40 @@ async function restoreBackup(req,env,user){
   return json({version:newVersion,restoredFrom:source});
 }
 
+async function googleMirror(req,user){
+  const body=await req.json().catch(()=>null);
+  if(!body||typeof body!=="object")return json({error:"invalid payload"},400);
+  if(String(body.date||"")<"2026-10-05")return json({ok:true,skipped:"before start date"});
+  if(!body.entry_id||!/^m-[A-Za-z0-9_-]+$/.test(String(body.entry_id)))return json({error:"invalid entry_id"},400);
+
+  const payload={
+    action:["CREATE","UPDATE","DELETE","UPSERT"].includes(String(body.action))?String(body.action):"UPSERT",
+    status:String(body.status)==="DELETED"?"DELETED":"ACTIVE",
+    date:String(body.date||"").slice(0,10),
+    time:String(body.time||"").slice(0,16),
+    category:String(body.category||"").slice(0,30),
+    item:String(body.item||"").slice(0,80),
+    account:String(body.account||"").slice(0,30),
+    nature:String(body.nature||"").slice(0,30),
+    project:String(body.project||"").slice(0,50),
+    amount:Math.max(0,Number(body.amount)||0),
+    note:String(body.note||"").slice(0,240),
+    entry_id:String(body.entry_id),
+    updated_at:String(body.updated_at||new Date().toISOString())
+  };
+
+  const upstream=await fetch("https://script.google.com/macros/s/AKfycbxC2dU7QiyGL2yMwC4jjoWtGquI-w2ATN4MzeyPMFy7uVuELY3j44MnbzSBwy1LcOVERg/exec",{
+    method:"POST",
+    headers:{"content-type":"text/plain;charset=UTF-8"},
+    body:JSON.stringify(payload),
+    redirect:"follow"
+  });
+  const textBody=await upstream.text();
+  let result=null;try{result=JSON.parse(textBody)}catch{}
+  if(!upstream.ok||!result?.ok)return json({error:"google mirror failed",status:upstream.status,upstream:result||null},502);
+  return json({ok:true,action:payload.action,entry_id:payload.entry_id});
+}
+
 async function cleanup(env){
   await env.DB.prepare(`DELETE FROM snapshots
     WHERE backup_day IS NOT NULL
@@ -155,6 +189,7 @@ export default{
       if(url.pathname==="/api/backups"&&req.method==="GET")return listBackups(env,user);
       if(url.pathname==="/api/backup"&&req.method==="GET")return readBackup(url,env,user);
       if(url.pathname==="/api/restore"&&req.method==="POST")return restoreBackup(req,env,user);
+      if(url.pathname==="/api/google-mirror"&&req.method==="POST")return googleMirror(req,user);
       return json({error:"not found"},404);
     }catch(err){
       console.error(err);
