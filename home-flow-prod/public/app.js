@@ -8,6 +8,9 @@ const NATURES = ["生活消費","房屋相關","家庭孝親","育兒教育","�
 const FIXED_OBLIGATION_CATS = ["房屋相關","家庭孝親","育兒教育","保險相關","手機等服務"];
 const DEFAULT_ACCOUNTS = ["Cash","國泰","台新","富邦","UBOT","ES","中信","一銀","其他"];
 const DEFAULT_PROJECTS = ["日常生活","旅行","東京 2026","聯悅臻裝潢","其他"];
+const GOOGLE_MIRROR_URL = "https://script.google.com/macros/s/AKfycbxrbe5OTssOP7dkhDqWgX-xDmQukzbTzlvEZnTbAV1lqGufJ4qLC8QI_lqtV4bPnLvteA/exec";
+const GOOGLE_MIRROR_START = "2026-10-05";
+const GOOGLE_MIRROR_QUEUE_KEY = "homeflow-google-mirror-queue-v1";
 
 let historyPayload = { meta:{count:0,annual:{}}, entries:[], projectDetails:[] };
 let historyEntries = [];
@@ -44,6 +47,61 @@ function localDate(){const d=new Date();return `${d.getFullYear()}-${String(d.ge
 function uid(){return `m-${Date.now().toString(36)}-${crypto.randomUUID()}`}
 async function withTimeout(promise,ms=5000,label="operation"){let id;const timeout=new Promise((_,reject)=>{id=setTimeout(()=>reject(new Error(label+" timeout")),ms)});try{return await Promise.race([promise,timeout])}finally{clearTimeout(id)}}
 function monthKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`}
+function googleMirrorEligible(entry){return !!entry&&String(entry.date||"")>=GOOGLE_MIRROR_START}
+function googleMirrorPayload(entry,action="UPSERT",status="ACTIVE"){
+  const now=new Date();
+  return{
+    action,status,
+    date:entry.date||localDate(),
+    time:now.toLocaleTimeString("zh-TW",{timeZone:"Asia/Taipei",hour12:false,hour:"2-digit",minute:"2-digit",second:"2-digit"}),
+    category:entry.category||"",
+    item:entry.legacyCategory||"",
+    account:entry.account||"",
+    nature:entry.nature||"",
+    project:entry.project||"",
+    amount:Number(entry.amount)||0,
+    note:entry.note||"",
+    entry_id:entry.id||"",
+    updated_at:entry.updatedAt||now.toISOString()
+  };
+}
+function googleMirrorQueue(){
+  try{const q=JSON.parse(localStorage.getItem(GOOGLE_MIRROR_QUEUE_KEY)||"[]");return Array.isArray(q)?q:[]}catch{return[]}
+}
+function saveGoogleMirrorQueue(q){try{localStorage.setItem(GOOGLE_MIRROR_QUEUE_KEY,JSON.stringify(q.slice(-200)))}catch{}}
+async function postGoogleMirror(payload){
+  await fetch(GOOGLE_MIRROR_URL,{
+    method:"POST",
+    mode:"no-cors",
+    cache:"no-store",
+    keepalive:true,
+    headers:{"Content-Type":"text/plain;charset=UTF-8"},
+    body:JSON.stringify(payload)
+  });
+}
+async function queueGoogleMirror(entry,action="UPSERT",status="ACTIVE"){
+  if(!googleMirrorEligible(entry))return;
+  const payload=googleMirrorPayload(entry,action,status);
+  try{await postGoogleMirror(payload)}
+  catch(e){
+    console.warn("Google mirror queued",e);
+    const q=googleMirrorQueue();q.push(payload);saveGoogleMirrorQueue(q);
+  }
+}
+async function flushGoogleMirrorQueue(){
+  const q=googleMirrorQueue();if(!q.length)return;
+  const remain=[];
+  for(const payload of q){
+    try{await postGoogleMirror(payload)}
+    catch{remain.push(payload);break}
+  }
+  if(remain.length<q.length){
+    const firstFailed=q.findIndex((_,i)=>i>=q.length-remain.length);
+    const tail=firstFailed>=0?q.slice(firstFailed):remain;
+    saveGoogleMirrorQueue(tail);
+  }else saveGoogleMirrorQueue(remain);
+}
+
 function setStatus(text,kind=""){const el=$("#status");if(!el)return;el.textContent=text;el.className=`status ${kind}`}
 function b64url(bytes){let binary="";for(const b of bytes)binary+=String.fromCharCode(b);return btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"")}
 function fromB64url(text){const padded=text.replace(/-/g,"+").replace(/_/g,"/")+"=".repeat((4-text.length%4)%4);const bin=atob(padded);return Uint8Array.from(bin,c=>c.charCodeAt(0))}
@@ -515,16 +573,55 @@ function renderChat(entries){
 function renderProjects(entries){const groups={};for(const e of expenseRows(entries)){if(e.project==="日常生活")continue;(groups[e.project]??={sum:0,count:0}).sum+=e.amount;groups[e.project].count++}const cards=Object.entries(groups).sort((a,b)=>b[1].sum-a[1].sum).map(([name,g])=>`<div class="project-card"><button class="project-open" data-project-open="${esc(name)}"><div class="project-head"><div><b>${esc(name)}</b><span>主帳 ${g.count} 筆 · 點一下看明細</span></div><strong>${money(g.sum)}</strong></div></button></div>`).join("");const refs=(historyPayload.projectDetails||[]).map(p=>`<details class="project-card ref"><summary><div class="project-head"><div><b>${esc(p.name)}</b><span>${esc(p.kind)} · 專案參考明細，不重複加入主帳</span></div><strong>${money(p.referenceTotal)}</strong></div></summary>${p.items.map(i=>`<div class="ref-row"><span>${esc(i.name)}${i.memo?`<div class="ref-note">${esc(i.memo)}</div>`:""}</span><b>${money(i.amount)}</b></div>`).join("")}</details>`).join("");$("#content").innerHTML=`<section class="card"><div class="section-head"><h2>Project 專案帳</h2><span>同一筆只算一次</span></div><p class="tiny">主帳是唯一交易來源；東京行、裝潢原始獨立表只作為專案參考明細，避免重複計算。</p></section>${cards||'<div class="empty">目前沒有專案交易</div>'}<section class="card"><div class="section-head"><h2>原始專案表</h2><span>Reference</span></div>${refs||'<div class="empty">歷史專案資料尚未解鎖</div>'}</section>`}
 
 function filteredList(entries){let r=entries;const q=state.search.trim().toLowerCase();if(q)r=r.filter(e=>[e.legacyCategory,e.note,e.account,e.project,e.category,e.nature,e.date].join(" ").toLowerCase().includes(q));const f=state.filters;if(f.year!=="全部")r=r.filter(e=>e.date.startsWith(f.year+"-"));if(f.category!=="全部")r=r.filter(e=>e.category===f.category);if(f.nature!=="全部")r=r.filter(e=>e.nature===f.nature);if(f.project!=="全部")r=r.filter(e=>e.project===f.project);return r}
-function renderList(entries){const years=["全部",...new Set(entries.map(e=>e.date.slice(0,4)))].sort((a,b)=>a==="全部"?-1:b.localeCompare(a)),projects=["全部",...new Set(entries.map(e=>e.project).filter(Boolean))],rows=filteredList(entries);$("#content").innerHTML=`<section class="search"><span>⌕</span><input id="searchBox" placeholder="搜尋 Costco、日本、房貸、店家…" value="${esc(state.search)}"></section><div class="filter-grid"><div class="filter"><select id="yearFilter">${formOptions(years,state.filters.year)}</select></div><div class="filter"><select id="categoryFilter">${formOptions(["全部",...EXPENSE_CATS],state.filters.category)}</select></div><div class="filter"><select id="natureFilter">${formOptions(["全部",...new Set([...(data.settings.natures||NATURES),...entries.map(e=>e.nature).filter(x=>x&&!["房貸本金","利息","資本支出","資金移轉","固定義務"].includes(x))])],state.filters.nature)}</select></div><div class="filter"><select id="projectFilter">${formOptions(projects,state.filters.project)}</select></div></div><div class="result-note">找到 ${rows.length.toLocaleString()} 筆 · 合計 ${money(cashOut(rows))}</div><section class="card">${entriesHtml(rows,state.listLimit)}${rows.length>state.listLimit?'<button class="load-more" data-load-more>再顯示 80 筆</button>':""}</section><section class="card"><div class="section-head"><h2>資料工具</h2><span>你的資料可帶走</span></div><div class="tools"><button data-export-csv>匯出全部 CSV</button><button data-export-json>備份修改資料</button><button data-cloud-backups>雲端備份 / 復原</button><label>匯入備份<input id="importBackup" type="file" accept="application/json" hidden></label></div><p class="tiny">歷史原始資料已加密內建；JSON 備份主要保存你之後新增、修改、刪除的差異與自訂帳戶/專案。</p></section>`}
+function renderList(entries){const years=["全部",...new Set(entries.map(e=>e.date.slice(0,4)))].sort((a,b)=>a==="全部"?-1:b.localeCompare(a)),projects=["全部",...new Set(entries.map(e=>e.project).filter(Boolean))],rows=filteredList(entries);$("#content").innerHTML=`<section class="search"><span>⌕</span><input id="searchBox" placeholder="搜尋 Costco、日本、房貸、店家…" value="${esc(state.search)}"></section><div class="filter-grid"><div class="filter"><select id="yearFilter">${formOptions(years,state.filters.year)}</select></div><div class="filter"><select id="categoryFilter">${formOptions(["全部",...EXPENSE_CATS],state.filters.category)}</select></div><div class="filter"><select id="natureFilter">${formOptions(["全部",...new Set([...(data.settings.natures||NATURES),...entries.map(e=>e.nature).filter(x=>x&&!["房貸本金","利息","資本支出","資金移轉","固定義務"].includes(x))])],state.filters.nature)}</select></div><div class="filter"><select id="projectFilter">${formOptions(projects,state.filters.project)}</select></div></div><div class="result-note">找到 ${rows.length.toLocaleString()} 筆 · 合計 ${money(cashOut(rows))}</div><section class="card">${entriesHtml(rows,state.listLimit)}${rows.length>state.listLimit?'<button class="load-more" data-load-more>再顯示 80 筆</button>':""}</section><section class="card"><div class="section-head"><h2>資料工具</h2><span>你的資料可帶走</span></div><div class="tools"><button data-export-csv>匯出全部 CSV</button><button data-export-json>備份修改資料</button><button data-cloud-backups>雲端備份 / 復原</button><label>匯入備份<input id="importBackup" type="file" accept="application/json" hidden></label></div><p class="tiny">歷史原始資料已加密內建；JSON 備份主要保存你之後新增、修改、刪除的差異與自訂帳戶/專案。<br>Google Sheets 鏡像：已啟用 · 2026-10-05 起</p></section>`}
 
 function render(){nav();const entries=effectiveEntries();if(state.tab==="home")renderHome(entries);else if(state.tab==="add")renderAdd(entries);else if(state.tab==="analysis")renderAnalysis(entries);else if(state.tab==="chat")renderChat(entries);else if(state.tab==="projects")renderProjects(entries);else renderList(entries);bindViewEvents(entries)}
 
 function editAccounts(){const cur=data.settings.accounts.join(", "),v=prompt("編輯付款帳戶（用逗號分隔）",cur);if(v===null)return;const arr=[...new Set(v.split(/[,，\n]/).map(x=>x.trim()).filter(Boolean))].slice(0,30);if(!arr.length)return;syncMutation(n=>{n.settings={...n.settings,accounts:arr};n.settingsUpdatedAt=nowIso()})}
 function editNatures(){const cur=(data.settings.natures||NATURES).join(", "),v=prompt("編輯 Nature｜支出性質（用逗號分隔）",cur);if(v===null)return;const arr=[...new Set(v.split(/[,，\n]/).map(x=>x.trim()).filter(Boolean))].slice(0,30);if(!arr.length)return;syncMutation(n=>{n.settings={...n.settings,natures:arr};n.settingsUpdatedAt=nowIso()})}
 function editProjects(){const cur=data.settings.projects.join(", "),v=prompt("編輯 Project（用逗號分隔）",cur);if(v===null)return;const arr=[...new Set(v.split(/[,，\n]/).map(x=>x.trim()).filter(Boolean))].slice(0,40);if(!arr.length)return;syncMutation(n=>{n.settings={...n.settings,projects:arr};n.settingsUpdatedAt=nowIso()})}
-async function saveEntry(){const amount=Number($("#amount")?.value);if(!Number.isFinite(amount)||!(amount>0)){$("#amount")?.focus();return}const old=editId?effectiveEntries().find(e=>e.id===editId):null;const draft={id:editId||uid(),type:old?.type||"expense",amount,date:$("#date").value||localDate(),category:$("#category").value,legacyCategory:$("#legacyCategory").value.trim(),account:$("#account").value,nature:$("#nature").value,obligationCategory:"",project:$("#project").value,note:$("#note").value.trim(),oneOff:$("#oneOff").checked,imported:old?.imported||false,source:old?.source||"",sourceRow:old?.sourceRow||0,createdAt:old?.createdAt||nowIso(),updatedAt:nowIso()};const ok=await syncMutation(n=>{const i=n.entries.findIndex(e=>e.id===draft.id);if(i>=0)n.entries[i]=normalizeEntry(draft);else n.entries.push(normalizeEntry(draft))});if(ok){editId=null;state.tab="home";render()}}
+async function saveEntry(){
+  const amount=Number($("#amount")?.value);
+  if(!Number.isFinite(amount)||!(amount>0)){$("#amount")?.focus();return}
+  const old=editId?effectiveEntries().find(e=>e.id===editId):null;
+  const draft={
+    id:editId||uid(),type:old?.type||"expense",amount,
+    date:$("#date").value||localDate(),
+    category:$("#category").value,
+    legacyCategory:$("#legacyCategory").value.trim(),
+    account:$("#account").value,
+    nature:$("#nature").value,
+    obligationCategory:"",
+    project:$("#project").value,
+    note:$("#note").value.trim(),
+    oneOff:$("#oneOff").checked,
+    imported:old?.imported||false,
+    source:old?.source||"",
+    sourceRow:old?.sourceRow||0,
+    createdAt:old?.createdAt||nowIso(),
+    updatedAt:nowIso()
+  };
+  const ok=await syncMutation(n=>{
+    const i=n.entries.findIndex(e=>e.id===draft.id);
+    if(i>=0)n.entries[i]=normalizeEntry(draft);
+    else n.entries.push(normalizeEntry(draft));
+  });
+  if(ok){
+    queueGoogleMirror(normalizeEntry(draft),old?"UPDATE":"CREATE","ACTIVE");
+    editId=null;state.tab="home";render();
+  }
+}
 function startEdit(id){editId=id;state.tab="add";render()}
-async function removeEntry(id){if(!confirm("刪除這筆紀錄？"))return;await syncMutation(n=>{n.entries=n.entries.filter(e=>e.id!==id);n.tombstones[id]=nowIso()})}
+async function removeEntry(id){
+  const entry=effectiveEntries().find(e=>e.id===id);
+  if(!entry||!confirm("刪除這筆紀錄？"))return;
+  const deletedAt=nowIso();
+  const ok=await syncMutation(n=>{
+    n.entries=n.entries.filter(e=>e.id!==id);
+    n.tombstones[id]=deletedAt;
+  });
+  if(ok)queueGoogleMirror({...entry,updatedAt:deletedAt},"DELETE","DELETED");
+}
 function csvValue(v){return `"${String(v??"").replaceAll('"','""')}"`}
 function exportCsv(){const rows=[["日期","類型","分類","原始項目","付款帳戶","Nature","Project","One-off","金額","備註","來源"]];effectiveEntries().slice().sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>rows.push([e.date,e.type,e.category,e.legacyCategory,e.account,e.nature,e.project,e.oneOff?"Y":"",e.amount,e.note,e.source]));const csv="\ufeff"+rows.map(r=>r.map(csvValue).join(",")).join("\n"),a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download=`home-flow-all-${localDate()}.csv`;a.click();URL.revokeObjectURL(a.href)}
 function exportBackup(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify({format:"homeflow-backup-v1",data},null,2)],{type:"application/json"}));a.download=`home-flow-backup-${localDate()}.json`;a.click();URL.revokeObjectURL(a.href)}
@@ -604,6 +701,7 @@ async function init(){
     console.warn("cloud boot failed",e);remoteReady=false;if(state.tab!=="add"&&state.tab!=="chat")render();
     setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 本機模式`:"本機模式 · 變更會先保留在此裝置","warn");
   }
-  setInterval(()=>{if(document.visibilityState==="visible")ensureRemote(true)},15000);
+  flushGoogleMirrorQueue().catch(()=>{});
+  setInterval(()=>{if(document.visibilityState==="visible"){ensureRemote(true);flushGoogleMirrorQueue().catch(()=>{})}},15000);
 }
-$$('.nav button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));$("#shareBtn")?.addEventListener("click",shareBook);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")ensureRemote(false)});render();init();
+$$('.nav button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));$("#shareBtn")?.addEventListener("click",shareBook);document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"){ensureRemote(false);flushGoogleMirrorQueue().catch(()=>{})}});render();init();
