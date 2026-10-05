@@ -34,14 +34,7 @@
     h1{font-size:34px;line-height:1;margin:0;font-weight:780;letter-spacing:-.04em}
     h1 span{color:var(--accent)}
     .sub{margin:12px 0 0;color:#a5a9af;font-size:14px}
-    .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}
-    .hint{margin:0;color:#646970;font-size:11px}
-    .sort-toggle{
-      appearance:none;border:1px solid #323438;background:#101113;color:#a9adb2;
-      border-radius:999px;padding:7px 12px;font:inherit;font-size:11px;letter-spacing:.04em;
-      cursor:pointer;white-space:nowrap
-    }
-    .sort-toggle.active{color:var(--accent);border-color:rgba(255,138,0,.5);background:rgba(255,138,0,.06)}
+    .hint{margin:10px 0 0;color:#646970;font-size:11px}
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
     .grid>.card:last-child:nth-child(odd){
       grid-column:1/-1;
@@ -69,23 +62,11 @@
       touch-action:manipulation;
     }
     .card:active{transform:scale(.985)}
-    .card.dragging{opacity:.45;transform:scale(.97);border-color:rgba(255,138,0,.55)}
-    .card.drop-target{border-color:var(--accent);box-shadow:0 0 0 1px rgba(255,138,0,.25),0 10px 30px rgba(0,0,0,.28)}
     .top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
     .symbol{
       width:50px;height:50px;display:grid;place-items:center;color:var(--accent);
     }
     .symbol svg{width:46px;height:46px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-    .drag{
-      width:30px;height:30px;border-radius:50%;
-      display:none;place-items:center;
-      color:#757a80;background:#0c0d0f;border:1px solid #2b2d31;
-      font-size:14px;line-height:1;cursor:grab;user-select:none;-webkit-user-select:none;
-      touch-action:none;
-    }
-    body.sorting .drag{display:grid}
-    body.sorting .card{border-color:#33363a}
-    .drag:active{cursor:grabbing;color:var(--accent);border-color:rgba(255,138,0,.45)}
     .copy{margin-top:14px;min-width:0}
     .title{font-size:clamp(14px,3.7vw,18px);line-height:1.12;font-weight:720;letter-spacing:-.02em;overflow-wrap:anywhere}
     .zh{font-size:14px;font-weight:700;color:var(--accent);margin-top:6px}
@@ -93,9 +74,6 @@
     .foot{display:flex;align-items:center;justify-content:flex-end;margin-top:8px}
     .arrow{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(255,138,0,.30);color:var(--accent);font-size:16px;margin:0 2px 2px 0}
     footer{display:flex;justify-content:space-between;align-items:center;padding:24px 5px 2px;color:#747980;font-size:10px;letter-spacing:.12em}
-    .reset{display:none;appearance:none;border:0;background:transparent;color:#747980;font:inherit;letter-spacing:.08em;padding:6px 0;cursor:pointer}
-    body.sorting .reset{display:block}
-    .reset:hover{color:#aaaeb3}
     .sig{font-family:Georgia,serif;font-style:italic;letter-spacing:.08em;color:#90959c}
     @media(max-width:390px){
       main{padding-left:12px;padding-right:12px}
@@ -103,7 +81,6 @@
       .card{padding:14px;border-radius:16px}
       .symbol{width:44px;height:44px}
       .symbol svg{width:40px;height:40px}
-      .drag{width:28px;height:28px}
       .desc{font-size:10px}
       .grid>.card:last-child:nth-child(odd){min-height:126px}
     }
@@ -120,10 +97,7 @@
     <div class="eyebrow">PERSONAL HUB</div>
     <h1>D.C <span>TOOLBOX</span></h1>
     <p class="sub">Tools for a Better Life.</p>
-    <div class="toolbar">
-      <p class="hint">常用工具，一眼就到。</p>
-      <button class="sort-toggle" id="sortToggle" type="button">排序</button>
-    </div>
+    <p class="hint">常用工具，一眼就到。</p>
   </header>
 
   <section class="grid" id="toolGrid">
@@ -131,7 +105,6 @@
       <div>
         <div class="top">
           <div class="symbol"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 22 24 9l16 13"/><path d="M12 20v18h24V20"/><path d="M19 38V27h10v11"/><path d="M33 11v7"/></svg></div>
-          <span class="drag" draggable="true" aria-label="拖曳 Home Flow">⋮⋮</span>
         </div>
         <div class="copy"><div class="title">Home Flow</div><div class="zh">家庭金流</div><div class="desc">同步・記帳・明細</div></div>
       </div>
@@ -142,7 +115,6 @@
       <div>
         <div class="top">
           <div class="symbol"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 39h32"/><path d="M11 34V26h6v8"/><path d="M21 34V20h6v14"/><path d="M31 34V13h6v21"/><path d="M9 20c7-2 12-6 16-11 3 3 6 5 13 6"/><path d="m34 10 5 5-7 1"/></svg></div>
-          <span class="drag" draggable="true" aria-label="拖曳 Portfolio Command">⋮⋮</span>
         </div>
         <div class="copy"><div class="title">Portfolio Command</div><div class="zh">投資指揮中心</div><div class="desc">配置・風險・決策</div></div>
       </div>
@@ -153,7 +125,6 @@
       <div>
         <div class="top">
           <div class="symbol"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M7 38h34"/><path d="m8 31 9-8 8 5 14-15"/><circle cx="17" cy="23" r="2"/><circle cx="25" cy="28" r="2"/><path d="M33 13h6v6"/></svg></div>
-          <span class="drag" draggable="true" aria-label="拖曳 Capital Track">⋮⋮</span>
         </div>
         <div class="copy"><div class="title">Capital Track</div><div class="zh">資本軌跡</div><div class="desc">資產曲線・成長紀錄</div></div>
       </div>
@@ -164,7 +135,6 @@
       <div>
         <div class="top">
           <div class="symbol"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 25h28c0 8-6 13-14 13S10 33 10 25Z"/><path d="M14 25c2-7 18-7 20 0"/><path d="M20 9c-3 3-3 6 0 9"/><path d="M28 9c-3 3-3 6 0 9"/></svg></div>
-          <span class="drag" draggable="true" aria-label="拖曳 Family Table">⋮⋮</span>
         </div>
         <div class="copy"><div class="title">Family Table</div><div class="zh">家庭餐桌</div><div class="desc">菜單・採買・偏好</div></div>
       </div>
@@ -175,7 +145,6 @@
       <div>
         <div class="top">
           <div class="symbol"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="m7 23 34-12-10 14 8 7-3 3-9-5-7 9-3-1 2-11-10-1Z"/><path d="M9 40c7-4 23-4 30 0"/></svg></div>
-          <span class="drag" draggable="true" aria-label="拖曳 Okinawa Trip">⋮⋮</span>
         </div>
         <div class="copy"><div class="title">Okinawa Trip</div><div class="zh">沖繩旅遊</div><div class="desc">行程・景點・規劃</div></div>
       </div>
@@ -186,7 +155,6 @@
       <div>
         <div class="top">
           <div class="symbol"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 6 38 11v10c0 10-5 17-14 21C15 38 10 31 10 21V11Z"/><path d="M24 15v14"/><path d="M17 22h14"/><path d="M34 10c4 4 6 8 7 13"/></svg></div>
-          <span class="drag" draggable="true" aria-label="拖曳 Okinawa Health Radar">⋮⋮</span>
         </div>
         <div class="copy"><div class="title">Okinawa Health Radar</div><div class="zh">沖繩流感雷達</div><div class="desc">流感監測・半年趨勢</div></div>
       </div>
@@ -197,7 +165,6 @@
       <div>
         <div class="top">
           <div class="symbol"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 15h20l-2 24H16Z"/><path d="M12 15h24"/><path d="m28 15 4-7"/><path d="M22 31c4-6 9-7 13-7-1 6-5 10-11 10"/></svg></div>
-          <span class="drag" draggable="true" aria-label="拖曳 Siply">⋮⋮</span>
         </div>
         <div class="copy"><div class="title">Siply</div><div class="zh">飲控紀錄</div><div class="desc">手搖飲・健康習慣</div></div>
       </div>
@@ -205,131 +172,8 @@
     </a>
   </section>
 
-  <footer><span>7 TOOLS</span><button class="reset" id="resetOrder" type="button">RESET ORDER</button><span class="sig">D.C</span></footer>
+  <footer><span>7 TOOLS</span><span class="sig">D.C</span></footer>
 </main>
 
-<script>
-(() => {
-  const grid = document.getElementById('toolGrid');
-  const key = 'dc-toolbox-order-v1';
-  const defaults = [...grid.querySelectorAll('.card')].map(c => c.dataset.id);
-  const sortToggle = document.getElementById('sortToggle');
-  let dragging = null;
-  let pointerDrag = null;
-  let suppressClick = false;
-
-  function saveOrder() {
-    localStorage.setItem(key, JSON.stringify([...grid.querySelectorAll('.card')].map(c => c.dataset.id)));
-  }
-
-  function restoreOrder() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(key) || '[]');
-      if (!Array.isArray(saved)) return;
-      const cards = new Map([...grid.querySelectorAll('.card')].map(c => [c.dataset.id, c]));
-      saved.forEach(id => { if (cards.has(id)) grid.appendChild(cards.get(id)); });
-      defaults.forEach(id => { if (cards.has(id) && !saved.includes(id)) grid.appendChild(cards.get(id)); });
-    } catch {}
-  }
-
-  function clearTargets() {
-    grid.querySelectorAll('.drop-target').forEach(el => el.classList.remove('drop-target'));
-  }
-
-  restoreOrder();
-
-  sortToggle.addEventListener('click', () => {
-    const active = document.body.classList.toggle('sorting');
-    sortToggle.classList.toggle('active', active);
-    sortToggle.textContent = active ? '完成' : '排序';
-  });
-
-  grid.addEventListener('dragstart', e => {
-    const handle = e.target.closest('.drag');
-    if (!handle) { e.preventDefault(); return; }
-    dragging = handle.closest('.card');
-    dragging.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', dragging.dataset.id);
-  });
-
-  grid.addEventListener('dragover', e => {
-    if (!dragging) return;
-    e.preventDefault();
-    const target = e.target.closest('.card');
-    clearTargets();
-    if (target && target !== dragging) target.classList.add('drop-target');
-  });
-
-  grid.addEventListener('drop', e => {
-    if (!dragging) return;
-    e.preventDefault();
-    const target = e.target.closest('.card');
-    if (target && target !== dragging) {
-      const rect = target.getBoundingClientRect();
-      const before = e.clientY < rect.top + rect.height / 2;
-      grid.insertBefore(dragging, before ? target : target.nextSibling);
-      saveOrder();
-    }
-    clearTargets();
-  });
-
-  grid.addEventListener('dragend', () => {
-    if (dragging) dragging.classList.remove('dragging');
-    dragging = null;
-    clearTargets();
-  });
-
-  grid.querySelectorAll('.drag').forEach(handle => {
-    handle.addEventListener('pointerdown', e => {
-      if (e.pointerType === 'mouse') return;
-      e.preventDefault();
-      const card = handle.closest('.card');
-      pointerDrag = { card, startX:e.clientX, startY:e.clientY, moved:false };
-      card.classList.add('dragging');
-      handle.setPointerCapture(e.pointerId);
-    });
-
-    handle.addEventListener('pointermove', e => {
-      if (!pointerDrag) return;
-      const dx = e.clientX - pointerDrag.startX;
-      const dy = e.clientY - pointerDrag.startY;
-      if (Math.hypot(dx,dy) > 8) pointerDrag.moved = true;
-      const el = document.elementFromPoint(e.clientX, e.clientY);
-      const target = el && el.closest('.card');
-      clearTargets();
-      if (target && target !== pointerDrag.card) {
-        target.classList.add('drop-target');
-        const rect = target.getBoundingClientRect();
-        const before = e.clientY < rect.top + rect.height / 2;
-        grid.insertBefore(pointerDrag.card, before ? target : target.nextSibling);
-      }
-    });
-
-    const endPointer = e => {
-      if (!pointerDrag) return;
-      suppressClick = pointerDrag.moved;
-      pointerDrag.card.classList.remove('dragging');
-      if (pointerDrag.moved) saveOrder();
-      pointerDrag = null;
-      clearTargets();
-      try { handle.releasePointerCapture(e.pointerId); } catch {}
-      setTimeout(() => suppressClick = false, 120);
-    };
-    handle.addEventListener('pointerup', endPointer);
-    handle.addEventListener('pointercancel', endPointer);
-  });
-
-  grid.addEventListener('click', e => {
-    if (document.body.classList.contains('sorting') || suppressClick || e.target.closest('.drag')) e.preventDefault();
-  });
-
-  document.getElementById('resetOrder').addEventListener('click', () => {
-    localStorage.removeItem(key);
-    const cards = new Map([...grid.querySelectorAll('.card')].map(c => [c.dataset.id, c]));
-    defaults.forEach(id => grid.appendChild(cards.get(id)));
-  });
-})();
-</script>
 </body>
 </html>
