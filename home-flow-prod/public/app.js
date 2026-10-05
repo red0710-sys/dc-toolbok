@@ -207,6 +207,10 @@ async function refreshRemote(silent=true){
   try{
     const r=await readRemote(),m=mergeData(data,r),needsUpload=JSON.stringify(m)!==JSON.stringify(r);
     data=m;await saveLocal();
+    if(!historyEntries.length&&data?.sharedHistoryKey){
+      storeHistoryKey(data.sharedHistoryKey);
+      try{await loadHistory()}catch(e){console.warn("background history unlock failed",e)}
+    }
     if(needsUpload){
       try{await writeRemote(m)}
       catch(e){if(e.code==="VERSION_CONFLICT"){const latest=await readRemote();data=mergeData(data,latest);await saveLocal()}else throw e}
