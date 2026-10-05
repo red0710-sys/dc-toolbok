@@ -90,16 +90,11 @@ async function queueGoogleMirror(entry,action="UPSERT",status="ACTIVE"){
 }
 async function flushGoogleMirrorQueue(){
   const q=googleMirrorQueue();if(!q.length)return;
-  const remain=[];
-  for(const payload of q){
-    try{await postGoogleMirror(payload)}
-    catch{remain.push(payload);break}
+  for(let i=0;i<q.length;i++){
+    try{await postGoogleMirror(q[i])}
+    catch{saveGoogleMirrorQueue(q.slice(i));return}
   }
-  if(remain.length<q.length){
-    const firstFailed=q.findIndex((_,i)=>i>=q.length-remain.length);
-    const tail=firstFailed>=0?q.slice(firstFailed):remain;
-    saveGoogleMirrorQueue(tail);
-  }else saveGoogleMirrorQueue(remain);
+  saveGoogleMirrorQueue([]);
 }
 
 function setStatus(text,kind=""){const el=$("#status");if(!el)return;el.textContent=text;el.className=`status ${kind}`}
