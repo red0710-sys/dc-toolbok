@@ -8,7 +8,7 @@ const NATURES = ["生活消費","房屋相關","家庭孝親","育兒教育","�
 const FIXED_OBLIGATION_CATS = ["房屋相關","家庭孝親","育兒教育","保險相關","手機等服務"];
 const DEFAULT_ACCOUNTS = ["Cash","國泰","台新","富邦","UBOT","ES","中信","一銀","其他"];
 const DEFAULT_PROJECTS = ["日常生活","旅行","東京 2026","聯悅臻裝潢","其他"];
-const GOOGLE_MIRROR_URL = "https://script.google.com/macros/s/AKfycbxrbe5OTssOP7dkhDqWgX-xDmQukzbTzlvEZnTbAV1lqGufJ4qLC8QI_lqtV4bPnLvteA/exec";
+const GOOGLE_MIRROR_URL = "https://script.google.com/macros/s/AKfycbxC2dU7QiyGL2yMwC4jjoWtGquI-w2ATN4MzeyPMFy7uVuELY3j44MnbzSBwy1LcOVERg/exec";
 const GOOGLE_MIRROR_START = "2026-10-05";
 const GOOGLE_MIRROR_QUEUE_KEY = "homeflow-google-mirror-queue-v1";
 
