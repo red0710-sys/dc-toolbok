@@ -70,14 +70,8 @@ function googleMirrorQueue(){
 }
 function saveGoogleMirrorQueue(q){try{localStorage.setItem(GOOGLE_MIRROR_QUEUE_KEY,JSON.stringify(q.slice(-200)))}catch{}}
 async function postGoogleMirror(payload){
-  await fetch(GOOGLE_MIRROR_URL,{
-    method:"POST",
-    mode:"no-cors",
-    cache:"no-store",
-    keepalive:true,
-    headers:{"Content-Type":"text/plain;charset=UTF-8"},
-    body:JSON.stringify(payload)
-  });
+  if(!cloudClient?.mirror)throw new Error("google mirror unavailable");
+  await withTimeout(cloudClient.mirror(payload),8000,"google mirror");
 }
 async function queueGoogleMirror(entry,action="UPSERT",status="ACTIVE"){
   if(!googleMirrorEligible(entry))return;
