@@ -79,8 +79,8 @@ async function writeRemote(next){
   if(r.conflict){const e=new Error("version conflict");e.code="VERSION_CONFLICT";throw e}
   remoteVersion=r.version;return r;
 }
-function saveLocal(){localStorage.setItem("homeflow-local-overrides",JSON.stringify(data));window.HomeFlowLocal?.save(data).catch?.(()=>{})}
-async function loadLocal(){try{const idb=window.HomeFlowLocal?.load?await withTimeout(window.HomeFlowLocal.load(),1500,"IndexedDB"):null;if(idb)return idb}catch(e){console.warn("IndexedDB unavailable",e)}try{return JSON.parse(localStorage.getItem("homeflow-local-overrides")||"null")}catch{return null}}
+async function saveLocal(){let saved=false;try{localStorage.setItem("homeflow-local-overrides",JSON.stringify(data));saved=true}catch{}const idb=await window.HomeFlowLocal?.save(data);if(!saved&&!idb)throw Error("local storage failed")}
+async function loadLocal(){try{const idb=window.HomeFlowLocal?.load?await withTimeout(window.HomeFlowLocal.load(),1500,"IndexedDB"):null;if(idb){let ls=null;try{ls=JSON.parse(localStorage.getItem("homeflow-local-overrides")||"null")}catch{}return ls?mergeData(idb,ls):idb}}catch(e){console.warn("IndexedDB unavailable",e)}try{return JSON.parse(localStorage.getItem("homeflow-local-overrides")||"null")}catch{return null}}
 async function bootRemote(){
   if(bootingRemote)return;
   if(!window.HomeFlowCloud)throw new Error("cloud client missing");
@@ -125,45 +125,47 @@ async function bootRemote(){
     }
 
     remoteReady=true;
-    saveLocal();
+    await saveLocal();
   }finally{
     bootingRemote=false;
   }
 }
 async function syncMutation(mutator){
-  if(saving)return false;saving=true;setStatus(remoteReady?"加密同步中…":"本機儲存中…");
+  if(saving)return false;saving=true;
+  let localSaved=false;
   try{
-    for(let attempt=0;attempt<3;attempt++){
-      let next=normalizeData(data);
-      if(remoteReady){try{next=mergeData(data,await readRemote())}catch{next=normalizeData(data)}}
-      await mutator(next);next.modifiedAt=nowIso();
-      if(remoteReady){
-        try{await writeRemote(next)}
-        catch(e){if(e.code==="VERSION_CONFLICT"&&attempt<2)continue;throw e}
+    const next=normalizeData(data);await mutator(next);next.modifiedAt=nowIso();
+    data=next;await saveLocal();localSaved=true;
+    if(remoteReady){
+      for(let attempt=0;attempt<3;attempt++){
+        data=mergeData(data,await readRemote());await saveLocal();
+        try{await writeRemote(data);break}catch(e){if(e.code!=="VERSION_CONFLICT"||attempt===2)throw e}
       }
-      data=next;saveLocal();render();setStatus(remoteReady?"已同步 · 端到端加密":"本機模式 · 已儲存",remoteReady?"ok":"warn");return true;
     }
-    throw new Error("sync retry exhausted");
-  }catch(e){console.error(e);setStatus("儲存失敗；資料仍保留在本機","error");return false}
-  finally{saving=false}
+    render();setStatus(remoteReady?"已同步 · 端到端加密":"本機已儲存 · 等待連線同步",remoteReady?"ok":"warn");return true;
+  }catch(e){
+    console.error(e);remoteReady=false;
+    setStatus(localSaved?"本機已儲存 · 雲端暫未同步":"儲存失敗 · 請保留此頁並匯出備份",localSaved?"warn":"error");
+    return localSaved;
+  }finally{saving=false}
 }
 async function refreshRemote(silent=true){
   if(!remoteReady||saving||refreshing)return;refreshing=true;
   try{
     const r=await readRemote(),m=mergeData(data,r),needsUpload=JSON.stringify(m)!==JSON.stringify(r);
-    data=m;saveLocal();
+    data=m;await saveLocal();
     if(needsUpload){
       try{await writeRemote(m)}
-      catch(e){if(e.code==="VERSION_CONFLICT"){const latest=await readRemote();data=mergeData(data,latest);saveLocal()}else throw e}
+      catch(e){if(e.code==="VERSION_CONFLICT"){const latest=await readRemote();data=mergeData(data,latest);await saveLocal()}else throw e}
     }
-    render();if(!silent)setStatus("已同步最新家庭帳本","ok");
+    if(state.tab!=="add"&&state.tab!=="chat")render();if(!silent)setStatus("已同步最新家庭帳本","ok");
   }catch(e){console.warn("refresh failed",e);remoteReady=false;if(!silent)setStatus("離線模式 · 變更會先保留在本機","warn")}
   finally{refreshing=false}
 }
 async function ensureRemote(silent=true){
   if(saving||refreshing||bootingRemote)return;
   if(remoteReady)return refreshRemote(silent);
-  try{await bootRemote();render();if(!silent)setStatus("已重新連線並同步","ok")}
+  try{await bootRemote();if(state.tab!=="add"&&state.tab!=="chat")render();if(!silent)setStatus("已重新連線並同步","ok")}
   catch(e){console.warn("cloud reconnect failed",e);if(!silent)setStatus("離線模式 · 資料仍可使用","warn")}
 }
 
@@ -520,7 +522,7 @@ function render(){nav();const entries=effectiveEntries();if(state.tab==="home")r
 function editAccounts(){const cur=data.settings.accounts.join(", "),v=prompt("編輯付款帳戶（用逗號分隔）",cur);if(v===null)return;const arr=[...new Set(v.split(/[,，\n]/).map(x=>x.trim()).filter(Boolean))].slice(0,30);if(!arr.length)return;syncMutation(n=>{n.settings={...n.settings,accounts:arr};n.settingsUpdatedAt=nowIso()})}
 function editNatures(){const cur=(data.settings.natures||NATURES).join(", "),v=prompt("編輯 Nature｜支出性質（用逗號分隔）",cur);if(v===null)return;const arr=[...new Set(v.split(/[,，\n]/).map(x=>x.trim()).filter(Boolean))].slice(0,30);if(!arr.length)return;syncMutation(n=>{n.settings={...n.settings,natures:arr};n.settingsUpdatedAt=nowIso()})}
 function editProjects(){const cur=data.settings.projects.join(", "),v=prompt("編輯 Project（用逗號分隔）",cur);if(v===null)return;const arr=[...new Set(v.split(/[,，\n]/).map(x=>x.trim()).filter(Boolean))].slice(0,40);if(!arr.length)return;syncMutation(n=>{n.settings={...n.settings,projects:arr};n.settingsUpdatedAt=nowIso()})}
-async function saveEntry(){const amount=Number($("#amount")?.value);if(!(amount>0)){$("#amount")?.focus();return}const old=editId?effectiveEntries().find(e=>e.id===editId):null;const draft={id:editId||uid(),type:old?.type||"expense",amount,date:$("#date").value||localDate(),category:$("#category").value,legacyCategory:$("#legacyCategory").value.trim(),account:$("#account").value,nature:$("#nature").value,obligationCategory:"",project:$("#project").value,note:$("#note").value.trim(),oneOff:$("#oneOff").checked,imported:old?.imported||false,source:old?.source||"",sourceRow:old?.sourceRow||0,createdAt:old?.createdAt||nowIso(),updatedAt:nowIso()};const ok=await syncMutation(n=>{const i=n.entries.findIndex(e=>e.id===draft.id);if(i>=0)n.entries[i]=normalizeEntry(draft);else n.entries.push(normalizeEntry(draft))});if(ok){editId=null;state.tab="home";render()}}
+async function saveEntry(){const amount=Number($("#amount")?.value);if(!Number.isFinite(amount)||!(amount>0)){$("#amount")?.focus();return}const old=editId?effectiveEntries().find(e=>e.id===editId):null;const draft={id:editId||uid(),type:old?.type||"expense",amount,date:$("#date").value||localDate(),category:$("#category").value,legacyCategory:$("#legacyCategory").value.trim(),account:$("#account").value,nature:$("#nature").value,obligationCategory:"",project:$("#project").value,note:$("#note").value.trim(),oneOff:$("#oneOff").checked,imported:old?.imported||false,source:old?.source||"",sourceRow:old?.sourceRow||0,createdAt:old?.createdAt||nowIso(),updatedAt:nowIso()};const ok=await syncMutation(n=>{const i=n.entries.findIndex(e=>e.id===draft.id);if(i>=0)n.entries[i]=normalizeEntry(draft);else n.entries.push(normalizeEntry(draft))});if(ok){editId=null;state.tab="home";render()}}
 function startEdit(id){editId=id;state.tab="add";render()}
 async function removeEntry(id){if(!confirm("刪除這筆紀錄？"))return;await syncMutation(n=>{n.entries=n.entries.filter(e=>e.id!==id);n.tombstones[id]=nowIso()})}
 function csvValue(v){return `"${String(v??"").replaceAll('"','""')}"`}
@@ -542,8 +544,9 @@ async function manageCloudBackups(){
     const idx=Number(pick)-1;if(!Number.isInteger(idx)||idx<0||idx>=shown.length){alert("編號不正確");return}
     const chosen=shown[idx];
     if(!confirm(`確定復原到 ${chosen.backup_day||chosen.created_at}？目前版本會先保留成備份。`))return;
-    await cloudClient.restore(chosen.version_id);
-    await ensureRemote(false);
+    const backup=await cloudClient.readBackup(chosen.version_id);
+    const restored=await cloudClient.restore(chosen.version_id);
+    data=normalizeData(backup.data);remoteVersion=restored.version;await saveLocal();render();
     alert("雲端備份已復原");
   }catch(e){console.error(e);alert("讀取或復原雲端備份失敗")}
 }
@@ -591,14 +594,14 @@ async function init(){
   try{data=normalizeData(await loadLocal())}catch(e){console.warn("local boot failed",e);data=defaultData()}
   render();setStatus("Home Flow 已開啟 · 正在同步…");
   try{await withTimeout(window.HomeFlowMigrationReady?.catch?.(()=>null)||Promise.resolve(),16000,"migration bridge")}catch(e){console.warn(e)}
-  try{await loadHistory();if(historyEntries.length)render()}catch(e){console.warn("history boot failed",e)}
+  try{await loadHistory();if(historyEntries.length&&state.tab!=="add"&&state.tab!=="chat")render()}catch(e){console.warn("history boot failed",e)}
   try{
     await bootRemote();
     if(!historyEntries.length&&data?.sharedHistoryKey){storeHistoryKey(data.sharedHistoryKey);try{await loadHistory()}catch(e){console.warn("shared history unlock failed",e)}}
-    render();
+    if(state.tab!=="add"&&state.tab!=="chat")render();
     setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 加密共用`:"Home Flow 已同步 · 歷史資料未解鎖","ok");
   }catch(e){
-    console.warn("cloud boot failed",e);remoteReady=false;render();
+    console.warn("cloud boot failed",e);remoteReady=false;if(state.tab!=="add"&&state.tab!=="chat")render();
     setStatus(historyEntries.length?`已載入 ${historyEntries.length.toLocaleString()} 筆歷史 · 本機模式`:"本機模式 · 變更會先保留在此裝置","warn");
   }
   setInterval(()=>{if(document.visibilityState==="visible")ensureRemote(true)},15000);

@@ -85,26 +85,22 @@ async function writeSnapshot(req,env,user){
   const existing=await env.DB.prepare("SELECT version_id FROM snapshots WHERE family_id=? AND version_id=?").bind(user.familyId,versionId).first();
   if(existing)return json({version:versionId,idempotent:true});
 
-  await env.DB.prepare("INSERT INTO snapshots(family_id,version_id,created_at,device_id,chunk_count,byte_size) VALUES(?,?,datetime('now'),?,?,?)")
-    .bind(user.familyId,versionId,deviceId,chunks.length,byteSize).run();
-  for(let i=0;i<chunks.length;i++){
-    await env.DB.prepare("INSERT INTO snapshot_chunks(family_id,version_id,chunk_index,payload) VALUES(?,?,?,?)")
-      .bind(user.familyId,versionId,i,chunks[i]).run();
-  }
-
+  // D1 batch is transactional. Claim the version before inserting/replacing data.
+  // Every later statement is gated by the successful compare-and-swap.
+  const owns="EXISTS(SELECT 1 FROM families WHERE family_id=? AND current_version=?)";
+  const statements=[env.DB.prepare("UPDATE families SET current_version=?,last_seen_at=datetime('now') WHERE family_id=? AND (current_version IS ? OR current_version=?)")
+    .bind(versionId,user.familyId,baseVersion,baseVersion||""),
+    env.DB.prepare("INSERT INTO snapshots(family_id,version_id,created_at,device_id,chunk_count,byte_size) SELECT ?,?,datetime('now'),?,?,? WHERE "+owns)
+      .bind(user.familyId,versionId,deviceId,chunks.length,byteSize,user.familyId,versionId)];
+  for(let i=0;i<chunks.length;i++)statements.push(env.DB.prepare("INSERT INTO snapshot_chunks(family_id,version_id,chunk_index,payload) SELECT ?,?,?,? WHERE "+owns)
+    .bind(user.familyId,versionId,i,chunks[i],user.familyId,versionId));
   if(current){
-    const backupExists=await env.DB.prepare("SELECT 1 AS ok FROM snapshots WHERE family_id=? AND backup_day=? LIMIT 1")
-      .bind(user.familyId,familyDay()).first();
-    if(!backupExists){
-      await env.DB.prepare("UPDATE snapshots SET backup_day=? WHERE family_id=? AND version_id=? AND backup_day IS NULL")
-        .bind(familyDay(),user.familyId,current).run();
-    }else{
-      await env.DB.prepare("DELETE FROM snapshots WHERE family_id=? AND version_id=? AND backup_day IS NULL").bind(user.familyId,current).run();
-    }
+    statements.push(env.DB.prepare("UPDATE snapshots SET backup_day=? WHERE family_id=? AND version_id=? AND backup_day IS NULL AND "+owns+" AND NOT EXISTS(SELECT 1 FROM snapshots WHERE family_id=? AND backup_day=?)")
+      .bind(familyDay(),user.familyId,current,user.familyId,versionId,user.familyId,familyDay()));
+    statements.push(env.DB.prepare("DELETE FROM snapshots WHERE family_id=? AND version_id=? AND backup_day IS NULL AND "+owns)
+      .bind(user.familyId,current,user.familyId,versionId));
   }
-
-  const moved=await env.DB.prepare("UPDATE families SET current_version=?,last_seen_at=datetime('now') WHERE family_id=? AND (current_version IS ? OR current_version=?)")
-    .bind(versionId,user.familyId,baseVersion,baseVersion||"").run();
+  const [moved]=await env.DB.batch(statements);
   if(!moved.meta?.changes){
     return json({error:"version conflict",currentVersion:(await env.DB.prepare("SELECT current_version FROM families WHERE family_id=?").bind(user.familyId).first())?.current_version||null},409);
   }
