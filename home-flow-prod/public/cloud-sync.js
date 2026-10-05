@@ -70,6 +70,7 @@ class HomeFlowCloudClient{
   async backups(){const r=await request("/api/backups",this.creds);if(!r.ok)throw new Error("backup list failed");return (await r.json()).backups||[]}
   async readBackup(version){const r=await request("/api/backup?version="+encodeURIComponent(version),this.creds);if(!r.ok)throw new Error("backup read failed");const j=await r.json();return{version:j.version,backupDay:j.backupDay,data:await decodeSnapshot(j.chunks,this.creds)}}
   async restore(version){const r=await request("/api/restore",this.creds,{method:"POST",body:JSON.stringify({version})});if(!r.ok)throw new Error("restore failed");return r.json()}
+  async mirror(payload){const r=await request("/api/google-mirror",this.creds,{method:"POST",body:JSON.stringify(payload)});const j=await r.json().catch(()=>({}));if(!r.ok||!j.ok)throw new Error(j.error||"google mirror failed");return j}
 }
 async function connect(){
   // Home Flow is one fixed shared family. Never let stale per-device credentials split the ledger.
