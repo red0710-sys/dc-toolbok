@@ -34,8 +34,20 @@
     h1{font-size:34px;line-height:1;margin:0;font-weight:780;letter-spacing:-.04em}
     h1 span{color:var(--accent)}
     .sub{margin:12px 0 0;color:#a5a9af;font-size:14px}
-    .hint{margin:8px 0 0;color:#646970;font-size:11px}
+    .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px}
+    .hint{margin:0;color:#646970;font-size:11px}
+    .sort-toggle{
+      appearance:none;border:1px solid #323438;background:#101113;color:#a9adb2;
+      border-radius:999px;padding:7px 12px;font:inherit;font-size:11px;letter-spacing:.04em;
+      cursor:pointer;white-space:nowrap
+    }
+    .sort-toggle.active{color:var(--accent);border-color:rgba(255,138,0,.5);background:rgba(255,138,0,.06)}
     .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .grid>.card:last-child:nth-child(odd){
+      grid-column:1/-1;
+      aspect-ratio:auto;
+      min-height:138px;
+    }
     .card{
       position:relative;
       display:flex;
@@ -65,21 +77,24 @@
     }
     .symbol svg{width:46px;height:46px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
     .drag{
-      width:34px;height:34px;border-radius:50%;
-      display:grid;place-items:center;
-      color:#6f747b;background:#0c0d0f;border:1px solid #292b2e;
-      font-size:16px;line-height:1;cursor:grab;user-select:none;-webkit-user-select:none;
+      width:30px;height:30px;border-radius:50%;
+      display:none;place-items:center;
+      color:#757a80;background:#0c0d0f;border:1px solid #2b2d31;
+      font-size:14px;line-height:1;cursor:grab;user-select:none;-webkit-user-select:none;
       touch-action:none;
     }
+    body.sorting .drag{display:grid}
+    body.sorting .card{border-color:#33363a}
     .drag:active{cursor:grabbing;color:var(--accent);border-color:rgba(255,138,0,.45)}
     .copy{margin-top:14px;min-width:0}
     .title{font-size:clamp(14px,3.7vw,18px);line-height:1.12;font-weight:720;letter-spacing:-.02em;overflow-wrap:anywhere}
     .zh{font-size:14px;font-weight:700;color:var(--accent);margin-top:6px}
     .desc{font-size:11px;line-height:1.45;color:var(--muted);margin-top:7px}
-    .foot{display:flex;align-items:center;justify-content:flex-end;margin-top:10px}
-    .arrow{width:29px;height:29px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(255,138,0,.38);color:var(--accent);font-size:18px}
+    .foot{display:flex;align-items:center;justify-content:flex-end;margin-top:8px}
+    .arrow{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(255,138,0,.30);color:var(--accent);font-size:16px;margin:0 2px 2px 0}
     footer{display:flex;justify-content:space-between;align-items:center;padding:24px 5px 2px;color:#747980;font-size:10px;letter-spacing:.12em}
-    .reset{appearance:none;border:0;background:transparent;color:#747980;font:inherit;letter-spacing:.08em;padding:6px 0;cursor:pointer}
+    .reset{display:none;appearance:none;border:0;background:transparent;color:#747980;font:inherit;letter-spacing:.08em;padding:6px 0;cursor:pointer}
+    body.sorting .reset{display:block}
     .reset:hover{color:#aaaeb3}
     .sig{font-family:Georgia,serif;font-style:italic;letter-spacing:.08em;color:#90959c}
     @media(max-width:390px){
@@ -88,8 +103,9 @@
       .card{padding:14px;border-radius:16px}
       .symbol{width:44px;height:44px}
       .symbol svg{width:40px;height:40px}
-      .drag{width:30px;height:30px}
+      .drag{width:28px;height:28px}
       .desc{font-size:10px}
+      .grid>.card:last-child:nth-child(odd){min-height:126px}
     }
     @media(min-width:700px){
       main{padding-top:58px}
@@ -104,11 +120,14 @@
     <div class="eyebrow">PERSONAL HUB</div>
     <h1>D.C <span>TOOLBOX</span></h1>
     <p class="sub">Tools for a Better Life.</p>
-    <p class="hint">拖曳右上角握把，可自訂工具順序</p>
+    <div class="toolbar">
+      <p class="hint">常用工具，一眼就到。</p>
+      <button class="sort-toggle" id="sortToggle" type="button">排序</button>
+    </div>
   </header>
 
   <section class="grid" id="toolGrid">
-    <a class="card" data-id="home-flow" href="https://home-flow.red0710.workers.dev/#hf_f=hf_f7F5VxDnJWGNToTB&hf_t=xV2WJcHLeH62nRFddZgEVxoBT07y7JDAa2u8C1R7idY&hf_k=2rCUqK-Q-L7rrrl8iOg2urOSzzrE0Pl_nANpGrO6yM0" target="_blank" rel="noopener">
+    <a class="card" data-id="home-flow" href="https://home-flow.red0710.workers.dev/" target="_blank" rel="noopener">
       <div>
         <div class="top">
           <div class="symbol"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 22 24 9l16 13"/><path d="M12 20v18h24V20"/><path d="M19 38V27h10v11"/><path d="M33 11v7"/></svg></div>
@@ -194,6 +213,7 @@
   const grid = document.getElementById('toolGrid');
   const key = 'dc-toolbox-order-v1';
   const defaults = [...grid.querySelectorAll('.card')].map(c => c.dataset.id);
+  const sortToggle = document.getElementById('sortToggle');
   let dragging = null;
   let pointerDrag = null;
   let suppressClick = false;
@@ -217,6 +237,12 @@
   }
 
   restoreOrder();
+
+  sortToggle.addEventListener('click', () => {
+    const active = document.body.classList.toggle('sorting');
+    sortToggle.classList.toggle('active', active);
+    sortToggle.textContent = active ? '完成' : '排序';
+  });
 
   grid.addEventListener('dragstart', e => {
     const handle = e.target.closest('.drag');
@@ -295,7 +321,7 @@
   });
 
   grid.addEventListener('click', e => {
-    if (suppressClick || e.target.closest('.drag')) e.preventDefault();
+    if (document.body.classList.contains('sorting') || suppressClick || e.target.closest('.drag')) e.preventDefault();
   });
 
   document.getElementById('resetOrder').addEventListener('click', () => {
