@@ -2,13 +2,6 @@ name: Refresh food review highlights
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/refresh-food-reviews.yml'
-      - 'scripts/refresh-food-reviews.mjs'
-  schedule:
-    - cron: '17 19 * * 2,5'
 
 permissions:
   contents: write
@@ -36,7 +29,7 @@ jobs:
         env:
           MAX_PLACES: 300
           CONCURRENCY: 4
-          STALE_DAYS: 14
+          STALE_DAYS: 0
         run: node scripts/refresh-food-reviews.mjs
       - name: Commit updated review cache
         run: |
