@@ -4,6 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#0b0b0c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <meta name="description" content="台灣美食地圖：Google Maps 收藏整理、吃過紀錄、備註與今天吃什麼推薦。" />
   <title>Taiwan Food Map</title>
   <style>
@@ -46,6 +50,11 @@ h2 { font-size: 1.05rem; letter-spacing: -.02em; }
 .today-icon { width: 52px; height: 52px; border-radius: 15px; background: #23242a; display: grid; place-items: center; font-size: 1.7rem; flex: 0 0 auto; }
 .today-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .today-actions { display: flex; gap: 10px; margin-top: 12px; }
+.today-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.today-filters select { width: 100%; }
+.rating-stars { letter-spacing: .04em; color: var(--accent-2); font-weight: 900; }
+.return-yes { color: var(--good); }
+.return-no { color: #ff9997; }
 .btn { border: 1px solid transparent; border-radius: 12px; min-height: 42px; padding: 0 14px; font-weight: 780; color: var(--text); background: transparent; transition: .18s ease; }
 .btn:hover { transform: translateY(-1px); }
 .btn-primary { color: #0a0a0a; background: linear-gradient(120deg, var(--accent), var(--accent-2)); box-shadow: 0 10px 28px rgba(255,122,0,.18); }
@@ -121,6 +130,24 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
               <p>先選區域，再用系統推薦或純隨機抽一間。</p>
             </div>
           </div>
+          <div class="today-filters">
+            <select id="todayCityFilter" aria-label="今天吃啥區域">
+              <option value="全部">全台</option>
+              <option value="基隆">基隆</option>
+              <option value="清水">清水</option>
+              <option value="梧棲">梧棲</option>
+              <option value="彰化">彰化</option>
+              <option value="嘉義">嘉義</option>
+              <option value="台南">台南</option>
+              <option value="高雄">高雄</option>
+              <option value="東部">東部</option>
+            </select>
+            <select id="todayStatusFilter" aria-label="今天吃啥條件">
+              <option value="全部">全部</option>
+              <option value="想吃">想吃</option>
+              <option value="沒吃過">沒吃過</option>
+            </select>
+          </div>
           <div class="today-actions">
             <button id="recommendBtn" class="btn btn-primary" type="button">✨ 系統推薦</button>
             <button id="randomBtn" class="btn btn-ghost" type="button">🎲 隨機推</button>
@@ -157,6 +184,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
             <option value="全部">全部狀態</option>
             <option value="想去">想去</option>
             <option value="吃過">吃過</option>
+            <option value="沒吃過">沒吃過</option>
             <option value="五星">五星 / 最愛</option>
           </select>
           <button id="addBtn" class="btn btn-ghost" type="button">＋ 新增</button>
@@ -184,6 +212,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   </div>
 
   <input id="zipInput" type="file" accept=".zip" hidden />
+  <input id="restoreInput" type="file" accept=".json,application/json" hidden />
   <script>
 (() => {
   'use strict';
@@ -229,6 +258,9 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   let activeRegion = '全部';
   let activeStatus = '全部';
   let searchTerm = '';
+  let todayCity = '全部';
+  let todayStatus = '全部';
+  let deferredInstallPrompt = null;
 
   const els = {
     syncBtn: document.getElementById('syncBtn'), zipInput: document.getElementById('zipInput'),
@@ -238,12 +270,14 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     wantStat: document.getElementById('wantStat'), noteStat: document.getElementById('noteStat'),
     lastSyncText: document.getElementById('lastSyncText'), todayResult: document.getElementById('todayResult'),
     recommendBtn: document.getElementById('recommendBtn'), randomBtn: document.getElementById('randomBtn'),
+    todayCityFilter: document.getElementById('todayCityFilter'), todayStatusFilter: document.getElementById('todayStatusFilter'),
     searchInput: document.getElementById('searchInput'), statusFilter: document.getElementById('statusFilter'),
     regionTabs: document.getElementById('regionTabs'), modalBackdrop: document.getElementById('modalBackdrop'),
-    modal: document.getElementById('modal')
+    modal: document.getElementById('modal'), restoreInput: document.getElementById('restoreInput')
   };
   bindEvents();
   renderAll();
+  setupPwa();
 
 
   function hydrateSharedData(base) {
@@ -269,6 +303,9 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
         comment: '',
         localNote: prev?.localNote || '',
         eaten: !!prev?.eaten,
+        myRating: Number.isFinite(prev?.myRating) ? prev.myRating : null,
+        wouldReturn: prev?.wouldReturn || '',
+        lastEatenAt: prev?.lastEatenAt || null,
         manual: false,
         removed: false
       };
@@ -313,6 +350,10 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     els.addBtn.addEventListener('click', () => openEditModal());
     els.recommendBtn.addEventListener('click', () => pickToday('recommend'));
     els.randomBtn.addEventListener('click', () => pickToday('random'));
+    els.todayCityFilter.addEventListener('change', e => { todayCity = e.target.value; renderAll(false); });
+    els.todayStatusFilter.addEventListener('change', e => { todayStatus = e.target.value; renderAll(false); });
+    els.restoreInput.addEventListener('change', restoreBackupFile);
+    window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstallPrompt = e; });
     els.searchInput.addEventListener('input', e => { searchTerm = e.target.value.trim().toLowerCase(); renderAll(false); });
     els.statusFilter.addEventListener('change', e => { activeStatus = e.target.value; renderAll(false); });
     els.regionTabs.addEventListener('click', e => {
@@ -330,30 +371,64 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     renderStats();
     renderPlaces(list);
     els.visibleCount.textContent = `${list.length} 家`;
-    els.candidateCount.textContent = `${list.filter(p => p.kind !== 'family').length} 家可選`;
+    els.candidateCount.textContent = `${getTodayCandidates().length} 家可選`;
   }
 
   function renderStats() {
-    const p = state.places.filter(x => !x.removed);
+    const p = state.places.filter(x => !x.removed && isFoodPlace(x));
     els.totalStat.textContent = p.length;
     els.eatenStat.textContent = p.filter(x => x.eaten || hasList(x, '吃過')).length;
-    els.wantStat.textContent = p.filter(x => hasList(x, '想去')).length;
+    els.wantStat.textContent = p.filter(x => !x.eaten || x.wouldReturn === 'yes').length;
     els.noteStat.textContent = p.filter(x => (x.localNote || x.note || x.comment || '').trim()).length;
     els.lastSyncText.textContent = `共享清單快取：${formatDateTime(SHARED_DATA_UPDATED_AT)}`;
   }
 
+  function isFoodPlace(p) {
+    if (p.kind === 'family') return false;
+    if (p.forceFood === true) return true;
+    if (p.forceFood === false) return false;
+    const t = String(p.title || '').toLowerCase();
+    const nonFood = [
+      /停車場/, /圖書館/, /親子館/, /運動廣場/, /gas station/, /加油站/,
+      /製鍋/, /漁港/, /seafood wholesaler/, /休閒農場/, /博物館/, /7-eleven/,
+      /便利商店/, /(^|[^餐])公園$/, /河樂廣場/, /釣魚場/
+    ];
+    return !nonFood.some(re => re.test(t));
+  }
+
   function getFilteredPlaces() {
-    return state.places.filter(p => !p.removed).filter(p => {
+    return state.places.filter(p => !p.removed && isFoodPlace(p)).filter(p => {
       if (activeRegion !== '全部' && (p.region || '待分類') !== activeRegion) return false;
       if (activeStatus === '想去' && !hasList(p, '想去')) return false;
       if (activeStatus === '吃過' && !(p.eaten || hasList(p, '吃過'))) return false;
-      if (activeStatus === '五星' && !(hasList(p, '五星') || hasList(p, '最愛'))) return false;
+      if (activeStatus === '沒吃過' && (p.eaten || hasList(p, '吃過'))) return false;
+      if (activeStatus === '五星' && !(hasList(p, '五星') || hasList(p, '最愛') || p.myRating === 5)) return false;
       if (searchTerm) {
         const hay = [p.title, p.city, p.localNote, p.note, p.comment, ...(p.sourceLists || [])].join(' ').toLowerCase();
         if (!hay.includes(searchTerm)) return false;
       }
       return true;
     }).sort(placeSort);
+  }
+
+  function getTodayCandidates() {
+    return state.places.filter(p => !p.removed && isFoodPlace(p)).filter(p => {
+      if (todayCity !== '全部' && (p.city || '') !== todayCity) return false;
+      const eaten = p.eaten || hasList(p, '吃過');
+      if (todayStatus === '沒吃過' && eaten) return false;
+      if (todayStatus === '想吃' && eaten && p.wouldReturn !== 'yes') return false;
+      return true;
+    });
+  }
+
+  function daysSinceLastEaten(p) {
+    if (!p.lastEatenAt) return Infinity;
+    const ms = Date.now() - new Date(p.lastEatenAt).getTime();
+    return Number.isFinite(ms) ? ms / 86400000 : Infinity;
+  }
+
+  function isRecentEaten(p) {
+    return daysSinceLastEaten(p) < 30;
   }
 
   function placeSort(a, b) {
@@ -401,7 +476,9 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
         <div class="place-sub">
           <span>${escapeHtml(p.region || '待分類')} · ${escapeHtml(p.city || '待分類')}</span>
           ${eaten ? '<span class="tag eaten">吃過</span>' : hasList(p,'想去') ? '<span class="tag">想去</span>' : ''}
-          ${Number.isFinite(p.rating) ? `<span class="tag">★ ${p.rating}${Number.isFinite(p.reviews) ? ` · ${p.reviews.toLocaleString('zh-TW')}` : ''}</span>` : ''}
+          ${Number.isFinite(p.rating) ? `<span class="tag">Google ★ ${p.rating}${Number.isFinite(p.reviews) ? ` · ${p.reviews.toLocaleString('zh-TW')}` : ''}</span>` : ''}
+          ${Number.isFinite(p.myRating) ? `<span class="tag hot">我的 ${'★'.repeat(p.myRating)}</span>` : ''}
+          ${p.wouldReturn === 'yes' ? '<span class="tag eaten">會再吃</span>' : p.wouldReturn === 'no' ? '<span class="tag">不再吃</span>' : ''}
           ${hot ? '<span class="tag hot">推薦</span>' : ''}
           ${p.manual ? '<span class="tag">手動</span>' : ''}
         </div>
@@ -416,12 +493,14 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   }
 
   function pickToday(mode) {
-    const candidates = getFilteredPlaces().filter(p => p.kind !== 'family');
-    if (!candidates.length) { toast('目前沒有可推薦的店家'); return; }
+    const candidates = getTodayCandidates();
+    if (!candidates.length) { toast('目前沒有符合條件的店家'); return; }
+    const fresh = candidates.filter(p => !isRecentEaten(p));
+    const pool = fresh.length ? fresh : candidates;
     let pick;
-    if (mode === 'random') pick = candidates[Math.floor(Math.random() * candidates.length)];
+    if (mode === 'random') pick = pool[Math.floor(Math.random() * pool.length)];
     else {
-      const ranked = candidates.map(p => ({ p, s: recommendationScore(p) })).sort((a,b) => b.s - a.s);
+      const ranked = pool.map(p => ({ p, s: recommendationScore(p) })).sort((a,b) => b.s - a.s);
       const top = ranked.slice(0, Math.max(1, Math.ceil(ranked.length * .25)));
       pick = top[Math.floor(Math.random() * top.length)].p;
     }
@@ -432,32 +511,38 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
         <div class="today-name">${escapeHtml(pick.title)}</div>
         <p>${escapeHtml(pick.city || '待分類')} · ${escapeHtml(reason)}</p>
         <div class="today-meta">
-          ${pick.eaten || hasList(pick,'吃過') ? '<span class="tag eaten">吃過</span>' : '<span class="tag">還沒吃</span>'}
-          ${hasList(pick,'五星') || hasList(pick,'最愛') ? '<span class="tag hot">高優先</span>' : ''}
+          ${pick.eaten || hasList(pick,'吃過') ? '<span class="tag eaten">吃過</span>' : '<span class="tag">沒吃過</span>'}
+          ${Number.isFinite(pick.myRating) ? `<span class="tag hot">我的 ${'★'.repeat(pick.myRating)}</span>` : ''}
+          ${pick.wouldReturn === 'yes' ? '<span class="tag eaten">會再吃</span>' : ''}
           ${pick.url ? `<button class="chip" onclick="window.open('${escapeAttr(pick.url)}','_blank','noopener')">Google Maps ↗</button>` : ''}
+          <button class="chip" data-edit="${escapeAttr(pick.id)}">評分 / 備註</button>
         </div>
       </div>`;
+    const editBtn = els.todayResult.querySelector('[data-edit]');
+    if (editBtn) editBtn.onclick = () => openEditModal(editBtn.dataset.edit);
   }
 
   function recommendationScore(p) {
     let s = 0;
     if (Number.isFinite(p.rating)) s += Math.max(0, p.rating - 3.5) * 34;
     if (Number.isFinite(p.reviews)) s += Math.log10(Math.max(1, p.reviews) + 1) * 14;
+    if (Number.isFinite(p.myRating)) s += (p.myRating - 3) * 24;
+    if (p.wouldReturn === 'yes') s += 28;
+    if (p.wouldReturn === 'no') s -= 90;
     if (hasList(p, '555') || hasList(p, '五星')) s += 24;
     if (hasList(p, '最愛')) s += 20;
     if (hasList(p, '吃過的名店')) s += 12;
-    if (p.eaten) s += 3;
     if ((p.localNote || '').trim()) s += 2;
+    if (isRecentEaten(p)) s -= 80;
     if (Number.isFinite(p.manualScore)) s += p.manualScore;
     return s;
   }
 
   function recommendationReason(p) {
     const r = [];
+    if (Number.isFinite(p.myRating)) r.push(`你給 ${p.myRating}★`);
+    if (p.wouldReturn === 'yes') r.push('你會再吃');
     if (Number.isFinite(p.rating)) r.push(`${p.rating}★${Number.isFinite(p.reviews) ? ' · ' + p.reviews.toLocaleString('zh-TW') + ' 則評論' : ''}`);
-    if (hasList(p, '555') || hasList(p, '五星')) r.push('五星收藏');
-    if (hasList(p, '最愛')) r.push('你的最愛');
-    if (hasList(p, '吃過的名店')) r.push('吃過名店');
     if (!r.length) r.push('依目前條件綜合人氣推薦');
     return r.slice(0,2).join('＋');
   }
@@ -474,11 +559,22 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
       </div>`).join('');
     els.modal.innerHTML = `
       <h3>Google Maps 來源清單</h3>
-      <p class="modal-desc">目前以你提供的共享清單做主資料來源；美食共 ${foodCount} 個 Google Maps 收藏。親子育樂獨立保留，不會混進「今天要吃啥」。</p>
+      <p class="modal-desc">目前以你提供的共享清單做主資料來源；非美食會自動排除，不會進入「今天要吃啥」。</p>
       ${rows}
+      <div class="check-row" style="margin-top:14px">
+        <div><strong>我的資料</strong><div class="muted-small">備份吃過、我的評分、會不會再吃與備註。</div></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+          <button class="btn btn-ghost" id="backupBtn" type="button">匯出備份</button>
+          <button class="btn btn-ghost" id="restoreBtn" type="button">還原備份</button>
+          <button class="btn btn-ghost" id="installBtn" type="button">安裝 App</button>
+        </div>
+      </div>
       <div class="modal-actions"><button class="btn btn-ghost" id="closeModalBtn">關閉</button></div>`;
     openModal();
     document.getElementById('closeModalBtn').onclick = closeModal;
+    document.getElementById('backupBtn').onclick = exportBackup;
+    document.getElementById('restoreBtn').onclick = () => els.restoreInput.click();
+    document.getElementById('installBtn').onclick = installApp;
     els.modal.querySelectorAll('[data-source-open]').forEach(btn => btn.onclick = () => window.open(btn.dataset.sourceOpen, '_blank', 'noopener'));
   }
 
@@ -633,6 +729,9 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
         ...p,
         eaten: !!prev.eaten,
         localNote: prev.localNote || '',
+        myRating: Number.isFinite(prev.myRating) ? prev.myRating : null,
+        wouldReturn: prev.wouldReturn || '',
+        lastEatenAt: prev.lastEatenAt || null,
         city: prev.manualCity ? prev.city : p.city,
         region: prev.manualCity ? prev.region : p.region,
         manualCity: !!prev.manualCity,
@@ -661,6 +760,9 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
         a.sourceLists = [...new Set([...(a.sourceLists||[]), ...(p.sourceLists||[])])];
         a.localNote = a.localNote || p.localNote || '';
         a.eaten = a.eaten || p.eaten;
+        a.myRating = Number.isFinite(a.myRating) ? a.myRating : p.myRating;
+        a.wouldReturn = a.wouldReturn || p.wouldReturn || '';
+        a.lastEatenAt = a.lastEatenAt || p.lastEatenAt || null;
       }
     }
     return [...map.values()];
@@ -670,14 +772,23 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     const p = id ? state.places.find(x => x.id === id) : null;
     els.modal.innerHTML = `
       <h3>${p ? '編輯店家' : '手動新增'}</h3>
-      <p class="modal-desc">手動資料與個人備註會保留，不會被下一次 Google Takeout 同步洗掉。</p>
+      <p class="modal-desc">吃過、我的評分、會不會再吃與備註都只存在你的裝置，可用「Google Maps 清單 → 匯出備份」保存。</p>
       <div class="field-grid">
         <div class="field full"><label>店名</label><input id="fTitle" value="${escapeAttr(p?.title || '')}" placeholder="例如：阿裕牛肉涮涮鍋" /></div>
         <div class="field full"><label>Google Maps 連結</label><input id="fUrl" value="${escapeAttr(p?.url || '')}" placeholder="https://maps.app.goo.gl/..." /></div>
         <div class="field"><label>城市 / 區域</label><select id="fCity">${cityOptions(p?.city || '台中')}</select></div>
         <div class="field"><label>狀態</label><select id="fStatus"><option value="一般">一般</option><option value="想去" ${hasList(p||{},'想去')?'selected':''}>想去</option><option value="五星" ${hasList(p||{},'五星')||hasList(p||{},'最愛')?'selected':''}>五星 / 最愛</option></select></div>
+        <div class="field"><label>我的評分</label><select id="fMyRating">
+          <option value="">未評分</option>
+          ${[1,2,3,4,5].map(n => `<option value="${n}" ${p?.myRating===n?'selected':''}>${'★'.repeat(n)} ${n} 分</option>`).join('')}
+        </select></div>
+        <div class="field"><label>會不會再吃</label><select id="fWouldReturn">
+          <option value="" ${!p?.wouldReturn?'selected':''}>未設定</option>
+          <option value="yes" ${p?.wouldReturn==='yes'?'selected':''}>會再吃</option>
+          <option value="no" ${p?.wouldReturn==='no'?'selected':''}>不會再吃</option>
+        </select></div>
         <div class="field full"><label>我的備註</label><textarea id="fNote" placeholder="必點、停車、家人喜好…">${escapeHtml(p?.localNote || '')}</textarea></div>
-        <div class="field full"><div class="check-row"><div><strong>吃過</strong><div class="muted-small">標記後可用篩選快速找吃過 / 未吃。</div></div><input id="fEaten" type="checkbox" ${p?.eaten ? 'checked' : ''}/></div></div>
+        <div class="field full"><div class="check-row"><div><strong>吃過</strong><div class="muted-small">第一次標記會記錄日期；30 天內系統會降低推薦頻率。</div></div><input id="fEaten" type="checkbox" ${p?.eaten ? 'checked' : ''}/></div></div>
       </div>
       <div class="modal-actions">
         ${p ? '<button class="btn btn-danger" id="deleteBtn">刪除</button>' : ''}
@@ -702,6 +813,9 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     const status = document.getElementById('fStatus').value;
     const localNote = document.getElementById('fNote').value.trim();
     const eaten = document.getElementById('fEaten').checked;
+    const ratingRaw = document.getElementById('fMyRating').value;
+    const myRating = ratingRaw ? Number(ratingRaw) : null;
+    const wouldReturn = document.getElementById('fWouldReturn').value;
     if (!title) { toast('請輸入店名'); return; }
     const meta = CITY_META[city] || {};
     const coords = parseCoordinates(url);
@@ -709,16 +823,17 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     sourceLists = sourceLists.filter(x => !['手動：想去','手動：五星'].includes(x));
     if (status === '想去') sourceLists.push('手動：想去');
     if (status === '五星') sourceLists.push('手動：五星');
+    const lastEatenAt = eaten ? (existing?.lastEatenAt || new Date().toISOString()) : null;
 
     if (existing) {
-      Object.assign(existing, { title, url, city, region: meta.region || '待分類', localNote, eaten, sourceLists, manualCity: true,
+      Object.assign(existing, { title, url, city, region: meta.region || existing.region || '待分類', localNote, eaten, myRating, wouldReturn, lastEatenAt, sourceLists, manualCity: true,
         lat: coords?.lat ?? existing.lat ?? null, lng: coords?.lng ?? existing.lng ?? null, removed: false });
     } else {
       const id = canonicalKey(url, title) || `manual:${Date.now()}`;
       const same = state.places.find(x => x.id === id);
       if (same) { toast('這家店已經存在'); return; }
-      state.places.push({ id, title, url, city, region: meta.region || '待分類', localNote, eaten, sourceLists, manual: true, manualCity: true,
-        note: '', comment: '', lat: coords?.lat ?? null, lng: coords?.lng ?? null, removed: false });
+      state.places.push({ id, title, url, city, region: meta.region || '待分類', localNote, eaten, myRating, wouldReturn, lastEatenAt, sourceLists, manual: true, manualCity: true,
+        note: '', comment: '', lat: coords?.lat ?? null, lng: coords?.lng ?? null, removed: false, forceFood: true });
     }
     saveState(); closeModal(); renderAll(); toast('已儲存');
   }
@@ -732,7 +847,60 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
 
   function toggleEaten(id) {
     const p = state.places.find(x => x.id === id); if (!p) return;
-    p.eaten = !p.eaten; saveState(); renderAll(false);
+    p.eaten = !p.eaten;
+    p.lastEatenAt = p.eaten ? new Date().toISOString() : null;
+    saveState(); renderAll(false);
+  }
+
+  function exportBackup() {
+    const payload = {
+      app: 'Taiwan Food Map',
+      backupVersion: 1,
+      exportedAt: new Date().toISOString(),
+      state
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `taiwan-food-map-backup-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast('備份已匯出');
+  }
+
+  async function restoreBackupFile(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const raw = JSON.parse(await file.text());
+      const restored = raw?.state || raw;
+      if (!restored || !Array.isArray(restored.places)) throw new Error('格式不正確');
+      state = hydrateSharedData({ ...defaultState(), ...restored });
+      saveState();
+      closeModal();
+      renderAll();
+      toast('備份已還原');
+    } catch (err) {
+      toast('還原失敗：' + (err?.message || '檔案錯誤'));
+    }
+  }
+
+  async function installApp() {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      return;
+    }
+    toast('若沒有跳出安裝視窗：Chrome 選單 → 加到主畫面');
+  }
+
+  function setupPwa() {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+    }
   }
 
   function inferCityFromList(name) {
