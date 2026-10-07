@@ -564,6 +564,22 @@ select,
     font-size:.86rem;
   }
 }
+
+/* Beta 1.5.2 — lock horizontal viewport during city navigation */
+html,body{
+  width:100%;
+  max-width:100%;
+  overflow-x:clip;
+  overscroll-behavior-x:none;
+}
+.app-shell,main,.toolbar,.content-grid,.list-card,.place-list{
+  width:100%;
+  max-width:100%;
+  min-width:0;
+}
+.city-jump{
+  overscroll-behavior-x:contain;
+}
 </style>
 </head>
 <body>
@@ -734,7 +750,7 @@ select,
   'use strict';
 
   const STORAGE_KEY = 'twFoodMap.v1';
-  const BUILD_VERSION = '1.5.1';
+  const BUILD_VERSION = '1.5.2';
   const SHARED_DATA_VERSION = '2026-10-07-shared-lists-v1';
   const SHARED_DATA_UPDATED_AT = '2026-10-07T18:45:00+08:00';
   const SHARED_SOURCES = [{"key":"keelung","label":"基隆","region":"北部","city":"基隆","kind":"food","declared":7,"url":"https://maps.app.goo.gl/4KACWmkaqChVpkvw6?g_st=ac","loaded":7},{"key":"wuqi","label":"梧棲","region":"中部","city":"梧棲","kind":"food","declared":76,"url":"https://maps.app.goo.gl/w1cTWpoC4z4itpZKA?g_st=ac","loaded":76},{"key":"family","label":"親子育樂","region":"其他","city":"親子育樂","kind":"family","declared":24,"url":"https://maps.app.goo.gl/f1mFM4Yjahaz9SyJ8?g_st=ac","loaded":24},{"key":"changhua","label":"彰化","region":"中部","city":"彰化","kind":"food","declared":29,"url":"https://maps.app.goo.gl/9oLNo3QeipNiEx7M7?g_st=ac","loaded":29},{"key":"tainan","label":"台南","region":"南部","city":"台南","kind":"food","declared":86,"url":"https://maps.app.goo.gl/EgamzKSobVtxUQHbA?g_st=ac","loaded":85},{"key":"kaohsiung","label":"高雄","region":"南部","city":"高雄","kind":"food","declared":9,"url":"https://maps.app.goo.gl/yANjiQEqpu76GJqc6?g_st=ac","loaded":9},{"key":"east","label":"東部","region":"東部","city":"東部","kind":"food","declared":3,"url":"https://maps.app.goo.gl/tKAFRrq6CMjShVeh6?g_st=ac","loaded":3},{"key":"chiayi","label":"嘉義","region":"南部","city":"嘉義","kind":"food","declared":14,"url":"https://maps.app.goo.gl/2bzH8oEPCLgnMUH67?g_st=ac","loaded":14},{"key":"qingshui","label":"清水","region":"中部","city":"清水","kind":"food","declared":43,"url":"https://maps.app.goo.gl/bZPPqHwSsL7VYN5v9?g_st=ac","loaded":44}];
@@ -1403,7 +1419,7 @@ select,
       cityLimits.set(city, current < 30 ? 30 : Infinity);
       expandedCities.add(city);
       renderPlaces(getFilteredPlaces());
-      requestAnimationFrame(() => document.getElementById('city-'+safeDomId(city))?.scrollIntoView({behavior:'smooth',block:'start'}));
+      requestAnimationFrame(() => scrollCityVertically(city));
     }));
 
     els.placeList.querySelectorAll('[data-collapse-city]').forEach(btn => btn.addEventListener('click', () => {
@@ -1411,15 +1427,24 @@ select,
       cityLimits.set(city, 10);
       expandedCities.delete(city);
       renderPlaces(getFilteredPlaces());
-      requestAnimationFrame(() => document.getElementById('city-'+safeDomId(city))?.scrollIntoView({behavior:'smooth',block:'start'}));
+      requestAnimationFrame(() => scrollCityVertically(city));
     }));
 
     els.placeList.querySelectorAll('[data-jump-city]').forEach(btn => btn.addEventListener('click', () => {
       const city = btn.dataset.jumpCity;
       expandedCities.add(city);
       renderPlaces(getFilteredPlaces());
-      requestAnimationFrame(() => document.getElementById('city-'+safeDomId(city))?.scrollIntoView({behavior:'smooth',block:'start'}));
+      requestAnimationFrame(() => scrollCityVertically(city));
     }));
+  }
+
+  function scrollCityVertically(city) {
+    const el = document.getElementById('city-' + safeDomId(city));
+    if (!el) return;
+    const top = Math.max(0, window.scrollY + el.getBoundingClientRect().top - 12);
+    document.documentElement.scrollLeft = 0;
+    document.body.scrollLeft = 0;
+    window.scrollTo({ top, left: 0, behavior: 'smooth' });
   }
 
   function safeDomId(v) {
@@ -1860,7 +1885,7 @@ select,
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
-          const reg = await navigator.serviceWorker.register('./sw.js?v=1.5.1');
+          const reg = await navigator.serviceWorker.register('./sw.js?v=1.5.2');
           await reg.update();
         } catch {}
       });
