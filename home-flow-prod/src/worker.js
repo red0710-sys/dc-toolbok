@@ -194,7 +194,7 @@ export default{
     if(!url.pathname.startsWith("/api/"))return env.ASSETS.fetch(req);
     if(req.method==="OPTIONS")return new Response(null,{status:204,headers:CORS_HEADERS});
     try{
-      if(url.pathname==="/api/health")return json({ok:true,service:"home-flow",time:new Date().toISOString()});
+      if(url.pathname==="/api/health")return json({ok:true,service:"home-flow",build:"2026-10-08-family-sync-cors-v1",time:new Date().toISOString()});
       if(url.pathname==="/api/food-review-probe"&&req.method==="GET")return foodReviewProbe(url);
       if(url.pathname==="/api/family"&&req.method==="POST")return createFamily(env);
       const user=await auth(req,env);
