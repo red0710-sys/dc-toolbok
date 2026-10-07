@@ -1,4 +1,4 @@
-const CACHE = 'tw-food-map-beta-1-2-v1';
+const CACHE = 'tw-food-map-beta-1-2-1-v1';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', event => {
