@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-07T13:37:03.492Z",
+  "updatedAt": "2026-10-07T13:46:57.936Z",
   "source": "Google Maps public review pages; cached snapshot, not live API",
-  "count": 23,
+  "count": 72,
   "places": {
     "shared:keelung:九如營養三明治（常一嚐）": {
       "title": "九如營養三明治（常一嚐）",
@@ -349,6 +349,731 @@
         "整體語氣：目前可見 Google 評論以正面描述為主。"
       ],
       "fetchedAt": "2026-10-07T13:37:03.492Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:keelung:許存睿 豬灶麵線羹": {
+      "title": "許存睿 豬灶麵線羹",
+      "city": "基隆",
+      "rating": 4.3,
+      "reviewCount": 160,
+      "topics": [],
+      "highlights": [
+        "用餐節奏：排隊、等候或出餐速度是近期評論常見話題。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論較兩極，負面提醒也不少。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.925Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:keelung:蓁好料小吃店": {
+      "title": "蓁好料小吃店",
+      "city": "基隆",
+      "rating": 4,
+      "reviewCount": 693,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.929Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:keelung:美珠土雞店": {
+      "title": "美珠土雞店",
+      "city": "基隆",
+      "rating": 4,
+      "reviewCount": 481,
+      "topics": [],
+      "highlights": [
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.929Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:台北江麻辣臭豆腐-梧棲店": {
+      "title": "台北江麻辣臭豆腐-梧棲店",
+      "city": "梧棲",
+      "rating": 4.1,
+      "reviewCount": 49,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.929Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:欣來便當 自助餐": {
+      "title": "欣來便當 自助餐",
+      "city": "梧棲",
+      "rating": 4.5,
+      "reviewCount": 480,
+      "topics": [],
+      "highlights": [
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.930Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:家家香 早午餐（便當、粥）": {
+      "title": "家家香 早午餐（便當、粥）",
+      "city": "梧棲",
+      "rating": 4.4,
+      "reviewCount": 23,
+      "topics": [],
+      "highlights": [
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.930Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:黃家腿庫飯": {
+      "title": "黃家腿庫飯",
+      "city": "梧棲",
+      "rating": 4.7,
+      "reviewCount": 38,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.930Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:薪食堂": {
+      "title": "薪食堂",
+      "city": "梧棲",
+      "rating": 4.8,
+      "reviewCount": 25,
+      "topics": [],
+      "highlights": [
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.930Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:碗不吃": {
+      "title": "碗不吃",
+      "city": "梧棲",
+      "rating": 4.1,
+      "reviewCount": 149,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.930Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:choumingy café": {
+      "title": "Choumingy Café",
+      "city": "梧棲",
+      "rating": 4.1,
+      "reviewCount": 1569,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "用餐節奏：排隊、等候或出餐速度是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.930Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:炸炸臭豆腐-梧棲總店": {
+      "title": "炸炸臭豆腐-梧棲總店",
+      "city": "梧棲",
+      "rating": 4.7,
+      "reviewCount": 133,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.931Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:肆-雞肉飯": {
+      "title": "肆-雞肉飯",
+      "city": "梧棲",
+      "rating": 4.6,
+      "reviewCount": 37,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.931Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:禾憶餐酒館 hoi bistro＆bar": {
+      "title": "禾憶餐酒館 Hoi Bistro＆Bar",
+      "city": "梧棲",
+      "rating": 4.5,
+      "reviewCount": 203,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.931Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:蔡ㄟ切仔麵": {
+      "title": "蔡ㄟ切仔麵",
+      "city": "梧棲",
+      "rating": 4.5,
+      "reviewCount": 33,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.931Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:麗麗早餐": {
+      "title": "麗麗早餐",
+      "city": "梧棲",
+      "rating": 4.4,
+      "reviewCount": 143,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.931Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:掌櫃水產": {
+      "title": "掌櫃水產",
+      "city": "梧棲",
+      "rating": 4.4,
+      "reviewCount": 122,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.932Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:惠子麵館": {
+      "title": "惠子麵館",
+      "city": "梧棲",
+      "rating": 4.2,
+      "reviewCount": 46,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.932Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:一口糧": {
+      "title": "一口糧",
+      "city": "梧棲",
+      "rating": 3.4,
+      "reviewCount": 39,
+      "topics": [],
+      "highlights": [
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.932Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:紅蜻蜓食堂": {
+      "title": "紅蜻蜓食堂",
+      "city": "梧棲",
+      "rating": 5,
+      "reviewCount": 25,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.932Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:蔡料好 鍋燒麵•粥品專賣": {
+      "title": "蔡料好 鍋燒麵•粥品專賣",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "用餐節奏：排隊、等候或出餐速度是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.932Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:日十。梧棲店｜粉漿蛋餅・刈包・飯糰": {
+      "title": "日十。梧棲店｜粉漿蛋餅・刈包・飯糰",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.933Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:喜鵲森林": {
+      "title": "喜鵲森林",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.933Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:105休息點心站": {
+      "title": "105休息點心站",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.933Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:興利鵝肉": {
+      "title": "興利鵝肉",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.933Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:元森綠豆沙仙草專賣店": {
+      "title": "元森綠豆沙仙草專賣店",
+      "city": "梧棲",
+      "rating": 4.1,
+      "reviewCount": 70,
+      "topics": [
+        {
+          "label": "芋圓",
+          "count": 7
+        },
+        {
+          "label": "燒仙草",
+          "count": 7
+        },
+        {
+          "label": "珍珠",
+          "count": 5
+        }
+      ],
+      "highlights": [
+        "熱門主題：最常提到「芋圓」（7）與「燒仙草」（7）。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.933Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:桂香坊冰糖醬滷味-梧棲店": {
+      "title": "桂香坊冰糖醬滷味-梧棲店",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.933Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:醇壽司（不定期公休，請留意fb.ig)梧棲必吃｜熱門美食｜外帶美食": {
+      "title": "醇壽司（不定期公休，請留意FB.IG)梧棲必吃｜熱門美食｜外帶美食",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.933Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:長袖廚房梧棲總館": {
+      "title": "長袖廚房梧棲總館",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.933Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:十九甲雞排．梧棲店": {
+      "title": "十九甲雞排．梧棲店",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.933Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:北港蔡三代筒仔米糕": {
+      "title": "北港蔡三代筒仔米糕",
+      "city": "梧棲",
+      "rating": 4.4,
+      "reviewCount": 6370,
+      "topics": [],
+      "highlights": [
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.933Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:鯨賀平價海鮮": {
+      "title": "鯨賀平價海鮮",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.934Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:第二香腸 香腸攤": {
+      "title": "第二香腸 香腸攤",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.934Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:肉圓榮": {
+      "title": "肉圓榮",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.934Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:潮州牛肉陳（梧棲店）每週一店休": {
+      "title": "潮州牛肉陳（梧棲店）每週一店休",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.934Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:陳媽咪飯糰米糕刈包 梧棲店": {
+      "title": "陳媽咪飯糰米糕刈包 梧棲店",
+      "city": "梧棲",
+      "rating": 4.7,
+      "reviewCount": 36,
+      "topics": [
+        {
+          "label": "紫米",
+          "count": 6
+        },
+        {
+          "label": "油條",
+          "count": 2
+        },
+        {
+          "label": "花生",
+          "count": 2
+        }
+      ],
+      "highlights": [
+        "熱門主題：最常提到「紫米」（6）與「油條」（2）。",
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.934Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:臭一色臭豆腐": {
+      "title": "臭一色臭豆腐",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.934Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:青董食代 green style ｜在地美食｜海線必吃": {
+      "title": "青董食代 Green Style ｜在地美食｜海線必吃",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.934Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:老四季（梧棲概念店）-麻醬牛肉拌麵&鮮蚵滷肉飯/便當/鍋物": {
+      "title": "老四季（梧棲概念店）-麻醬牛肉拌麵&鮮蚵滷肉飯/便當/鍋物",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "用餐節奏：排隊、等候或出餐速度是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.935Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:宇良食2.0": {
+      "title": "宇良食2.0",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.935Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:梧樂食光 | 創作料理 we love cuisine": {
+      "title": "梧樂食光 | 創作料理 We Love Cuisine",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.935Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:一等香麵食館（梧棲店）": {
+      "title": "一等香麵食館（梧棲店）",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.935Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:好紀鮮食館 (午餐預約制)": {
+      "title": "好紀鮮食館 (午餐預約制)",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.935Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:小時厚牛排-台中梧棲店": {
+      "title": "小時厚牛排-台中梧棲店",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.935Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:吉好吃鹽水雞 梧棲東健店": {
+      "title": "吉好吃鹽水雞 梧棲東健店",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.935Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:鴨寶食堂": {
+      "title": "鴨寶食堂",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.935Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:台南一甲子": {
+      "title": "台南一甲子",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.935Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:歌王豆花": {
+      "title": "歌王豆花",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.935Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:牛家村麵食館": {
+      "title": "牛家村麵食館",
+      "city": "梧棲",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.936Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:阿吉魯肉飯": {
+      "title": "阿吉魯肉飯",
+      "city": "梧棲",
+      "rating": 4.3,
+      "reviewCount": 331,
+      "topics": [
+        {
+          "label": "排骨",
+          "count": 22
+        },
+        {
+          "label": "便當",
+          "count": 19
+        },
+        {
+          "label": "湯",
+          "count": 15
+        }
+      ],
+      "highlights": [
+        "熱門主題：最常提到「排骨」（22）與「便當」（19）。",
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:46:57.936Z",
       "source": "Google Maps public review page"
     }
   }
