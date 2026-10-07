@@ -1,6 +1,328 @@
 {
-  "updatedAt": "2026-10-07T13:27:51.293Z",
+  "updatedAt": "2026-10-07T13:29:57.733Z",
   "source": "Google Maps public review pages; cached snapshot, not live API",
-  "count": 0,
-  "places": {}
+  "count": 22,
+  "places": {
+    "shared:keelung:九如營養三明治（常一嚐）": {
+      "title": "九如營養三明治（常一嚐）",
+      "city": "基隆",
+      "rating": 4.3,
+      "reviewCount": 2167,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.3★／2,167 則，整體評價穩定。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:21.164Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:keelung:封神雞-黑白切白斬雞": {
+      "title": "封神雞-黑白切白斬雞",
+      "city": "基隆",
+      "rating": 4.1,
+      "reviewCount": 1072,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.1★／1,072 則，整體評價穩定。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:21.164Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:keelung:安樂市場菜頭滷 （粉專：菜頭滷）": {
+      "title": "安樂市場菜頭滷 （粉專：菜頭滷）",
+      "city": "基隆",
+      "rating": 4.4,
+      "reviewCount": 191,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.4★／191 則，整體評價偏高。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:21.164Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:舊車路桶仔雞": {
+      "title": "舊車路桶仔雞",
+      "city": "梧棲",
+      "rating": 4.7,
+      "reviewCount": 251,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.7★／251 則，整體評價非常高。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:21.164Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:紀軍綻魯肉飯": {
+      "title": "紀軍綻魯肉飯",
+      "city": "梧棲",
+      "rating": 4.8,
+      "reviewCount": 80,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.8★／80 則，整體評價非常高。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:21.164Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:wuqi:嗎哪活蝦": {
+      "title": "嗎哪活蝦",
+      "city": "梧棲",
+      "rating": 4.9,
+      "reviewCount": 56,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.9★／56 則，整體評價非常高。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:21.164Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:changhua:十二段鍋物堂 | 彰化店": {
+      "title": "十二段鍋物堂 | 彰化店",
+      "city": "彰化",
+      "rating": 4.6,
+      "reviewCount": 3688,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.6★／3,688 則，整體評價偏高。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:21.164Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:changhua:聰哥團長蛋黃酥": {
+      "title": "聰哥團長蛋黃酥",
+      "city": "彰化",
+      "rating": 4.8,
+      "reviewCount": 636,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.8★／636 則，整體評價非常高。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:21.164Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:changhua:彰化老担阿璋肉圓": {
+      "title": "彰化老担阿璋肉圓",
+      "city": "彰化",
+      "rating": 4.3,
+      "reviewCount": 23,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.3★／23 則，整體評價穩定。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:40.855Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:liu jia juang": {
+      "title": "Liu Jia Juang",
+      "city": "台南",
+      "rating": 4.3,
+      "reviewCount": 5089,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.3★／5,089 則，整體評價穩定。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:40.855Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:阿銘牛肉湯": {
+      "title": "阿銘牛肉湯",
+      "city": "台南",
+      "rating": 4.4,
+      "reviewCount": 2798,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.4★／2,798 則，整體評價偏高。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:40.855Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:lian ying fa dim sum": {
+      "title": "Lian Ying Fa Dim Sum",
+      "city": "台南",
+      "rating": 4.2,
+      "reviewCount": 4511,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.2★／4,511 則，整體評價穩定。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:40.855Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:kaohsiung:duck zhen": {
+      "title": "Duck Zhen",
+      "city": "高雄",
+      "rating": 4.3,
+      "reviewCount": 11685,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.3★／11,685 則，整體評價穩定。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:40.855Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:kaohsiung:bei gang tsai rice tube (yancheng)": {
+      "title": "Bei Gang Tsai Rice Tube (Yancheng)",
+      "city": "高雄",
+      "rating": 4.4,
+      "reviewCount": 6371,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.4★／6,371 則，整體評價偏高。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:40.855Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:kaohsiung:gang yuan beef noodle restaurant": {
+      "title": "Gang Yuan Beef Noodle Restaurant",
+      "city": "高雄",
+      "rating": 4.2,
+      "reviewCount": 9833,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.2★／9,833 則，整體評價穩定。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:40.855Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:east:松田釣魚池": {
+      "title": "松田釣魚池",
+      "city": "東部",
+      "rating": 4.2,
+      "reviewCount": 45,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.2★／45 則，整體評價穩定。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:57.732Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:chiayi:咱台灣人的冰": {
+      "title": "咱台灣人的冰",
+      "city": "嘉義",
+      "rating": 4.3,
+      "reviewCount": 2245,
+      "topics": [
+        {
+          "label": "地瓜",
+          "count": 475
+        },
+        {
+          "label": "桂圓",
+          "count": 139
+        },
+        {
+          "label": "芋圓",
+          "count": 108
+        }
+      ],
+      "highlights": [
+        "口碑：Google 4.3★／2,245 則，整體評價穩定。",
+        "熱門：評論最常提到「地瓜」與「桂圓」。",
+        "交通：停車便利度是評論常見討論點。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:57.733Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:chiayi:嘉義公園火雞肉飯（公休請看fb)": {
+      "title": "嘉義公園火雞肉飯（公休請看FB)",
+      "city": "嘉義",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 星等資料暫時抓不到，建議直接看最新評論。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:57.733Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:chiayi:桃城三禾火雞肉飯": {
+      "title": "桃城三禾火雞肉飯",
+      "city": "嘉義",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 星等資料暫時抓不到，建議直接看最新評論。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:57.733Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:炒飯不能王": {
+      "title": "炒飯不能王",
+      "city": "清水",
+      "rating": 4.9,
+      "reviewCount": 1058,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.9★／1,058 則，整體評價非常高。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:57.733Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:小阿姨滷肉飯（清水店)蒸蛋滷肉飯/蚵仔滷肉飯/附近美食/在地小吃/休假詳情收尋fb": {
+      "title": "小阿姨滷肉飯（清水店)蒸蛋滷肉飯/蚵仔滷肉飯/附近美食/在地小吃/休假詳情收尋FB",
+      "city": "清水",
+      "rating": 4.8,
+      "reviewCount": 1347,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.8★／1,347 則，整體評價非常高。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:57.733Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:陳寶包手工肉包饅頭丨民族店": {
+      "title": "陳寶包手工肉包饅頭丨民族店",
+      "city": "清水",
+      "rating": 4.8,
+      "reviewCount": 235,
+      "topics": [],
+      "highlights": [
+        "口碑：Google 4.8★／235 則，整體評價非常高。",
+        "熱門：Google 沒有穩定提供可解析的熱門主題。",
+        "提醒：建議點開 Google Maps 看最新評論與營業狀態。"
+      ],
+      "fetchedAt": "2026-10-07T13:29:57.733Z",
+      "source": "Google Maps public review page"
+    }
+  }
 }
