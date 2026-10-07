@@ -880,12 +880,13 @@ html,body{
   <input id="zipInput" type="file" accept=".zip" hidden />
   <input id="restoreInput" type="file" accept=".json,application/json" hidden />
   <script src="./cloud-sync.js?v=1.4.0"></script>
+  <script src="./review-refresh.js?v=1.7.0"></script>
   <script>
 (() => {
   'use strict';
 
   const STORAGE_KEY = 'twFoodMap.v1';
-  const BUILD_VERSION = '1.6.2';
+  const BUILD_VERSION = '1.7.0';
   const SHARED_DATA_VERSION = '2026-10-07-shared-lists-v1';
   const SHARED_DATA_UPDATED_AT = '2026-10-07T18:45:00+08:00';
   const SHARED_SOURCES = [{"key":"keelung","label":"基隆","region":"北部","city":"基隆","kind":"food","declared":7,"url":"https://maps.app.goo.gl/4KACWmkaqChVpkvw6?g_st=ac","loaded":7},{"key":"wuqi","label":"梧棲","region":"中部","city":"梧棲","kind":"food","declared":76,"url":"https://maps.app.goo.gl/w1cTWpoC4z4itpZKA?g_st=ac","loaded":76},{"key":"family","label":"親子育樂","region":"其他","city":"親子育樂","kind":"family","declared":24,"url":"https://maps.app.goo.gl/f1mFM4Yjahaz9SyJ8?g_st=ac","loaded":24},{"key":"changhua","label":"彰化","region":"中部","city":"彰化","kind":"food","declared":29,"url":"https://maps.app.goo.gl/9oLNo3QeipNiEx7M7?g_st=ac","loaded":29},{"key":"tainan","label":"台南","region":"南部","city":"台南","kind":"food","declared":86,"url":"https://maps.app.goo.gl/EgamzKSobVtxUQHbA?g_st=ac","loaded":85},{"key":"kaohsiung","label":"高雄","region":"南部","city":"高雄","kind":"food","declared":9,"url":"https://maps.app.goo.gl/yANjiQEqpu76GJqc6?g_st=ac","loaded":9},{"key":"east","label":"東部","region":"東部","city":"東部","kind":"food","declared":3,"url":"https://maps.app.goo.gl/tKAFRrq6CMjShVeh6?g_st=ac","loaded":3},{"key":"chiayi","label":"嘉義","region":"南部","city":"嘉義","kind":"food","declared":14,"url":"https://maps.app.goo.gl/2bzH8oEPCLgnMUH67?g_st=ac","loaded":14},{"key":"qingshui","label":"清水","region":"中部","city":"清水","kind":"food","declared":43,"url":"https://maps.app.goo.gl/bZPPqHwSsL7VYN5v9?g_st=ac","loaded":44}];
@@ -987,14 +988,30 @@ html,body{
   };
   bindEvents();
   if (els.reviewUpdateBtn) {
-    els.reviewUpdateBtn.addEventListener('click', () => {
-      window.open('https://github.com/red0710-sys/dc-toolbok/actions/workflows/refresh-food-reviews.yml', '_blank', 'noopener');
-    });
+    els.reviewUpdateBtn.addEventListener('click', () => window.TaiwanFoodReviewRefresh?.open?.());
   }
   renderAll();
   setupPwa();
   initCloudSync();
   loadReviewHighlights();
+
+  window.TaiwanFoodAppBridge = {
+    getReviewTargets() {
+      return state.places.filter(p => !p.removed && isFoodPlace(p)).map(p => ({
+        id:p.id, title:p.title, city:p.city, rating:p.rating, reviews:p.reviews
+      }));
+    },
+    getReviewCache() {
+      return { updatedAt: reviewHighlights.updatedAt, places: { ...(reviewHighlights.places || {}) } };
+    },
+    commitReviewCache(cache) {
+      reviewHighlights = { updatedAt: cache?.updatedAt || null, places: cache?.places || {} };
+      state.reviewHighlights = reviewHighlights;
+      saveState(true);
+      updateReviewStatus();
+      renderAll(false);
+    }
+  };
 
 
   function hydrateSharedData(base) {
@@ -1065,19 +1082,32 @@ html,body{
   }
 
   async function loadReviewHighlights() {
+    let staticCache = null;
     try {
       const r = await fetch('./review-highlights.json?ts=' + Date.now(), { cache: 'no-store' });
       if (!r.ok) throw new Error('review cache unavailable');
       const j = await r.json();
-      reviewHighlights = {
+      staticCache = {
         updatedAt: j.updatedAt || null,
         places: j.places && typeof j.places === 'object' ? j.places : {}
       };
-      updateReviewStatus();
-      renderAll(false);
     } catch (err) {
       console.warn('review highlights unavailable', err);
-      if (els.reviewUpdateText) els.reviewUpdateText.textContent = 'Google 評論：讀取失敗 · 手動更新 ↗';
+    }
+    const saved = state?.reviewHighlights;
+    reviewHighlights = saved?.places && cloudTime(saved.updatedAt) >= cloudTime(staticCache?.updatedAt)
+      ? { updatedAt: saved.updatedAt || null, places: saved.places || {} }
+      : (staticCache || { updatedAt: null, places: {} });
+    updateReviewStatus();
+    renderAll(false);
+  }
+
+  function adoptReviewHighlightsFromState() {
+    const saved = state?.reviewHighlights;
+    if (!saved?.places) return;
+    if (cloudTime(saved.updatedAt) > cloudTime(reviewHighlights.updatedAt)) {
+      reviewHighlights = { updatedAt: saved.updatedAt || null, places: saved.places || {} };
+      updateReviewStatus();
     }
   }
 
@@ -1092,7 +1122,7 @@ html,body{
       ? '未知'
       : new Intl.DateTimeFormat('zh-TW',{year:'numeric',month:'numeric',day:'numeric'}).format(d);
     const count = Object.keys(reviewHighlights.places || {}).length;
-    els.reviewUpdateText.textContent = `Google 評論：${label} · ${count} 間 · 手動更新 ↗`;
+    els.reviewUpdateText.textContent = `Google 評論：${label} · ${count} 間 · 手動更新`;
   }
 
   function reviewCacheFor(p) {
@@ -1439,6 +1469,7 @@ html,body{
   }
 
   function renderAll(fitMap = true) {
+    adoptReviewHighlightsFromState();
     if (els.todayCityLabel) els.todayCityLabel.textContent = todayLocationLabel(todayCity);
     const list = getFilteredPlaces();
     renderStats();
@@ -2164,7 +2195,7 @@ html,body{
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
-          const reg = await navigator.serviceWorker.register('./sw.js?v=1.6.2');
+          const reg = await navigator.serviceWorker.register('./sw.js?v=1.7.0');
           await reg.update();
         } catch {}
       });
