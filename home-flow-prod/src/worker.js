@@ -1,4 +1,5 @@
-const JSON_HEADERS={"content-type":"application/json; charset=utf-8","cache-control":"no-store","access-control-allow-origin":"https://red0710-sys.github.io","vary":"Origin"};\nconst CORS_HEADERS={"access-control-allow-origin":"https://red0710-sys.github.io","access-control-allow-methods":"GET,POST,PUT,OPTIONS","access-control-allow-headers":"authorization,x-homeflow-family,content-type","access-control-max-age":"86400","vary":"Origin"};
+const JSON_HEADERS={"content-type":"application/json; charset=utf-8","cache-control":"no-store","access-control-allow-origin":"https://red0710-sys.github.io","vary":"Origin"};
+const CORS_HEADERS={"access-control-allow-origin":"https://red0710-sys.github.io","access-control-allow-methods":"GET,POST,PUT,OPTIONS","access-control-allow-headers":"authorization,x-homeflow-family,content-type","access-control-max-age":"86400","vary":"Origin"};
 
 function json(data,status=200,extra={}){return new Response(JSON.stringify(data),{status,headers:{...JSON_HEADERS,...extra}})}
 function b64url(bytes){let s="";for(const b of bytes)s+=String.fromCharCode(b);return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"")}
