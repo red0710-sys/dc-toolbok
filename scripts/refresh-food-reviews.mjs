@@ -3,6 +3,7 @@ import { chromium } from 'playwright';
 
 const INDEX = 'food-map/index.html';
 const OUT = 'food-map/review-highlights.json';
+const OUT_MIRROR = 'home-flow-prod/public/food-map/review-highlights.json';
 const MAX = Number(process.env.MAX_PLACES || 300);
 const CONCURRENCY = Number(process.env.CONCURRENCY || 4);
 const STALE_DAYS = Number(process.env.STALE_DAYS || 14);
