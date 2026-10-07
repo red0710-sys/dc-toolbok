@@ -610,6 +610,85 @@ html,body{
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
 }
+
+/* Beta 1.5.4 — no horizontal chip scrolling + 3-place draw */
+.region-tabs,.quick-tabs,.sub-tabs,.city-tabs,.type-tabs{
+  flex:1 1 auto;
+  min-width:0;
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+  overflow:visible !important;
+  padding-bottom:0;
+}
+.filter-line{
+  align-items:flex-start;
+}
+.filter-line .chip{
+  flex:0 0 auto;
+}
+.today-result.multi{
+  display:block;
+  padding:14px;
+}
+.draw-list{
+  display:grid;
+  gap:9px;
+}
+.draw-item{
+  display:grid;
+  grid-template-columns:30px minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:13px;
+  padding:11px;
+}
+.draw-rank{
+  width:30px;
+  height:30px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:rgba(255,255,255,.16);
+  font-weight:800;
+  font-size:.85rem;
+}
+.draw-main{
+  min-width:0;
+}
+.draw-name{
+  color:#fff;
+  font-weight:800;
+  line-height:1.3;
+}
+.draw-point{
+  margin-top:3px;
+  color:rgba(255,255,255,.78);
+  font-size:.78rem;
+  line-height:1.4;
+}
+.draw-open{
+  min-width:38px;
+  height:38px;
+  border:0;
+  border-radius:10px;
+  background:rgba(255,255,255,.16);
+  color:#fff;
+  font-weight:800;
+}
+@media(max-width:560px){
+  .filter-line{
+    display:grid;
+    grid-template-columns:46px minmax(0,1fr);
+    gap:9px;
+  }
+  .filter-label{
+    width:auto;
+    flex-basis:auto;
+  }
+}
 </style>
 </head>
 <body>
@@ -651,7 +730,7 @@ html,body{
           </div>
           <div class="today-actions">
             <button id="recommendBtn" class="btn btn-primary" type="button">✨ 系統推薦</button>
-            <button id="randomBtn" class="btn btn-ghost" type="button">🎲 隨機推</button>
+            <button id="randomBtn" class="btn btn-ghost" type="button">🎲 抽三間</button>
           </div>
         </article>
 
@@ -780,7 +859,7 @@ html,body{
   'use strict';
 
   const STORAGE_KEY = 'twFoodMap.v1';
-  const BUILD_VERSION = '1.5.3';
+  const BUILD_VERSION = '1.5.4';
   const SHARED_DATA_VERSION = '2026-10-07-shared-lists-v1';
   const SHARED_DATA_UPDATED_AT = '2026-10-07T18:45:00+08:00';
   const SHARED_SOURCES = [{"key":"keelung","label":"基隆","region":"北部","city":"基隆","kind":"food","declared":7,"url":"https://maps.app.goo.gl/4KACWmkaqChVpkvw6?g_st=ac","loaded":7},{"key":"wuqi","label":"梧棲","region":"中部","city":"梧棲","kind":"food","declared":76,"url":"https://maps.app.goo.gl/w1cTWpoC4z4itpZKA?g_st=ac","loaded":76},{"key":"family","label":"親子育樂","region":"其他","city":"親子育樂","kind":"family","declared":24,"url":"https://maps.app.goo.gl/f1mFM4Yjahaz9SyJ8?g_st=ac","loaded":24},{"key":"changhua","label":"彰化","region":"中部","city":"彰化","kind":"food","declared":29,"url":"https://maps.app.goo.gl/9oLNo3QeipNiEx7M7?g_st=ac","loaded":29},{"key":"tainan","label":"台南","region":"南部","city":"台南","kind":"food","declared":86,"url":"https://maps.app.goo.gl/EgamzKSobVtxUQHbA?g_st=ac","loaded":85},{"key":"kaohsiung","label":"高雄","region":"南部","city":"高雄","kind":"food","declared":9,"url":"https://maps.app.goo.gl/yANjiQEqpu76GJqc6?g_st=ac","loaded":9},{"key":"east","label":"東部","region":"東部","city":"東部","kind":"food","declared":3,"url":"https://maps.app.goo.gl/tKAFRrq6CMjShVeh6?g_st=ac","loaded":3},{"key":"chiayi","label":"嘉義","region":"南部","city":"嘉義","kind":"food","declared":14,"url":"https://maps.app.goo.gl/2bzH8oEPCLgnMUH67?g_st=ac","loaded":14},{"key":"qingshui","label":"清水","region":"中部","city":"清水","kind":"food","declared":43,"url":"https://maps.app.goo.gl/bZPPqHwSsL7VYN5v9?g_st=ac","loaded":44}];
@@ -1511,16 +1590,36 @@ html,body{
     if (!candidates.length) { toast('目前沒有符合條件的店家'); return; }
     const fresh = candidates.filter(p => !isRecentEaten(p));
     const pool = fresh.length ? fresh : candidates;
-    let pick;
-    if (mode === 'random') pick = pool[Math.floor(Math.random() * pool.length)];
-    else {
-      const ranked = pool.map(p => ({ p, s: recommendationScore(p) })).sort((a,b) => b.s - a.s);
-      const top = ranked.slice(0, Math.max(1, Math.ceil(ranked.length * .25)));
-      pick = top[Math.floor(Math.random() * top.length)].p;
+
+    if (mode === 'random') {
+      const picks = shufflePlaces(pool).slice(0, Math.min(3, pool.length));
+      els.todayResult.classList.remove('empty');
+      els.todayResult.classList.add('multi');
+      els.todayResult.innerHTML = `
+        <div class="draw-list">
+          ${picks.map((pick, i) => `
+            <div class="draw-item">
+              <div class="draw-rank">${i + 1}</div>
+              <div class="draw-main">
+                <div class="draw-name">${escapeHtml(pick.title)}</div>
+                <div class="draw-point">${escapeHtml(oneLineHighlight(pick))}</div>
+              </div>
+              ${pick.url ? `<button class="draw-open" type="button" data-open-map="${escapeAttr(pick.url)}" aria-label="開啟 Google Maps">↗</button>` : ''}
+            </div>`).join('')}
+        </div>`;
+      els.todayResult.querySelectorAll('[data-open-map]').forEach(btn => {
+        btn.onclick = () => window.open(btn.dataset.openMap, '_blank', 'noopener');
+      });
+      return;
     }
-    const reason = mode === 'random' ? '完全隨機抽選' : recommendationReason(pick);
+
+    els.todayResult.classList.remove('multi');
+    const ranked = pool.map(p => ({ p, s: recommendationScore(p) })).sort((a,b) => b.s - a.s);
+    const top = ranked.slice(0, Math.max(1, Math.ceil(ranked.length * .25)));
+    const pick = top[Math.floor(Math.random() * top.length)].p;
+    const reason = recommendationReason(pick);
     els.todayResult.classList.remove('empty');
-    els.todayResult.innerHTML = `<div class="today-icon">${mode === 'random' ? '🎲' : '🔥'}</div>
+    els.todayResult.innerHTML = `<div class="today-icon">🔥</div>
       <div style="min-width:0;flex:1">
         <div class="today-name">${escapeHtml(pick.title)}</div>
         <p>${escapeHtml(pick.city || '待分類')} · ${escapeHtml(reason)}</p>
@@ -1534,6 +1633,28 @@ html,body{
       </div>`;
     const editBtn = els.todayResult.querySelector('[data-edit]');
     if (editBtn) editBtn.onclick = () => openEditModal(editBtn.dataset.edit);
+  }
+
+  function shufflePlaces(list) {
+    const out = [...list];
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  }
+
+  function oneLineHighlight(p) {
+    const city = p.city || '待分類';
+    const eaten = p.eaten || hasList(p, '吃過');
+    const bits = [];
+    if (Number.isFinite(p.myRating)) bits.push(`你給 ${p.myRating}★`);
+    else if (p.wouldReturn === 'yes') bits.push('你會再吃');
+    else if (Number.isFinite(p.rating)) {
+      bits.push(`Google ${p.rating}★${Number.isFinite(p.reviews) ? '／' + p.reviews.toLocaleString('zh-TW') + ' 則' : ''}`);
+    }
+    bits.push(eaten ? '吃過' : '還沒吃過');
+    return `${city}｜${bits.join('，')}。`;
   }
 
   function recommendationScore(p) {
@@ -1915,7 +2036,7 @@ html,body{
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
-          const reg = await navigator.serviceWorker.register('./sw.js?v=1.5.3');
+          const reg = await navigator.serviceWorker.register('./sw.js?v=1.5.4');
           await reg.update();
         } catch {}
       });
