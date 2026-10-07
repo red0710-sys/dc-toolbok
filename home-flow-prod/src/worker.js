@@ -162,30 +162,13 @@ async function foodReviewProbe(url){
   const title=(url.searchParams.get("title")||"").trim().slice(0,120);
   const city=(url.searchParams.get("city")||"").trim().slice(0,40);
   if(!title)return json({error:"missing title"},400);
-  const target="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent([title,city].filter(Boolean).join(" "))+"&hl=zh-TW";
-  const upstream=await fetch(target,{
-    headers:{
-      "user-agent":"Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/140 Safari/537.36",
-      "accept-language":"zh-TW,zh;q=0.9,en;q=0.7"
-    },
-    cf:{cacheTtl:3600,cacheEverything:true}
-  });
-  const html=await upstream.text();
-  const decoded=html
-    .replace(/\\u([0-9a-fA-F]{4})/g,(_,h)=>String.fromCharCode(parseInt(h,16)))
-    .replace(/\\x22/g,'"').replace(/\\x27/g,"'")
-    .replace(/&quot;/g,'"').replace(/&#39;/g,"'");
-  const plain=decoded
-    .replace(/<script[\\s\\S]*?<\\/script>/gi," ")
-    .replace(/<style[\\s\\S]*?<\\/style>/gi," ")
-    .replace(/<[^>]+>/g," ")
-    .replace(/\\s+/g," ")
-    .trim();
-  const hasSummary=decoded.includes("評論摘要");
-  const hasReviews=decoded.includes("篇評論")||decoded.includes("評論");
-  const pos=Math.max(decoded.indexOf("評論摘要"),decoded.indexOf("篇評論"));
-  const sample=(pos>=0?decoded.slice(Math.max(0,pos-500),pos+5000):plain.slice(0,3000));
-  return json({ok:upstream.ok,status:upstream.status,length:html.length,hasSummary,hasReviews,sample:sample.slice(0,5000)});
+  const mapsUrl="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent([title,city].filter(Boolean).join(" "))+"&hl=zh-TW";
+  const target="https://r.jina.ai/"+mapsUrl;
+  const upstream=await fetch(target,{headers:{"accept":"text/plain","x-timeout":"20"}});
+  const body=await upstream.text();
+  const hasSummary=body.includes("評論摘要")||body.includes("Review summary");
+  const hasReviews=body.includes("篇評論")||body.includes("Reviews")||body.includes("評論");
+  return json({ok:upstream.ok,status:upstream.status,length:body.length,hasSummary,hasReviews,sample:body.slice(0,5000)});
 }
 
 async function cleanup(env){
