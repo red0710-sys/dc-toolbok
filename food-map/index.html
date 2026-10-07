@@ -102,6 +102,44 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
 }
 
 
+
+/* Core UI styles restored after map removal */
+.place-list { height:auto; min-height:0; max-height:none; overflow:visible; padding-right:0; }
+.place-name { font-weight:820; line-height:1.35; }
+.place-sub { color:var(--muted); font-size:.76rem; margin-top:5px; display:flex; flex-wrap:wrap; gap:6px; }
+.tag { padding:3px 7px; border-radius:999px; background:#202126; color:#bbbcc3; }
+.tag.hot { color:#111; background:var(--accent-2); }
+.tag.eaten { color:#111; background:var(--good); }
+.place-note { color:#c8c9ce; margin-top:7px; font-size:.82rem; line-height:1.45; }
+.item-actions { display:flex; gap:6px; align-items:flex-start; }
+.icon-btn { width:36px; height:36px; border-radius:10px; border:1px solid #30323a; background:#1a1b20; color:#dadbe0; }
+.icon-btn:hover { border-color:#4a4d56; background:#22242a; }
+.empty-list { padding:32px 10px; text-align:center; color:var(--muted); }
+.muted-small { color:var(--muted); font-size:.72rem; }
+
+.modal-backdrop { position:fixed; inset:0; z-index:5000; background:rgba(0,0,0,.72); backdrop-filter:blur(8px); display:grid; place-items:center; padding:18px; }
+.modal-backdrop.hidden { display:none; }
+.modal { width:min(620px,100%); max-height:min(88vh,860px); overflow-y:auto; background:#111216; border:1px solid #30323a; border-radius:20px; padding:20px; box-shadow:0 28px 100px rgba(0,0,0,.55); }
+.modal h3 { font-size:1.25rem; margin-bottom:6px; }
+.modal-desc { color:var(--muted); font-size:.85rem; line-height:1.5; margin-bottom:16px; }
+.field-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.field { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+.field.full { grid-column:1 / -1; }
+.field label { color:#c9cad0; font-size:.76rem; font-weight:760; }
+.field input, .field textarea, .field select { width:100%; color:var(--text); background:#17181c; border:1px solid #30323a; border-radius:12px; min-height:42px; padding:0 10px; outline:none; }
+.field textarea { min-height:92px; padding-top:10px; resize:vertical; }
+.check-row { display:flex; align-items:center; justify-content:space-between; gap:12px; border:1px solid #2d2f35; background:#17181c; padding:11px 12px; border-radius:12px; }
+.check-row input { width:19px; height:19px; accent-color:var(--accent); }
+.modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:16px; flex-wrap:wrap; }
+.dropzone { border:1.5px dashed #474950; border-radius:16px; padding:28px 18px; text-align:center; background:#15161a; }
+.dropzone strong { display:block; margin-bottom:5px; }
+.dropzone p { color:var(--muted); font-size:.8rem; margin-bottom:13px; }
+.diff-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:13px 0; }
+.diff-box { padding:12px; border-radius:12px; border:1px solid #2d2f35; background:#17181c; text-align:center; }
+.diff-box strong { display:block; font-size:1.25rem; }
+.diff-box span { color:var(--muted); font-size:.72rem; }
+.toast { position:fixed; left:50%; bottom:max(24px, env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:9999; background:#202126; color:#f7f7f5; border:1px solid #34363e; box-shadow:var(--shadow); border-radius:999px; padding:10px 14px; font-size:.82rem; max-width:calc(100% - 32px); text-align:center; }
+
 /* Beta 1.2 — hierarchical filters + compact accordion browsing */
 .toolbar { margin-bottom:14px; display:flex; flex-direction:column; gap:12px; align-items:stretch; }
 .filter-block { display:grid; gap:8px; }
@@ -395,8 +433,9 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
         myRating: Number.isFinite(prev?.myRating) ? prev.myRating : null,
         wouldReturn: prev?.wouldReturn || '',
         lastEatenAt: prev?.lastEatenAt || null,
+        forceFood: typeof prev?.forceFood === 'boolean' ? prev.forceFood : undefined,
         manual: false,
-        removed: false
+        removed: !!prev?.removed
       };
     });
     const manual = (base.places || []).filter(p => p.manual);
@@ -557,7 +596,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     const nonFood = [
       /停車場/, /圖書館/, /親子館/, /運動廣場/, /gas station/, /加油站/,
       /製鍋/, /漁港/, /seafood wholesaler/, /休閒農場/, /博物館/, /7-eleven/,
-      /便利商店/, /(^|[^餐])公園$/, /河樂廣場/, /釣魚場/
+      /便利商店/, /文化館/, /(^|[^餐])公園$/, /河樂廣場/, /釣魚場/
     ];
     return !nonFood.some(re => re.test(t));
   }
