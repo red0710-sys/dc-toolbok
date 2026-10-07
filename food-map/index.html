@@ -1,0 +1,808 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0b0c" />
+  <meta name="description" content="台灣美食地圖：Google Maps 收藏整理、吃過紀錄、備註與今天吃什麼推薦。" />
+  <title>Taiwan Food Map</title>
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <style>
+:root {
+  color-scheme: dark;
+  --bg: #08090b;
+  --panel: #111216;
+  --panel-2: #17181d;
+  --line: #292b31;
+  --text: #f5f5f3;
+  --muted: #999ca5;
+  --accent: #ff7a00;
+  --accent-2: #ffb000;
+  --good: #a7e35d;
+  --danger: #ff625f;
+  --radius: 18px;
+  --shadow: 0 18px 50px rgba(0,0,0,.28);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif; }
+body { background: radial-gradient(circle at 20% -10%, rgba(255,122,0,.13), transparent 26rem), var(--bg); }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+.app-shell { width: min(1460px, calc(100% - 28px)); margin: 0 auto; padding: 22px 0 44px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: clamp(1.5rem, 2.7vw, 2.45rem); letter-spacing: -.045em; }
+h2 { font-size: 1.05rem; letter-spacing: -.02em; }
+.eyebrow, .kicker { color: var(--accent); font-size: .68rem; letter-spacing: .16em; font-weight: 800; }
+.card { background: linear-gradient(180deg, rgba(255,255,255,.025), transparent), var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.hero-grid { display: grid; grid-template-columns: 1.65fr .75fr; gap: 14px; margin-bottom: 14px; }
+.today-card, .stats-card, .toolbar, .map-card, .list-card { padding: 18px; }
+.section-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.section-head.compact { align-items: center; }
+.soft-pill { color: #d7d8dc; background: #202126; border: 1px solid #2d2f35; border-radius: 999px; padding: 6px 9px; font-size: .72rem; white-space: nowrap; }
+.today-result { min-height: 118px; padding: 18px; border-radius: 14px; border: 1px solid #2b2d33; background: linear-gradient(135deg, #191a1f, #101115); display: flex; gap: 15px; align-items: center; }
+.today-result.empty { color: var(--muted); }
+.today-result p { margin-top: 5px; color: var(--muted); font-size: .88rem; }
+.today-result .today-name { font-size: clamp(1.2rem, 2vw, 1.75rem); font-weight: 850; letter-spacing: -.035em; color: var(--text); }
+.today-icon { width: 52px; height: 52px; border-radius: 15px; background: #23242a; display: grid; place-items: center; font-size: 1.7rem; flex: 0 0 auto; }
+.today-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.today-actions { display: flex; gap: 10px; margin-top: 12px; }
+.btn { border: 1px solid transparent; border-radius: 12px; min-height: 42px; padding: 0 14px; font-weight: 780; color: var(--text); background: transparent; transition: .18s ease; }
+.btn:hover { transform: translateY(-1px); }
+.btn-primary { color: #0a0a0a; background: linear-gradient(120deg, var(--accent), var(--accent-2)); box-shadow: 0 10px 28px rgba(255,122,0,.18); }
+.btn-ghost { background: #1b1c21; border-color: #30323a; }
+.btn-danger { background: rgba(255,98,95,.10); border-color: rgba(255,98,95,.3); color: #ff9997; }
+.stats-card { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: start; }
+.stat { min-height: 76px; border-radius: 14px; border: 1px solid #292b31; background: #15161a; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; }
+.stat span { color: var(--muted); font-size: .78rem; }
+.stat strong { font-size: 1.45rem; }
+.sync-status { grid-column: 1 / -1; padding: 10px 12px; color: var(--muted); font-size: .78rem; display: flex; align-items: center; gap: 8px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 4px rgba(167,227,93,.08); }
+.toolbar { margin-bottom: 14px; display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.region-tabs { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; }
+.region-tabs::-webkit-scrollbar { display: none; }
+.chip { white-space: nowrap; border: 1px solid #2d2f35; background: #17181c; color: #b6b8c0; border-radius: 999px; padding: 8px 11px; }
+.chip.active { color: #0a0a0a; border-color: var(--accent); background: var(--accent); font-weight: 850; }
+.filters-row { display: flex; gap: 8px; align-items: center; }
+.search-wrap { height: 42px; width: min(320px, 32vw); display: flex; align-items: center; gap: 8px; border: 1px solid #30323a; background: #17181c; border-radius: 12px; padding: 0 11px; color: var(--muted); }
+.search-wrap input { min-width: 0; width: 100%; background: transparent; border: 0; outline: 0; color: var(--text); }
+select, .field input, .field textarea { color: var(--text); background: #17181c; border: 1px solid #30323a; border-radius: 12px; min-height: 42px; padding: 0 10px; outline: none; }
+.field textarea { min-height: 92px; padding-top: 10px; resize: vertical; }
+.content-grid { display: grid; grid-template-columns: minmax(0, 1.16fr) minmax(360px, .84fr); gap: 14px; align-items: start; }
+#map { height: min(68vh, 720px); min-height: 460px; border-radius: 14px; overflow: hidden; background: #0d0e11; }
+.leaflet-container { font-family: inherit; background: #0d0e11; }
+.leaflet-control-attribution { font-size: 9px; }
+.place-list { height: min(68vh, 720px); min-height: 460px; overflow-y: auto; padding-right: 4px; }
+.place-group { margin-bottom: 19px; }
+.place-group-title { position: sticky; top: 0; z-index: 2; padding: 8px 0; background: linear-gradient(180deg, var(--panel) 75%, transparent); font-size: .74rem; font-weight: 900; letter-spacing: .08em; color: var(--accent-2); }
+.place-item { border-top: 1px solid #27292f; padding: 13px 2px; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 9px; }
+.place-item:first-of-type { border-top: 0; }
+.place-name { font-weight: 820; line-height: 1.35; }
+.place-sub { color: var(--muted); font-size: .76rem; margin-top: 5px; display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { padding: 3px 7px; border-radius: 999px; background: #202126; color: #bbbcc3; }
+.tag.hot { color: #111; background: var(--accent-2); }
+.tag.eaten { color: #111; background: var(--good); }
+.place-note { color: #c8c9ce; margin-top: 8px; font-size: .82rem; line-height: 1.45; }
+.item-actions { display: flex; gap: 6px; align-items: flex-start; }
+.icon-btn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid #30323a; background: #1a1b20; color: #dadbe0; }
+.empty-list { padding: 32px 10px; text-align: center; color: var(--muted); }
+.muted-small { color: var(--muted); font-size: .72rem; }
+.modal-backdrop { position: fixed; inset: 0; z-index: 5000; background: rgba(0,0,0,.72); backdrop-filter: blur(8px); display: grid; place-items: center; padding: 18px; }
+.modal-backdrop.hidden { display: none; }
+.modal { width: min(620px, 100%); max-height: min(88vh, 860px); overflow-y: auto; background: #111216; border: 1px solid #30323a; border-radius: 20px; padding: 20px; box-shadow: 0 28px 100px rgba(0,0,0,.55); }
+.modal h3 { font-size: 1.25rem; margin-bottom: 6px; }
+.modal-desc { color: var(--muted); font-size: .85rem; line-height: 1.5; margin-bottom: 16px; }
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.field.full { grid-column: 1 / -1; }
+.field label { color: #c9cad0; font-size: .76rem; font-weight: 760; }
+.field input, .field textarea, .field select { width: 100%; }
+.check-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid #2d2f35; background: #17181c; padding: 11px 12px; border-radius: 12px; }
+.check-row input { width: 19px; height: 19px; accent-color: var(--accent); }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.dropzone { border: 1.5px dashed #474950; border-radius: 16px; padding: 28px 18px; text-align: center; background: #15161a; }
+.dropzone strong { display: block; margin-bottom: 5px; }
+.dropzone p { color: var(--muted); font-size: .8rem; margin-bottom: 13px; }
+.diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 13px 0; }
+.diff-box { padding: 12px; border-radius: 12px; border: 1px solid #2d2f35; background: #17181c; text-align: center; }
+.diff-box strong { display: block; font-size: 1.25rem; }
+.diff-box span { color: var(--muted); font-size: .72rem; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 9999; background: #202126; color: #f7f7f5; border: 1px solid #34363e; box-shadow: var(--shadow); border-radius: 999px; padding: 10px 14px; font-size: .82rem; }
+.marker-pin { width: 18px; height: 18px; background: var(--accent); border: 3px solid #0e0f12; box-shadow: 0 0 0 2px rgba(255,122,0,.45); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+.marker-pin > span { display: none; }
+@media (max-width: 900px) {
+  .app-shell { width: min(100% - 18px, 760px); padding-top: 12px; }
+  .hero-grid, .content-grid { grid-template-columns: 1fr; }
+  .toolbar { align-items: stretch; flex-direction: column; }
+  .filters-row { width: 100%; }
+  .search-wrap { width: 100%; flex: 1; }
+  .map-card { order: 2; }
+  .list-card { order: 1; }
+  #map { height: 52vh; min-height: 360px; }
+  .place-list { height: auto; min-height: 0; max-height: none; }
+}
+@media (max-width: 560px) {
+  .topbar .btn { min-height: 38px; padding: 0 10px; font-size: .78rem; }
+  .hero-grid { gap: 10px; }
+  .today-card, .stats-card, .toolbar, .map-card, .list-card { padding: 14px; }
+  .today-actions .btn { flex: 1; }
+  .filters-row { display: grid; grid-template-columns: 1fr 1fr; }
+  .search-wrap { grid-column: 1 / -1; }
+  .filters-row .btn, .filters-row select { width: 100%; }
+  .field-grid { grid-template-columns: 1fr; }
+  .field.full { grid-column: auto; }
+  .modal { padding: 16px; }
+  .content-grid { gap: 10px; }
+}
+
+</style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">PERSONAL FOOD OS</div>
+        <h1>Taiwan Food Map</h1>
+      </div>
+      <button id="syncBtn" class="btn btn-primary" type="button">同步 Google Maps</button>
+    </header>
+
+    <main>
+      <section class="hero-grid">
+        <article class="card today-card">
+          <div class="section-head">
+            <div>
+              <span class="kicker">TODAY</span>
+              <h2>今天要吃啥？</h2>
+            </div>
+            <span id="candidateCount" class="soft-pill">0 家可選</span>
+          </div>
+          <div id="todayResult" class="today-result empty">
+            <div class="today-icon">🍜</div>
+            <div>
+              <strong>先匯入你的 Google Maps 收藏</strong>
+              <p>之後可用系統推薦或純隨機抽一間。</p>
+            </div>
+          </div>
+          <div class="today-actions">
+            <button id="recommendBtn" class="btn btn-primary" type="button">✨ 系統推薦</button>
+            <button id="randomBtn" class="btn btn-ghost" type="button">🎲 隨機推</button>
+          </div>
+        </article>
+
+        <article class="card stats-card">
+          <div class="stat"><span>收藏</span><strong id="totalStat">0</strong></div>
+          <div class="stat"><span>吃過</span><strong id="eatenStat">0</strong></div>
+          <div class="stat"><span>想去</span><strong id="wantStat">0</strong></div>
+          <div class="stat"><span>有備註</span><strong id="noteStat">0</strong></div>
+          <div class="sync-status">
+            <span class="dot"></span>
+            <span id="lastSyncText">尚未同步</span>
+          </div>
+        </article>
+      </section>
+
+      <section class="toolbar card">
+        <div class="region-tabs" id="regionTabs">
+          <button class="chip active" data-region="全部">全部</button>
+          <button class="chip" data-region="北部">北部</button>
+          <button class="chip" data-region="中部">中部</button>
+          <button class="chip" data-region="南部">南部</button>
+          <button class="chip" data-region="東部">東部</button>
+          <button class="chip" data-region="待分類">待分類</button>
+        </div>
+        <div class="filters-row">
+          <label class="search-wrap">
+            <span>⌕</span>
+            <input id="searchInput" type="search" placeholder="搜尋店名、城市、備註…" autocomplete="off" />
+          </label>
+          <select id="statusFilter" aria-label="狀態篩選">
+            <option value="全部">全部狀態</option>
+            <option value="想去">想去</option>
+            <option value="吃過">吃過</option>
+            <option value="五星">五星 / 最愛</option>
+          </select>
+          <button id="addBtn" class="btn btn-ghost" type="button">＋ 新增</button>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <article class="card map-card">
+          <div class="section-head compact">
+            <div>
+              <span class="kicker">MAP</span>
+              <h2>美食地圖</h2>
+            </div>
+            <span id="mapHint" class="muted-small">有座標的店家會顯示圖釘</span>
+          </div>
+          <div id="map"></div>
+        </article>
+
+        <article class="card list-card">
+          <div class="section-head compact">
+            <div>
+              <span class="kicker">PLACES</span>
+              <h2>北到南</h2>
+            </div>
+            <span id="visibleCount" class="soft-pill">0 家</span>
+          </div>
+          <div id="placeList" class="place-list"></div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <div id="modalBackdrop" class="modal-backdrop hidden" aria-hidden="true">
+    <div id="modal" class="modal" role="dialog" aria-modal="true"></div>
+  </div>
+
+  <input id="zipInput" type="file" accept=".zip" hidden />
+
+  <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+(() => {
+  'use strict';
+
+  const STORAGE_KEY = 'twFoodMap.v1';
+  const REGION_ORDER = ['北部', '中部', '南部', '東部', '待分類'];
+  const CITY_META = {
+    '基隆': { region: '北部', center: [25.1276, 121.7392] },
+    '台北': { region: '北部', center: [25.0330, 121.5654] },
+    '新北': { region: '北部', center: [25.0169, 121.4628] },
+    '桃園': { region: '北部', center: [24.9937, 121.3010] },
+    '新竹': { region: '北部', center: [24.8138, 120.9675] },
+    '苗栗': { region: '中部', center: [24.5602, 120.8214] },
+    '台中': { region: '中部', center: [24.1477, 120.6736] },
+    '大甲': { region: '中部', center: [24.3479, 120.6224], city: '台中' },
+    '清水': { region: '中部', center: [24.2700, 120.5760], city: '台中' },
+    '梧棲': { region: '中部', center: [24.2549, 120.5301], city: '台中' },
+    '沙鹿': { region: '中部', center: [24.2378, 120.5659], city: '台中' },
+    '彰化': { region: '中部', center: [24.0756, 120.5440] },
+    '南投': { region: '中部', center: [23.9609, 120.9719] },
+    '雲林': { region: '中部', center: [23.7092, 120.4313] },
+    '嘉義': { region: '南部', center: [23.4801, 120.4491] },
+    '台南': { region: '南部', center: [22.9997, 120.2270] },
+    '高雄': { region: '南部', center: [22.6273, 120.3014] },
+    '屏東': { region: '南部', center: [22.5519, 120.5488] },
+    '宜蘭': { region: '東部', center: [24.7021, 121.7378] },
+    '花蓮': { region: '東部', center: [23.9911, 121.6112] },
+    '台東': { region: '東部', center: [22.7554, 121.1500] },
+    '東部': { region: '東部', center: [23.55, 121.25] }
+  };
+
+  const FILENAME_CITY_RULES = [
+    ['基隆', '基隆'], ['大甲', '大甲'], ['沙鹿', '沙鹿'], ['梧棲', '梧棲'], ['清水', '清水'],
+    ['台中市區', '台中'], ['彰化', '彰化'], ['台南', '台南'], ['高雄', '高雄'], ['東部', '東部']
+  ];
+
+  let state = loadState();
+  let activeRegion = '全部';
+  let activeStatus = '全部';
+  let searchTerm = '';
+  let map;
+  let markerLayer;
+
+  const els = {
+    syncBtn: document.getElementById('syncBtn'), zipInput: document.getElementById('zipInput'),
+    addBtn: document.getElementById('addBtn'), placeList: document.getElementById('placeList'),
+    visibleCount: document.getElementById('visibleCount'), candidateCount: document.getElementById('candidateCount'),
+    totalStat: document.getElementById('totalStat'), eatenStat: document.getElementById('eatenStat'),
+    wantStat: document.getElementById('wantStat'), noteStat: document.getElementById('noteStat'),
+    lastSyncText: document.getElementById('lastSyncText'), todayResult: document.getElementById('todayResult'),
+    recommendBtn: document.getElementById('recommendBtn'), randomBtn: document.getElementById('randomBtn'),
+    searchInput: document.getElementById('searchInput'), statusFilter: document.getElementById('statusFilter'),
+    regionTabs: document.getElementById('regionTabs'), modalBackdrop: document.getElementById('modalBackdrop'),
+    modal: document.getElementById('modal')
+  };
+
+  initMap();
+  bindEvents();
+  renderAll();
+
+  function defaultState() {
+    return { version: 1, places: [], lastSync: null, lastImportName: null };
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? { ...defaultState(), ...JSON.parse(raw) } : defaultState();
+    } catch { return defaultState(); }
+  }
+
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  function initMap() {
+    map = L.map('map', { zoomControl: true, attributionControl: true }).setView([23.75, 120.95], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+    markerLayer = L.layerGroup().addTo(map);
+  }
+
+  function bindEvents() {
+    els.syncBtn.addEventListener('click', openSyncModal);
+    els.zipInput.addEventListener('change', handleZipSelect);
+    els.addBtn.addEventListener('click', () => openEditModal());
+    els.recommendBtn.addEventListener('click', () => pickToday('recommend'));
+    els.randomBtn.addEventListener('click', () => pickToday('random'));
+    els.searchInput.addEventListener('input', e => { searchTerm = e.target.value.trim().toLowerCase(); renderAll(false); });
+    els.statusFilter.addEventListener('change', e => { activeStatus = e.target.value; renderAll(false); });
+    els.regionTabs.addEventListener('click', e => {
+      const btn = e.target.closest('[data-region]'); if (!btn) return;
+      activeRegion = btn.dataset.region;
+      [...els.regionTabs.querySelectorAll('.chip')].forEach(x => x.classList.toggle('active', x === btn));
+      renderAll(false);
+    });
+    els.modalBackdrop.addEventListener('click', e => { if (e.target === els.modalBackdrop) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  }
+
+  function renderAll(fitMap = true) {
+    const list = getFilteredPlaces();
+    renderStats();
+    renderPlaces(list);
+    renderMap(list, fitMap);
+    els.visibleCount.textContent = `${list.length} 家`;
+    els.candidateCount.textContent = `${list.length} 家可選`;
+  }
+
+  function renderStats() {
+    const p = state.places.filter(x => !x.removed);
+    els.totalStat.textContent = p.length;
+    els.eatenStat.textContent = p.filter(x => x.eaten || hasList(x, '吃過')).length;
+    els.wantStat.textContent = p.filter(x => hasList(x, '想去')).length;
+    els.noteStat.textContent = p.filter(x => (x.localNote || x.note || x.comment || '').trim()).length;
+    els.lastSyncText.textContent = state.lastSync ? `上次同步：${formatDateTime(state.lastSync)}` : '尚未同步';
+  }
+
+  function getFilteredPlaces() {
+    return state.places.filter(p => !p.removed).filter(p => {
+      if (activeRegion !== '全部' && (p.region || '待分類') !== activeRegion) return false;
+      if (activeStatus === '想去' && !hasList(p, '想去')) return false;
+      if (activeStatus === '吃過' && !(p.eaten || hasList(p, '吃過'))) return false;
+      if (activeStatus === '五星' && !(hasList(p, '五星') || hasList(p, '最愛'))) return false;
+      if (searchTerm) {
+        const hay = [p.title, p.city, p.localNote, p.note, p.comment, ...(p.sourceLists || [])].join(' ').toLowerCase();
+        if (!hay.includes(searchTerm)) return false;
+      }
+      return true;
+    }).sort(placeSort);
+  }
+
+  function placeSort(a, b) {
+    const ra = REGION_ORDER.indexOf(a.region || '待分類');
+    const rb = REGION_ORDER.indexOf(b.region || '待分類');
+    if (ra !== rb) return ra - rb;
+    const ca = citySortKey(a.city), cb = citySortKey(b.city);
+    if (ca !== cb) return ca - cb;
+    return (a.title || '').localeCompare(b.title || '', 'zh-Hant');
+  }
+
+  function citySortKey(city) {
+    const order = ['基隆','台北','新北','桃園','新竹','苗栗','大甲','清水','梧棲','沙鹿','台中','彰化','南投','雲林','嘉義','台南','高雄','屏東','宜蘭','花蓮','台東','東部','待分類'];
+    const idx = order.indexOf(city || '待分類'); return idx < 0 ? 999 : idx;
+  }
+
+  function renderPlaces(list) {
+    if (!list.length) {
+      els.placeList.innerHTML = `<div class="empty-list">沒有符合條件的店家。<br><small>可先同步 Google Takeout 或手動新增。</small></div>`;
+      return;
+    }
+    const groups = new Map();
+    for (const p of list) {
+      const key = p.city || '待分類';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(p);
+    }
+    els.placeList.innerHTML = [...groups.entries()].map(([city, places]) => `
+      <section class="place-group">
+        <div class="place-group-title">${escapeHtml(city)} · ${places.length}</div>
+        ${places.map(renderPlaceItem).join('')}
+      </section>`).join('');
+
+    els.placeList.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openEditModal(btn.dataset.edit)));
+    els.placeList.querySelectorAll('[data-eaten]').forEach(btn => btn.addEventListener('click', () => toggleEaten(btn.dataset.eaten)));
+  }
+
+  function renderPlaceItem(p) {
+    const eaten = p.eaten || hasList(p, '吃過');
+    const hot = hasList(p, '五星') || hasList(p, '最愛');
+    const note = p.localNote || p.note || p.comment || '';
+    return `<div class="place-item">
+      <div>
+        <div class="place-name">${escapeHtml(p.title || '未命名地點')}</div>
+        <div class="place-sub">
+          <span>${escapeHtml(p.region || '待分類')} · ${escapeHtml(p.city || '待分類')}</span>
+          ${eaten ? '<span class="tag eaten">吃過</span>' : hasList(p,'想去') ? '<span class="tag">想去</span>' : ''}
+          ${hot ? '<span class="tag hot">推薦</span>' : ''}
+          ${p.manual ? '<span class="tag">手動</span>' : ''}
+        </div>
+        ${note ? `<div class="place-note">${escapeHtml(note)}</div>` : ''}
+      </div>
+      <div class="item-actions">
+        ${p.url ? `<button class="icon-btn" title="Google Maps" onclick="window.open('${escapeAttr(p.url)}','_blank','noopener')">↗</button>` : ''}
+        <button class="icon-btn" data-eaten="${p.id}" title="切換吃過">${eaten ? '✓' : '○'}</button>
+        <button class="icon-btn" data-edit="${p.id}" title="編輯">✎</button>
+      </div>
+    </div>`;
+  }
+
+  function renderMap(list, fit = true) {
+    markerLayer.clearLayers();
+    const bounds = [];
+    for (const p of list) {
+      if (!Number.isFinite(p.lat) || !Number.isFinite(p.lng)) continue;
+      const icon = L.divIcon({ className: '', html: '<div class="marker-pin"><span></span></div>', iconSize: [22,22], iconAnchor: [10,20] });
+      const m = L.marker([p.lat, p.lng], { icon }).bindPopup(`<strong>${escapeHtml(p.title)}</strong><br><small>${escapeHtml(p.city || '')}</small>${p.url ? `<br><a href="${escapeAttr(p.url)}" target="_blank" rel="noopener">開啟 Google Maps</a>` : ''}`);
+      markerLayer.addLayer(m); bounds.push([p.lat, p.lng]);
+    }
+    if (fit && bounds.length) map.fitBounds(bounds, { padding: [28,28], maxZoom: 14 });
+    else if (fit && !bounds.length) map.setView([23.75, 120.95], 7);
+  }
+
+  function pickToday(mode) {
+    const candidates = getFilteredPlaces();
+    if (!candidates.length) { toast('目前沒有可推薦的店家'); return; }
+    let pick;
+    if (mode === 'random') pick = candidates[Math.floor(Math.random() * candidates.length)];
+    else {
+      const ranked = candidates.map(p => ({ p, s: recommendationScore(p) })).sort((a,b) => b.s - a.s);
+      const top = ranked.slice(0, Math.max(1, Math.ceil(ranked.length * .25)));
+      pick = top[Math.floor(Math.random() * top.length)].p;
+    }
+    const reason = mode === 'random' ? '完全隨機抽選' : recommendationReason(pick);
+    els.todayResult.classList.remove('empty');
+    els.todayResult.innerHTML = `<div class="today-icon">${mode === 'random' ? '🎲' : '🔥'}</div>
+      <div style="min-width:0;flex:1">
+        <div class="today-name">${escapeHtml(pick.title)}</div>
+        <p>${escapeHtml(pick.city || '待分類')} · ${escapeHtml(reason)}</p>
+        <div class="today-meta">
+          ${pick.eaten || hasList(pick,'吃過') ? '<span class="tag eaten">吃過</span>' : '<span class="tag">還沒吃</span>'}
+          ${hasList(pick,'五星') || hasList(pick,'最愛') ? '<span class="tag hot">高優先</span>' : ''}
+          ${pick.url ? `<button class="chip" onclick="window.open('${escapeAttr(pick.url)}','_blank','noopener')">Google Maps ↗</button>` : ''}
+        </div>
+      </div>`;
+  }
+
+  function recommendationScore(p) {
+    let s = 10;
+    if (hasList(p, '555') || hasList(p, '五星')) s += 42;
+    if (hasList(p, '最愛')) s += 34;
+    if (hasList(p, '吃過的名店')) s += 24;
+    if (hasList(p, '想去的餐廳')) s += 12;
+    if (p.eaten) s += 5;
+    if ((p.localNote || '').trim()) s += 4;
+    if (Number.isFinite(p.manualScore)) s += p.manualScore;
+    return s;
+  }
+
+  function recommendationReason(p) {
+    const r = [];
+    if (hasList(p, '555') || hasList(p, '五星')) r.push('五星收藏');
+    if (hasList(p, '最愛')) r.push('你的最愛');
+    if (hasList(p, '吃過的名店')) r.push('吃過名店');
+    if (hasList(p, '想去的餐廳')) r.push('想去清單');
+    if (!r.length) r.push('依目前條件綜合推薦');
+    return r.slice(0,2).join('＋');
+  }
+
+  function openSyncModal() {
+    els.modal.innerHTML = `
+      <h3>同步 Google Maps</h3>
+      <p class="modal-desc">Google Takeout → 只匯出「已儲存」→ 把 ZIP 丟進來。資料只在你的瀏覽器中處理，不會上傳到伺服器。</p>
+      <div class="dropzone" id="dropzone">
+        <strong>拖曳 Takeout ZIP 到這裡</strong>
+        <p>會自動讀取美食清單、合併重複店家，並保留「吃過」與你的備註。</p>
+        <button id="chooseZipBtn" class="btn btn-primary" type="button">選擇 ZIP</button>
+      </div>
+      <div class="modal-actions"><button class="btn btn-ghost" id="closeModalBtn">取消</button></div>`;
+    openModal();
+    document.getElementById('chooseZipBtn').onclick = () => els.zipInput.click();
+    document.getElementById('closeModalBtn').onclick = closeModal;
+    const dz = document.getElementById('dropzone');
+    ['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.style.borderColor = '#ff7a00'; }));
+    ['dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.style.borderColor = ''; }));
+    dz.addEventListener('drop', e => { const f = e.dataTransfer.files?.[0]; if (f) importTakeoutZip(f); });
+  }
+
+  async function handleZipSelect(e) {
+    const file = e.target.files?.[0]; e.target.value = '';
+    if (file) await importTakeoutZip(file);
+  }
+
+  async function importTakeoutZip(file) {
+    if (!file.name.toLowerCase().endsWith('.zip')) { toast('請選擇 ZIP 檔'); return; }
+    els.modal.innerHTML = `<h3>正在解析…</h3><p class="modal-desc">${escapeHtml(file.name)}</p><div class="dropzone"><strong>讀取 Google Maps 收藏中</strong><p>不會上傳檔案。</p></div>`;
+    openModal();
+    try {
+      const zip = await JSZip.loadAsync(file);
+      const csvFiles = Object.values(zip.files).filter(x => !x.dir && x.name.toLowerCase().endsWith('.csv'));
+      if (!csvFiles.length) throw new Error('這個 ZIP 裡沒有 CSV。請確認 Takeout 選的是「已儲存」。');
+
+      const rows = [];
+      for (const entry of csvFiles) {
+        const text = await entry.async('string');
+        const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+        const listName = decodeListName(entry.name);
+        for (const raw of parsed.data || []) rows.push(normalizeTakeoutRow(raw, listName));
+      }
+
+      const imported = buildTaiwanFoodPlaces(rows);
+      const diff = diffImport(imported);
+      showImportPreview(file.name, imported, diff, csvFiles.length);
+    } catch (err) {
+      els.modal.innerHTML = `<h3>無法匯入</h3><p class="modal-desc">${escapeHtml(err?.message || '解析失敗')}</p><div class="modal-actions"><button class="btn btn-ghost" id="closeModalBtn">關閉</button></div>`;
+      document.getElementById('closeModalBtn').onclick = closeModal;
+    }
+  }
+
+  function showImportPreview(fileName, imported, diff, csvCount) {
+    els.modal.innerHTML = `
+      <h3>同步預覽</h3>
+      <p class="modal-desc">讀到 ${csvCount} 個清單；台灣美食候選 ${imported.length} 家。套用後會保留你在本工具設定的「吃過 / 備註 / 手動城市」。</p>
+      <div class="diff-grid">
+        <div class="diff-box"><strong>+${diff.added}</strong><span>新增</span></div>
+        <div class="diff-box"><strong>${diff.updated}</strong><span>更新</span></div>
+        <div class="diff-box"><strong>−${diff.removed}</strong><span>Maps 已移除</span></div>
+      </div>
+      <div class="check-row"><div><strong>只處理台灣美食</strong><div class="muted-small">以「美食＋城市」清單為主，跨區清單只用來補五星/最愛/吃過/想去標記。</div></div><span>✓</span></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="closeModalBtn">取消</button>
+        <button class="btn btn-primary" id="applyImportBtn">套用更新</button>
+      </div>`;
+    document.getElementById('closeModalBtn').onclick = closeModal;
+    document.getElementById('applyImportBtn').onclick = () => {
+      applyImport(imported, fileName); closeModal(); toast(`同步完成：新增 ${diff.added} 家`);
+    };
+  }
+
+  function buildTaiwanFoodPlaces(rows) {
+    const index = new Map();
+    const cross = new Map();
+    const crossNames = ['555 五星好評','吃過的名店','最愛的地點','想去的餐廳'];
+
+    for (const r of rows) {
+      const key = canonicalKey(r.url, r.title);
+      if (!key) continue;
+      if (!cross.has(key)) cross.set(key, new Set());
+      if (crossNames.some(n => r.listName.includes(n))) cross.get(key).add(r.listName);
+    }
+
+    for (const r of rows) {
+      if (!isPrimaryTaiwanFoodList(r.listName)) continue;
+      const city = inferCityFromList(r.listName) || inferCityFromText([r.title,r.note,r.comment].join(' ')) || '待分類';
+      const meta = CITY_META[city] || {};
+      const key = canonicalKey(r.url, r.title); if (!key) continue;
+      const coords = parseCoordinates(r.url);
+      if (!index.has(key)) {
+        index.set(key, {
+          id: key, title: r.title || '未命名地點', url: r.url || '', note: r.note || '', comment: r.comment || '',
+          sourceLists: [r.listName], city, region: meta.region || '待分類', lat: coords?.lat ?? null, lng: coords?.lng ?? null,
+          eaten: false, localNote: '', manual: false, removed: false
+        });
+      } else {
+        const p = index.get(key);
+        if (!p.sourceLists.includes(r.listName)) p.sourceLists.push(r.listName);
+        if (!p.note && r.note) p.note = r.note;
+        if (!p.comment && r.comment) p.comment = r.comment;
+      }
+    }
+
+    for (const [key, p] of index.entries()) {
+      for (const name of cross.get(key) || []) if (!p.sourceLists.includes(name)) p.sourceLists.push(name);
+    }
+
+    return [...index.values()];
+  }
+
+  function isPrimaryTaiwanFoodList(name) {
+    return /美食/.test(name) && !/新加坡|中國|比利時|日本|沖繩|東京/i.test(name);
+  }
+
+  function normalizeTakeoutRow(raw, listName) {
+    const get = (...names) => {
+      for (const n of names) {
+        const k = Object.keys(raw).find(x => x.trim().toLowerCase() === n.toLowerCase());
+        if (k && raw[k] != null) return String(raw[k]).trim();
+      }
+      return '';
+    };
+    return { listName, title: get('Title','名稱','標題'), note: get('Note','備註'), url: get('URL','Url','網址'), comment: get('Comment','Comments','留言','評論') };
+  }
+
+  function decodeListName(path) {
+    const leaf = path.split('/').pop() || path;
+    return leaf.replace(/\.csv$/i, '').trim();
+  }
+
+  function diffImport(imported) {
+    const oldImported = state.places.filter(p => !p.manual);
+    const old = new Map(oldImported.map(p => [p.id, p]));
+    const neu = new Map(imported.map(p => [p.id, p]));
+    let added = 0, updated = 0, removed = 0;
+    for (const [id, p] of neu) {
+      if (!old.has(id)) added++;
+      else if (JSON.stringify((old.get(id).sourceLists||[]).slice().sort()) !== JSON.stringify((p.sourceLists||[]).slice().sort())) updated++;
+    }
+    for (const id of old.keys()) if (!neu.has(id)) removed++;
+    return { added, updated, removed };
+  }
+
+  function applyImport(imported, fileName) {
+    const old = new Map(state.places.map(p => [p.id, p]));
+    const incomingIds = new Set(imported.map(p => p.id));
+    const merged = imported.map(p => {
+      const prev = old.get(p.id);
+      return prev ? {
+        ...p,
+        eaten: !!prev.eaten,
+        localNote: prev.localNote || '',
+        city: prev.manualCity ? prev.city : p.city,
+        region: prev.manualCity ? prev.region : p.region,
+        manualCity: !!prev.manualCity,
+        manualScore: prev.manualScore,
+        removed: false
+      } : p;
+    });
+
+    for (const p of state.places) {
+      if (p.manual) merged.push(p);
+      else if (!incomingIds.has(p.id)) merged.push({ ...p, removed: true });
+    }
+
+    state.places = dedupePlaces(merged);
+    state.lastSync = new Date().toISOString();
+    state.lastImportName = fileName;
+    saveState(); renderAll();
+  }
+
+  function dedupePlaces(arr) {
+    const map = new Map();
+    for (const p of arr) {
+      if (!map.has(p.id)) map.set(p.id, p);
+      else {
+        const a = map.get(p.id);
+        a.sourceLists = [...new Set([...(a.sourceLists||[]), ...(p.sourceLists||[])])];
+        a.localNote = a.localNote || p.localNote || '';
+        a.eaten = a.eaten || p.eaten;
+      }
+    }
+    return [...map.values()];
+  }
+
+  function openEditModal(id = null) {
+    const p = id ? state.places.find(x => x.id === id) : null;
+    els.modal.innerHTML = `
+      <h3>${p ? '編輯店家' : '手動新增'}</h3>
+      <p class="modal-desc">手動資料與個人備註會保留，不會被下一次 Google Takeout 同步洗掉。</p>
+      <div class="field-grid">
+        <div class="field full"><label>店名</label><input id="fTitle" value="${escapeAttr(p?.title || '')}" placeholder="例如：阿裕牛肉涮涮鍋" /></div>
+        <div class="field full"><label>Google Maps 連結</label><input id="fUrl" value="${escapeAttr(p?.url || '')}" placeholder="https://maps.app.goo.gl/..." /></div>
+        <div class="field"><label>城市 / 區域</label><select id="fCity">${cityOptions(p?.city || '台中')}</select></div>
+        <div class="field"><label>狀態</label><select id="fStatus"><option value="一般">一般</option><option value="想去" ${hasList(p||{},'想去')?'selected':''}>想去</option><option value="五星" ${hasList(p||{},'五星')||hasList(p||{},'最愛')?'selected':''}>五星 / 最愛</option></select></div>
+        <div class="field full"><label>我的備註</label><textarea id="fNote" placeholder="必點、停車、家人喜好…">${escapeHtml(p?.localNote || '')}</textarea></div>
+        <div class="field full"><div class="check-row"><div><strong>吃過</strong><div class="muted-small">標記後可用篩選快速找吃過 / 未吃。</div></div><input id="fEaten" type="checkbox" ${p?.eaten ? 'checked' : ''}/></div></div>
+      </div>
+      <div class="modal-actions">
+        ${p ? '<button class="btn btn-danger" id="deleteBtn">刪除</button>' : ''}
+        <button class="btn btn-ghost" id="closeModalBtn">取消</button>
+        <button class="btn btn-primary" id="savePlaceBtn">儲存</button>
+      </div>`;
+    openModal();
+    document.getElementById('closeModalBtn').onclick = closeModal;
+    document.getElementById('savePlaceBtn').onclick = () => savePlaceForm(p);
+    if (p) document.getElementById('deleteBtn').onclick = () => deletePlace(p.id);
+  }
+
+  function cityOptions(selected) {
+    const cities = ['基隆','台北','新北','桃園','新竹','苗栗','大甲','清水','梧棲','沙鹿','台中','彰化','南投','雲林','嘉義','台南','高雄','屏東','宜蘭','花蓮','台東','東部','待分類'];
+    return cities.map(c => `<option value="${c}" ${c===selected?'selected':''}>${c}</option>`).join('');
+  }
+
+  function savePlaceForm(existing) {
+    const title = document.getElementById('fTitle').value.trim();
+    const url = document.getElementById('fUrl').value.trim();
+    const city = document.getElementById('fCity').value;
+    const status = document.getElementById('fStatus').value;
+    const localNote = document.getElementById('fNote').value.trim();
+    const eaten = document.getElementById('fEaten').checked;
+    if (!title) { toast('請輸入店名'); return; }
+    const meta = CITY_META[city] || {};
+    const coords = parseCoordinates(url);
+    let sourceLists = existing?.sourceLists ? [...existing.sourceLists] : [];
+    sourceLists = sourceLists.filter(x => !['手動：想去','手動：五星'].includes(x));
+    if (status === '想去') sourceLists.push('手動：想去');
+    if (status === '五星') sourceLists.push('手動：五星');
+
+    if (existing) {
+      Object.assign(existing, { title, url, city, region: meta.region || '待分類', localNote, eaten, sourceLists, manualCity: true,
+        lat: coords?.lat ?? existing.lat ?? null, lng: coords?.lng ?? existing.lng ?? null, removed: false });
+    } else {
+      const id = canonicalKey(url, title) || `manual:${Date.now()}`;
+      const same = state.places.find(x => x.id === id);
+      if (same) { toast('這家店已經存在'); return; }
+      state.places.push({ id, title, url, city, region: meta.region || '待分類', localNote, eaten, sourceLists, manual: true, manualCity: true,
+        note: '', comment: '', lat: coords?.lat ?? null, lng: coords?.lng ?? null, removed: false });
+    }
+    saveState(); closeModal(); renderAll(); toast('已儲存');
+  }
+
+  function deletePlace(id) {
+    const p = state.places.find(x => x.id === id); if (!p) return;
+    if (p.manual) state.places = state.places.filter(x => x.id !== id);
+    else p.removed = true;
+    saveState(); closeModal(); renderAll(); toast('已從工具中移除');
+  }
+
+  function toggleEaten(id) {
+    const p = state.places.find(x => x.id === id); if (!p) return;
+    p.eaten = !p.eaten; saveState(); renderAll(false);
+  }
+
+  function inferCityFromList(name) {
+    for (const [needle, city] of FILENAME_CITY_RULES) if (name.includes(needle)) return city;
+    return null;
+  }
+
+  function inferCityFromText(text) {
+    if (!text) return null;
+    for (const city of Object.keys(CITY_META)) if (text.includes(city)) return city;
+    const aliases = [
+      ['臺北','台北'],['臺中','台中'],['臺南','台南'],['臺東','台東'],
+      ['北投','台北'],['信義','台北'],['士林','台北'],['板橋','新北'],['新店','新北'],
+      ['西屯','台中'],['北屯','台中'],['南屯','台中'],['豐原','台中'],['龍井','台中'],['烏日','台中'],
+      ['永康','台南'],['安平','台南'],['左營','高雄'],['苓雅','高雄']
+    ];
+    for (const [k,v] of aliases) if (text.includes(k)) return v;
+    return null;
+  }
+
+  function parseCoordinates(url) {
+    if (!url) return null;
+    const patterns = [
+      /@(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/,
+      /[?&](?:q|query|ll)=(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/,
+      /!3d(-?\d{1,3}\.\d+)!4d(-?\d{1,3}\.\d+)/
+    ];
+    for (const re of patterns) {
+      const m = url.match(re);
+      if (m) return { lat: Number(m[1]), lng: Number(m[2]) };
+    }
+    return null;
+  }
+
+  function canonicalKey(url, title) {
+    if (url) {
+      try {
+        const decoded = decodeURIComponent(url);
+        let m = decoded.match(/[?&](?:ludocid|cid)=([0-9]+)/i); if (m) return `cid:${m[1]}`;
+        m = decoded.match(/!1s(0x[0-9a-f]+:0x[0-9a-f]+)/i); if (m) return `hex:${m[1].toLowerCase()}`;
+        const u = new URL(url);
+        ['utm_source','utm_medium','utm_campaign','g_st','entry','sa'].forEach(k => u.searchParams.delete(k));
+        u.hash = '';
+        return `url:${u.toString().replace(/\/$/,'')}`;
+      } catch {}
+    }
+    const t = (title || '').trim().toLowerCase();
+    return t ? `title:${t}` : null;
+  }
+
+  function hasList(p, needle) { return (p.sourceLists || []).some(x => String(x).includes(needle)); }
+  function formatDateTime(iso) { try { return new Intl.DateTimeFormat('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(iso)); } catch { return iso; } }
+  function openModal() { els.modalBackdrop.classList.remove('hidden'); els.modalBackdrop.setAttribute('aria-hidden','false'); }
+  function closeModal() { els.modalBackdrop.classList.add('hidden'); els.modalBackdrop.setAttribute('aria-hidden','true'); }
+  function toast(msg) { const el = document.createElement('div'); el.className='toast'; el.textContent=msg; document.body.appendChild(el); setTimeout(()=>el.remove(),2200); }
+  function escapeHtml(v='') { return String(v).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+  function escapeAttr(v='') { return escapeHtml(v).replace(/`/g,'&#96;'); }
+})();
+
+</script>
+</body>
+</html>
