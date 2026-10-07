@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-07T13:49:19.530Z",
+  "updatedAt": "2026-10-07T13:50:27.123Z",
   "source": "Google Maps public review pages; cached snapshot, not live API",
-  "count": 166,
+  "count": 213,
   "places": {
     "shared:keelung:九如營養三明治（常一嚐）": {
       "title": "九如營養三明治（常一嚐）",
@@ -2551,6 +2551,703 @@
         "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。"
       ],
       "fetchedAt": "2026-10-07T13:49:19.530Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:黃火木舊台味冰店 (北永康店)": {
+      "title": "黃火木舊台味冰店 (北永康店)",
+      "city": "台南",
+      "rating": 4.3,
+      "reviewCount": 203,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.116Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:breakfast": {
+      "title": "Breakfast",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.117Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:𤦔鹹酥雞-安平店": {
+      "title": "𤦔鹹酥雞-安平店",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.117Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:夏林臭豆腐": {
+      "title": "夏林臭豆腐",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "用餐節奏：排隊、等候或出餐速度是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.117Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:黃火木舊台味冰店": {
+      "title": "黃火木舊台味冰店",
+      "city": "台南",
+      "rating": 4.2,
+      "reviewCount": 1664,
+      "topics": [],
+      "highlights": [
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.117Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:赤峰鐵板燒 (安中店)": {
+      "title": "赤峰鐵板燒 (安中店)",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.117Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:馨味胡椒白菜雞": {
+      "title": "馨味胡椒白菜雞",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.117Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:阿忠螃蟹-府城蟳禮": {
+      "title": "阿忠螃蟹-府城蟳禮",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.117Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:嘟嘟牛排-西門店": {
+      "title": "嘟嘟牛排-西門店",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "用餐節奏：排隊、等候或出餐速度是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.117Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:丹瓦樓": {
+      "title": "丹瓦樓",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.118Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:walking su 藥膳麻油雞": {
+      "title": "Walking Su 藥膳麻油雞",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.118Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:阿宏牛肉湯": {
+      "title": "阿宏牛肉湯",
+      "city": "台南",
+      "rating": 4.4,
+      "reviewCount": 727,
+      "topics": [],
+      "highlights": [
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.118Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:陳家汕頭意麵": {
+      "title": "陳家汕頭意麵",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "用餐節奏：排隊、等候或出餐速度是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.118Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:台南葡吉麵包店": {
+      "title": "台南葡吉麵包店",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "用餐節奏：排隊、等候或出餐速度是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.118Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:阿杰溫體牛肉湯（每天售完為止）": {
+      "title": "阿杰溫體牛肉湯（每天售完為止）",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.118Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:豐收飯桌": {
+      "title": "豐收飯桌",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.118Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:無名羊肉湯-大菜市（每日上午五點半開賣，賣完為止，星期二固定店休，請追蹤臉書，感謝您！）": {
+      "title": "無名羊肉湯-大菜市（每日上午五點半開賣，賣完為止，星期二固定店休，請追蹤臉書，感謝您！）",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.119Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:東山古腸新古早味糯米大腸": {
+      "title": "東山古腸新古早味糯米大腸",
+      "city": "台南",
+      "rating": 4.5,
+      "reviewCount": 260,
+      "topics": [],
+      "highlights": [
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.119Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:上好烤魯味": {
+      "title": "上好烤魯味",
+      "city": "台南",
+      "rating": 4.4,
+      "reviewCount": 1284,
+      "topics": [
+        {
+          "label": "滷味",
+          "count": 158
+        },
+        {
+          "label": "米血",
+          "count": 68
+        },
+        {
+          "label": "燒烤",
+          "count": 67
+        }
+      ],
+      "highlights": [
+        "熱門主題：最常提到「滷味」（158）與「米血」（68）。",
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.119Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:檨仔林阿全碗粿": {
+      "title": "檨仔林阿全碗粿",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "用餐節奏：排隊、等候或出餐速度是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.119Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:台南市 基明飯桌仔－飯桌仔鮮魚自助餐": {
+      "title": "台南市 基明飯桌仔－飯桌仔鮮魚自助餐",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.119Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:呷涮嘴東山鴨頭": {
+      "title": "呷涮嘴東山鴨頭",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.119Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:克林台包": {
+      "title": "克林台包",
+      "city": "台南",
+      "rating": 4.2,
+      "reviewCount": 3399,
+      "topics": [
+        {
+          "label": "蛋黃",
+          "count": 134
+        },
+        {
+          "label": "伴手禮",
+          "count": 84
+        },
+        {
+          "label": "饅頭",
+          "count": 71
+        }
+      ],
+      "highlights": [
+        "熱門主題：最常提到「蛋黃」（134）與「伴手禮」（84）。",
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.119Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:布萊恩紅茶正興總店": {
+      "title": "布萊恩紅茶正興總店",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.119Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:炸雞洋行(歡迎電話預訂)": {
+      "title": "炸雞洋行(歡迎電話預訂)",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "用餐節奏：排隊、等候或出餐速度是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.120Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:保哥黑輪": {
+      "title": "保哥黑輪",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.120Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:鴻牛溫體牛肉湯-南門店｜中西區美食｜宵夜牛肉湯｜熱門牛肉湯｜台南美食推薦｜台南小吃推薦｜牛肉湯推薦｜溫體牛｜必吃牛肉鍋｜宵夜推薦｜熱炒推薦｜必吃美食｜評價牛肉湯｜": {
+      "title": "鴻牛溫體牛肉湯-南門店｜中西區美食｜宵夜牛肉湯｜熱門牛肉湯｜台南美食推薦｜台南小吃推薦｜牛肉湯推薦｜溫體牛｜必吃牛肉鍋｜宵夜推薦｜熱炒推薦｜必吃美食｜評價牛肉湯｜",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.120Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:八寶彬 圓仔惠": {
+      "title": "八寶彬 圓仔惠",
+      "city": "台南",
+      "rating": 4.2,
+      "reviewCount": 3253,
+      "topics": [],
+      "highlights": [
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.120Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:阿棠牛肉湯": {
+      "title": "阿棠牛肉湯",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.121Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:阿堂鹹粥": {
+      "title": "阿堂鹹粥",
+      "city": "台南",
+      "rating": 3.8,
+      "reviewCount": 8814,
+      "topics": [
+        {
+          "label": "虱目魚",
+          "count": 414
+        },
+        {
+          "label": "煎",
+          "count": 385
+        },
+        {
+          "label": "料",
+          "count": 269
+        }
+      ],
+      "highlights": [
+        "熱門主題：最常提到「虱目魚」（414）與「煎」（385）。",
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.121Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:kaohsiung:湖南味": {
+      "title": "湖南味",
+      "city": "高雄",
+      "rating": 4.1,
+      "reviewCount": 1556,
+      "topics": [],
+      "highlights": [
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.121Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:kaohsiung:yancheng duck noodles": {
+      "title": "Yancheng Duck Noodles",
+      "city": "高雄",
+      "rating": 4.2,
+      "reviewCount": 1649,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.121Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:kaohsiung:冬粉王": {
+      "title": "冬粉王",
+      "city": "高雄",
+      "rating": 4.1,
+      "reviewCount": 4858,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.121Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:kaohsiung:鳳興麵線": {
+      "title": "鳳興麵線",
+      "city": "高雄",
+      "rating": 4.1,
+      "reviewCount": 4439,
+      "topics": [],
+      "highlights": [
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.121Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:kaohsiung:古早味碳火芳德豬肉冬粉": {
+      "title": "古早味碳火芳德豬肉冬粉",
+      "city": "高雄",
+      "rating": 4.4,
+      "reviewCount": 660,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.121Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:chiayi:粉圓冰 愛玉冰": {
+      "title": "粉圓冰 愛玉冰",
+      "city": "嘉義",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.121Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:chiayi:阿燕雞子粿": {
+      "title": "阿燕雞子粿",
+      "city": "嘉義",
+      "rating": 4.4,
+      "reviewCount": 77,
+      "topics": [],
+      "highlights": [
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.122Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:chiayi:阿玲水餃煎餃": {
+      "title": "阿玲水餃煎餃",
+      "city": "嘉義",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.122Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:chiayi:佳園汕頭火鍋": {
+      "title": "佳園汕頭火鍋",
+      "city": "嘉義",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.122Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:chiayi:北歐工坊複合式餐廳": {
+      "title": "北歐工坊複合式餐廳",
+      "city": "嘉義",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.122Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:chiayi:興加臭豆腐": {
+      "title": "興加臭豆腐",
+      "city": "嘉義",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.122Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:chiayi:古早時代-現炒鴨肉羹/福星藥頭排骨": {
+      "title": "古早時代-現炒鴨肉羹/福星藥頭排骨",
+      "city": "嘉義",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.122Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:chiayi:錦記麻糬": {
+      "title": "錦記麻糬",
+      "city": "嘉義",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.122Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:chiayi:阿明火雞肉飯": {
+      "title": "阿明火雞肉飯",
+      "city": "嘉義",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "用餐節奏：排隊、等候或出餐速度是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.122Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:chiayi:1961海鮮碳烤": {
+      "title": "1961海鮮碳烤",
+      "city": "嘉義",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.123Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:西濱小吃": {
+      "title": "西濱小吃",
+      "city": "清水",
+      "rating": 4.6,
+      "reviewCount": 77,
+      "topics": [],
+      "highlights": [
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.123Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:清水區 蔡家涼麵（建國國小旁）": {
+      "title": "清水區 蔡家涼麵（建國國小旁）",
+      "city": "清水",
+      "rating": 4.7,
+      "reviewCount": 106,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:50:27.123Z",
       "source": "Google Maps public review page"
     }
   }
