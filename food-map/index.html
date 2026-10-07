@@ -769,6 +769,10 @@ html,body{
             <span id="familySyncDot" class="dot"></span>
             <span id="familySyncText">家庭同步：連線中…</span>
           </button>
+          <button id="reviewUpdateBtn" class="sync-status sync-status-btn" type="button">
+            <span class="dot"></span>
+            <span id="reviewUpdateText">Google 評論：讀取更新日期…</span>
+          </button>
         </article>
       </section>
 
@@ -881,7 +885,7 @@ html,body{
   'use strict';
 
   const STORAGE_KEY = 'twFoodMap.v1';
-  const BUILD_VERSION = '1.6.1';
+  const BUILD_VERSION = '1.6.2';
   const SHARED_DATA_VERSION = '2026-10-07-shared-lists-v1';
   const SHARED_DATA_UPDATED_AT = '2026-10-07T18:45:00+08:00';
   const SHARED_SOURCES = [{"key":"keelung","label":"基隆","region":"北部","city":"基隆","kind":"food","declared":7,"url":"https://maps.app.goo.gl/4KACWmkaqChVpkvw6?g_st=ac","loaded":7},{"key":"wuqi","label":"梧棲","region":"中部","city":"梧棲","kind":"food","declared":76,"url":"https://maps.app.goo.gl/w1cTWpoC4z4itpZKA?g_st=ac","loaded":76},{"key":"family","label":"親子育樂","region":"其他","city":"親子育樂","kind":"family","declared":24,"url":"https://maps.app.goo.gl/f1mFM4Yjahaz9SyJ8?g_st=ac","loaded":24},{"key":"changhua","label":"彰化","region":"中部","city":"彰化","kind":"food","declared":29,"url":"https://maps.app.goo.gl/9oLNo3QeipNiEx7M7?g_st=ac","loaded":29},{"key":"tainan","label":"台南","region":"南部","city":"台南","kind":"food","declared":86,"url":"https://maps.app.goo.gl/EgamzKSobVtxUQHbA?g_st=ac","loaded":85},{"key":"kaohsiung","label":"高雄","region":"南部","city":"高雄","kind":"food","declared":9,"url":"https://maps.app.goo.gl/yANjiQEqpu76GJqc6?g_st=ac","loaded":9},{"key":"east","label":"東部","region":"東部","city":"東部","kind":"food","declared":3,"url":"https://maps.app.goo.gl/tKAFRrq6CMjShVeh6?g_st=ac","loaded":3},{"key":"chiayi","label":"嘉義","region":"南部","city":"嘉義","kind":"food","declared":14,"url":"https://maps.app.goo.gl/2bzH8oEPCLgnMUH67?g_st=ac","loaded":14},{"key":"qingshui","label":"清水","region":"中部","city":"清水","kind":"food","declared":43,"url":"https://maps.app.goo.gl/bZPPqHwSsL7VYN5v9?g_st=ac","loaded":44}];
@@ -970,6 +974,7 @@ html,body{
     wantStat: document.getElementById('wantStat'), noteStat: document.getElementById('noteStat'),
     lastSyncText: document.getElementById('lastSyncText'), familySyncBtn: document.getElementById('familySyncBtn'),
     familySyncText: document.getElementById('familySyncText'), familySyncDot: document.getElementById('familySyncDot'),
+    reviewUpdateBtn: document.getElementById('reviewUpdateBtn'), reviewUpdateText: document.getElementById('reviewUpdateText'),
     todayResult: document.getElementById('todayResult'),
     recommendBtn: document.getElementById('recommendBtn'), randomBtn: document.getElementById('randomBtn'),
     todayCityFilter: document.getElementById('todayCityFilter'), todayCityLabel: document.getElementById('todayCityLabel'), todayStatusFilter: document.getElementById('todayStatusFilter'),
@@ -981,6 +986,11 @@ html,body{
     modal: document.getElementById('modal'), restoreInput: document.getElementById('restoreInput')
   };
   bindEvents();
+  if (els.reviewUpdateBtn) {
+    els.reviewUpdateBtn.addEventListener('click', () => {
+      window.open('https://github.com/red0710-sys/dc-toolbok/actions/workflows/refresh-food-reviews.yml', '_blank', 'noopener');
+    });
+  }
   renderAll();
   setupPwa();
   initCloudSync();
@@ -1063,10 +1073,26 @@ html,body{
         updatedAt: j.updatedAt || null,
         places: j.places && typeof j.places === 'object' ? j.places : {}
       };
+      updateReviewStatus();
       renderAll(false);
     } catch (err) {
       console.warn('review highlights unavailable', err);
+      if (els.reviewUpdateText) els.reviewUpdateText.textContent = 'Google 評論：讀取失敗 · 手動更新 ↗';
     }
+  }
+
+  function updateReviewStatus() {
+    if (!els.reviewUpdateText) return;
+    if (!reviewHighlights.updatedAt) {
+      els.reviewUpdateText.textContent = 'Google 評論：尚無更新日期 · 手動更新 ↗';
+      return;
+    }
+    const d = new Date(reviewHighlights.updatedAt);
+    const label = Number.isNaN(d.getTime())
+      ? '未知'
+      : new Intl.DateTimeFormat('zh-TW',{year:'numeric',month:'numeric',day:'numeric'}).format(d);
+    const count = Object.keys(reviewHighlights.places || {}).length;
+    els.reviewUpdateText.textContent = `Google 評論：${label} · ${count} 間 · 手動更新 ↗`;
   }
 
   function reviewCacheFor(p) {
@@ -2138,7 +2164,7 @@ html,body{
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
-          const reg = await navigator.serviceWorker.register('./sw.js?v=1.6.1');
+          const reg = await navigator.serviceWorker.register('./sw.js?v=1.6.2');
           await reg.update();
         } catch {}
       });
