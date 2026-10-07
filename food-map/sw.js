@@ -1,4 +1,4 @@
-const CACHE = 'tw-food-map-beta-1-3-3-v1';
+const CACHE = 'tw-food-map-beta-1-3-4-v1';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', event => {
@@ -17,7 +17,7 @@ self.addEventListener('fetch', event => {
   if (req.method !== 'GET') return;
   if (req.mode === 'navigate') {
     event.respondWith(
-      fetch(req).then(res => {
+      fetch(req, { cache: 'no-store' }).then(res => {
         const copy = res.clone();
         caches.open(CACHE).then(cache => cache.put('./index.html', copy));
         return res;
