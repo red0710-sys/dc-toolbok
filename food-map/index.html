@@ -27,7 +27,7 @@
   --shadow: 0 18px 50px rgba(0,0,0,.28);
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif; }
+html, body { margin: 0; min-height: 100%; max-width:100%; overflow-x:hidden; background: var(--bg); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif; }
 body { background: radial-gradient(circle at 20% -10%, rgba(255,122,0,.13), transparent 26rem), var(--bg); }
 button, input, select, textarea { font: inherit; }
 button { cursor: pointer; }
@@ -93,7 +93,6 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   .filters-row { width: 100%; }
   .search-wrap { width: 100%; flex: 1; }
   .list-card { order: 1; }
-  #map { height: 52vh; min-height: 360px; }
   .place-list { height: auto; min-height: 0; max-height: none; }
 }
 @media (max-width: 560px) {
@@ -106,8 +105,57 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   .filters-row .btn, .filters-row select { width: 100%; }
   .field-grid { grid-template-columns: 1fr; }
   .field.full { grid-column: auto; }
-  .modal { padding: 16px; }
   .content-grid { gap: 10px; }
+
+  .modal-backdrop {
+    place-items:end center;
+    padding:0;
+    overflow:hidden;
+  }
+  .modal {
+    width:100%;
+    max-width:none;
+    max-height:82dvh;
+    overflow-y:auto;
+    overflow-x:hidden;
+    border-left:0;
+    border-right:0;
+    border-bottom:0;
+    border-radius:24px 24px 0 0;
+    padding:18px 16px calc(18px + env(safe-area-inset-bottom));
+  }
+  .modal h3 { font-size:1.15rem; }
+  .modal-desc { font-size:.8rem; margin-bottom:14px; }
+  .picker-grid { gap:16px; }
+  .picker-section { gap:7px; min-width:0; }
+  .picker-options {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+    width:100%;
+    min-width:0;
+  }
+  .picker-option {
+    width:100%;
+    min-width:0;
+    min-height:42px;
+    padding:0 7px;
+    border-radius:12px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-size:.9rem;
+  }
+  .picker-section:first-child .picker-options {
+    grid-template-columns:1fr;
+  }
+  .modal-actions {
+    position:sticky;
+    bottom:-18px;
+    margin:18px -16px -18px;
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg,rgba(17,18,22,.1),#111216 28%);
+  }
 }
 
 
@@ -342,7 +390,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   'use strict';
 
   const STORAGE_KEY = 'twFoodMap.v1';
-  const BUILD_VERSION = '1.3.0';
+  const BUILD_VERSION = '1.3.1';
   const SHARED_DATA_VERSION = '2026-10-07-shared-lists-v1';
   const SHARED_DATA_UPDATED_AT = '2026-10-07T18:45:00+08:00';
   const SHARED_SOURCES = [{"key":"keelung","label":"基隆","region":"北部","city":"基隆","kind":"food","declared":7,"url":"https://maps.app.goo.gl/4KACWmkaqChVpkvw6?g_st=ac","loaded":7},{"key":"wuqi","label":"梧棲","region":"中部","city":"梧棲","kind":"food","declared":76,"url":"https://maps.app.goo.gl/w1cTWpoC4z4itpZKA?g_st=ac","loaded":76},{"key":"family","label":"親子育樂","region":"其他","city":"親子育樂","kind":"family","declared":24,"url":"https://maps.app.goo.gl/f1mFM4Yjahaz9SyJ8?g_st=ac","loaded":24},{"key":"changhua","label":"彰化","region":"中部","city":"彰化","kind":"food","declared":29,"url":"https://maps.app.goo.gl/9oLNo3QeipNiEx7M7?g_st=ac","loaded":29},{"key":"tainan","label":"台南","region":"南部","city":"台南","kind":"food","declared":86,"url":"https://maps.app.goo.gl/EgamzKSobVtxUQHbA?g_st=ac","loaded":85},{"key":"kaohsiung","label":"高雄","region":"南部","city":"高雄","kind":"food","declared":9,"url":"https://maps.app.goo.gl/yANjiQEqpu76GJqc6?g_st=ac","loaded":9},{"key":"east","label":"東部","region":"東部","city":"東部","kind":"food","declared":3,"url":"https://maps.app.goo.gl/tKAFRrq6CMjShVeh6?g_st=ac","loaded":3},{"key":"chiayi","label":"嘉義","region":"南部","city":"嘉義","kind":"food","declared":14,"url":"https://maps.app.goo.gl/2bzH8oEPCLgnMUH67?g_st=ac","loaded":14},{"key":"qingshui","label":"清水","region":"中部","city":"清水","kind":"food","declared":43,"url":"https://maps.app.goo.gl/bZPPqHwSsL7VYN5v9?g_st=ac","loaded":44}];
@@ -1289,7 +1337,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
-          const reg = await navigator.serviceWorker.register('./sw.js?v=1.3.0');
+          const reg = await navigator.serviceWorker.register('./sw.js?v=1.3.1');
           await reg.update();
         } catch {}
       });
