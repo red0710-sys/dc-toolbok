@@ -74,6 +74,10 @@ h2 { font-size: 1.05rem; letter-spacing: -.02em; }
 .stat span { color: var(--muted); font-size: .78rem; }
 .stat strong { font-size: 1.45rem; }
 .sync-status { grid-column: 1 / -1; padding: 10px 12px; color: var(--muted); font-size: .78rem; display: flex; align-items: center; gap: 8px; }
+.sync-status-btn { width:100%; border:0; border-top:1px solid #24262c; background:transparent; text-align:left; cursor:pointer; }
+.sync-status-btn:hover { color:var(--text); }
+.sync-status-btn .dot.offline { background:#777b84; box-shadow:none; }
+.sync-status-btn .dot.syncing { background:var(--accent-2); box-shadow:0 0 0 4px rgba(255,176,0,.08); }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 4px rgba(167,227,93,.08); }
 .toolbar { margin-bottom: 14px; display: flex; justify-content: space-between; gap: 12px; align-items: center; }
 .region-tabs { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; }
@@ -341,6 +345,10 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
             <span class="dot"></span>
             <span id="lastSyncText">尚未同步</span>
           </div>
+          <button id="familySyncBtn" class="sync-status sync-status-btn" type="button">
+            <span id="familySyncDot" class="dot"></span>
+            <span id="familySyncText">家庭同步：連線中…</span>
+          </button>
         </article>
       </section>
 
@@ -447,12 +455,13 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
 
   <input id="zipInput" type="file" accept=".zip" hidden />
   <input id="restoreInput" type="file" accept=".json,application/json" hidden />
+  <script src="./cloud-sync.js?v=1.4.0"></script>
   <script>
 (() => {
   'use strict';
 
   const STORAGE_KEY = 'twFoodMap.v1';
-  const BUILD_VERSION = '1.3.4';
+  const BUILD_VERSION = '1.4.0';
   const SHARED_DATA_VERSION = '2026-10-07-shared-lists-v1';
   const SHARED_DATA_UPDATED_AT = '2026-10-07T18:45:00+08:00';
   const SHARED_SOURCES = [{"key":"keelung","label":"基隆","region":"北部","city":"基隆","kind":"food","declared":7,"url":"https://maps.app.goo.gl/4KACWmkaqChVpkvw6?g_st=ac","loaded":7},{"key":"wuqi","label":"梧棲","region":"中部","city":"梧棲","kind":"food","declared":76,"url":"https://maps.app.goo.gl/w1cTWpoC4z4itpZKA?g_st=ac","loaded":76},{"key":"family","label":"親子育樂","region":"其他","city":"親子育樂","kind":"family","declared":24,"url":"https://maps.app.goo.gl/f1mFM4Yjahaz9SyJ8?g_st=ac","loaded":24},{"key":"changhua","label":"彰化","region":"中部","city":"彰化","kind":"food","declared":29,"url":"https://maps.app.goo.gl/9oLNo3QeipNiEx7M7?g_st=ac","loaded":29},{"key":"tainan","label":"台南","region":"南部","city":"台南","kind":"food","declared":86,"url":"https://maps.app.goo.gl/EgamzKSobVtxUQHbA?g_st=ac","loaded":85},{"key":"kaohsiung","label":"高雄","region":"南部","city":"高雄","kind":"food","declared":9,"url":"https://maps.app.goo.gl/yANjiQEqpu76GJqc6?g_st=ac","loaded":9},{"key":"east","label":"東部","region":"東部","city":"東部","kind":"food","declared":3,"url":"https://maps.app.goo.gl/tKAFRrq6CMjShVeh6?g_st=ac","loaded":3},{"key":"chiayi","label":"嘉義","region":"南部","city":"嘉義","kind":"food","declared":14,"url":"https://maps.app.goo.gl/2bzH8oEPCLgnMUH67?g_st=ac","loaded":14},{"key":"qingshui","label":"清水","region":"中部","city":"清水","kind":"food","declared":43,"url":"https://maps.app.goo.gl/bZPPqHwSsL7VYN5v9?g_st=ac","loaded":44}];
@@ -524,6 +533,13 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   let todayCity = '全部';
   let todayStatus = '全部';
   let deferredInstallPrompt = null;
+  let cloudClient = null;
+  let cloudReady = false;
+  let cloudVersion = null;
+  let cloudSaving = false;
+  let cloudRefreshing = false;
+  let cloudSaveTimer = null;
+  let cloudPollTimer = null;
 
   const els = {
     syncBtn: document.getElementById('syncBtn'), zipInput: document.getElementById('zipInput'),
@@ -531,7 +547,9 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     visibleCount: document.getElementById('visibleCount'), candidateCount: document.getElementById('candidateCount'),
     totalStat: document.getElementById('totalStat'), eatenStat: document.getElementById('eatenStat'),
     wantStat: document.getElementById('wantStat'), noteStat: document.getElementById('noteStat'),
-    lastSyncText: document.getElementById('lastSyncText'), todayResult: document.getElementById('todayResult'),
+    lastSyncText: document.getElementById('lastSyncText'), familySyncBtn: document.getElementById('familySyncBtn'),
+    familySyncText: document.getElementById('familySyncText'), familySyncDot: document.getElementById('familySyncDot'),
+    todayResult: document.getElementById('todayResult'),
     recommendBtn: document.getElementById('recommendBtn'), randomBtn: document.getElementById('randomBtn'),
     todayCityFilter: document.getElementById('todayCityFilter'), todayCityLabel: document.getElementById('todayCityLabel'), todayStatusFilter: document.getElementById('todayStatusFilter'),
     searchInput: document.getElementById('searchInput'), statusFilter: document.getElementById('statusFilter'),
@@ -544,6 +562,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   bindEvents();
   renderAll();
   setupPwa();
+  initCloudSync();
 
 
   function hydrateSharedData(base) {
@@ -597,7 +616,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   }
 
   function defaultState() {
-    return { version: 1, places: [], lastSync: null, lastImportName: null };
+    return { version: 1, places: [], lastSync: null, lastImportName: null, modifiedAt: '1970-01-01T00:00:00.000Z' };
   }
 
   function loadState() {
@@ -607,12 +626,161 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     } catch { return defaultState(); }
   }
 
-  function saveState() {
+  function saveState(syncCloud = true) {
+    if (syncCloud) state.modifiedAt = new Date().toISOString();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (syncCloud) queueCloudSave();
+  }
+
+  function cloudTime(v) {
+    const t = Date.parse(v || '1970-01-01T00:00:00.000Z');
+    return Number.isFinite(t) ? t : 0;
+  }
+
+  function setFamilySyncStatus(text, mode = 'ok') {
+    if (!els.familySyncText || !els.familySyncDot) return;
+    els.familySyncText.textContent = text;
+    els.familySyncDot.classList.toggle('offline', mode === 'offline');
+    els.familySyncDot.classList.toggle('syncing', mode === 'syncing');
+  }
+
+  async function initCloudSync() {
+    if (!window.TaiwanFoodCloud) {
+      setFamilySyncStatus('家庭同步：無法載入', 'offline');
+      return;
+    }
+    setFamilySyncStatus('家庭同步：連線中…', 'syncing');
+    try {
+      cloudClient = await window.TaiwanFoodCloud.connect({ createIfMissing: true });
+      const remote = await cloudClient.read();
+      cloudVersion = remote.version || null;
+
+      if (!remote.data) {
+        await pushCloudState();
+      } else {
+        const remoteState = hydrateSharedData({ ...defaultState(), ...remote.data });
+        if (cloudTime(remoteState.modifiedAt) > cloudTime(state.modifiedAt)) {
+          state = remoteState;
+          saveState(false);
+          renderAll(false);
+        } else if (cloudTime(state.modifiedAt) > cloudTime(remoteState.modifiedAt)) {
+          await pushCloudState();
+        }
+      }
+
+      cloudReady = true;
+      setFamilySyncStatus('家庭同步：已連線', 'ok');
+      if (cloudPollTimer) clearInterval(cloudPollTimer);
+      cloudPollTimer = setInterval(() => refreshCloudState(true), 30000);
+      window.addEventListener('focus', () => refreshCloudState(true));
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshCloudState(true); });
+    } catch (err) {
+      console.warn('family sync init failed', err);
+      cloudReady = false;
+      setFamilySyncStatus('家庭同步：離線，本機仍可用', 'offline');
+    }
+  }
+
+  function queueCloudSave() {
+    if (!cloudReady || !cloudClient) return;
+    clearTimeout(cloudSaveTimer);
+    cloudSaveTimer = setTimeout(() => pushCloudState(), 500);
+  }
+
+  async function pushCloudState() {
+    if (!cloudClient || cloudSaving) return;
+    cloudSaving = true;
+    setFamilySyncStatus('家庭同步：同步中…', 'syncing');
+    try {
+      let result = await cloudClient.write(state, cloudVersion);
+      if (result.conflict) {
+        const latest = await cloudClient.read();
+        cloudVersion = latest.version || null;
+        if (latest.data && cloudTime(latest.data.modifiedAt) > cloudTime(state.modifiedAt)) {
+          state = hydrateSharedData({ ...defaultState(), ...latest.data });
+          saveState(false);
+          renderAll(false);
+        } else {
+          result = await cloudClient.write(state, cloudVersion);
+          if (result.conflict) throw new Error('sync conflict');
+          cloudVersion = result.version;
+        }
+      } else {
+        cloudVersion = result.version;
+      }
+      cloudReady = true;
+      setFamilySyncStatus('家庭同步：已同步 ' + new Intl.DateTimeFormat('zh-TW',{hour:'2-digit',minute:'2-digit'}).format(new Date()), 'ok');
+    } catch (err) {
+      console.warn('family sync save failed', err);
+      cloudReady = false;
+      setFamilySyncStatus('家庭同步：待重新連線', 'offline');
+    } finally {
+      cloudSaving = false;
+    }
+  }
+
+  async function refreshCloudState(silent = false) {
+    if (!cloudClient || cloudRefreshing || cloudSaving) return;
+    cloudRefreshing = true;
+    if (!silent) setFamilySyncStatus('家庭同步：檢查更新…', 'syncing');
+    try {
+      const remote = await cloudClient.read();
+      if (remote.version && remote.version !== cloudVersion) {
+        cloudVersion = remote.version;
+        if (remote.data && cloudTime(remote.data.modifiedAt) > cloudTime(state.modifiedAt)) {
+          state = hydrateSharedData({ ...defaultState(), ...remote.data });
+          saveState(false);
+          renderAll(false);
+        } else if (remote.data && cloudTime(state.modifiedAt) > cloudTime(remote.data.modifiedAt)) {
+          await pushCloudState();
+        }
+      }
+      cloudReady = true;
+      if (!silent) setFamilySyncStatus('家庭同步：已是最新', 'ok');
+      else setFamilySyncStatus('家庭同步：已連線', 'ok');
+    } catch (err) {
+      console.warn('family sync refresh failed', err);
+      cloudReady = false;
+      setFamilySyncStatus('家庭同步：離線，本機仍可用', 'offline');
+    } finally {
+      cloudRefreshing = false;
+    }
+  }
+
+  async function shareFamilySync() {
+    if (!cloudClient) return;
+    const url = cloudClient.inviteUrl();
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Taiwan Food 家庭同步', text: '用這個連結加入我們的美食清單', url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast('老婆設定連結已複製');
+      }
+    } catch {}
+  }
+
+  function openFamilySyncModal() {
+    const ready = !!cloudClient;
+    els.modal.innerHTML = `
+      <h3>家庭同步</h3>
+      <p class="modal-desc">你和老婆可共用同一份「吃過、評分、備註、手動新增」資料。資料使用 Cloudflare D1 儲存，內容在瀏覽器端加密後才上傳。</p>
+      <div class="check-row"><div><strong>${ready ? '已建立家庭空間' : '尚未連線'}</strong><div class="muted-small">${ready ? '分享設定連結給老婆，只需設定一次。' : '請先確認網路後再試一次。'}</div></div><span>${ready ? '✓' : '!'}</span></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="closeModalBtn">關閉</button>
+        ${ready ? '<button class="btn btn-ghost" id="syncNowBtn">立即同步</button><button class="btn btn-primary" id="shareFamilyBtn">分享給老婆</button>' : ''}
+      </div>`;
+    openModal();
+    document.getElementById('closeModalBtn').onclick = closeModal;
+    const syncNow = document.getElementById('syncNowBtn');
+    if (syncNow) syncNow.onclick = () => refreshCloudState(false);
+    const shareBtn = document.getElementById('shareFamilyBtn');
+    if (shareBtn) shareBtn.onclick = shareFamilySync;
   }
 
   function bindEvents() {
     els.syncBtn.addEventListener('click', openSourcesModal);
+    els.familySyncBtn.addEventListener('click', openFamilySyncModal);
     els.zipInput.addEventListener('change', handleZipSelect);
     els.addBtn.addEventListener('click', () => openEditModal());
     els.recommendBtn.addEventListener('click', () => pickToday('recommend'));
@@ -1419,7 +1587,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
-          const reg = await navigator.serviceWorker.register('./sw.js?v=1.3.4');
+          const reg = await navigator.serviceWorker.register('./sw.js?v=1.4.0');
           await reg.update();
         } catch {}
       });
