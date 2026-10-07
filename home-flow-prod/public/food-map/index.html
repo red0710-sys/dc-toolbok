@@ -1,0 +1,1656 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0b0c" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  <meta name="description" content="台灣美食收藏：Google Maps 清單整理、地區分類、吃過紀錄、備註與今天吃什麼推薦。" />
+  <title>Taiwan Food Map</title>
+  <style>
+:root {
+  color-scheme: dark;
+  --bg: #08090b;
+  --panel: #111216;
+  --panel-2: #17181d;
+  --line: #292b31;
+  --text: #f5f5f3;
+  --muted: #999ca5;
+  --accent: #ff7a00;
+  --accent-2: #ffb000;
+  --good: #a7e35d;
+  --danger: #ff625f;
+  --radius: 18px;
+  --shadow: 0 18px 50px rgba(0,0,0,.28);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; min-height: 100%; max-width:100%; overflow-x:hidden; background: var(--bg); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif; }
+body { background: radial-gradient(circle at 20% -10%, rgba(255,122,0,.13), transparent 26rem), var(--bg); }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+.app-shell { width: min(1460px, calc(100% - 28px)); margin: 0 auto; padding: 22px 0 44px; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: clamp(1.5rem, 2.7vw, 2.45rem); letter-spacing: -.045em; }
+h2 { font-size: 1.05rem; letter-spacing: -.02em; }
+.eyebrow, .kicker { color: var(--accent); font-size: .68rem; letter-spacing: .16em; font-weight: 800; }
+.card { background: linear-gradient(180deg, rgba(255,255,255,.025), transparent), var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.hero-grid { display: grid; grid-template-columns: 1.65fr .75fr; gap: 14px; margin-bottom: 14px; }
+.today-card, .stats-card, .toolbar, .list-card { padding: 18px; }
+.section-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.section-head.compact { align-items: center; }
+.soft-pill { color: #d7d8dc; background: #202126; border: 1px solid #2d2f35; border-radius: 999px; padding: 6px 9px; font-size: .72rem; white-space: nowrap; }
+.today-result { min-height: 118px; padding: 18px; border-radius: 14px; border: 1px solid #2b2d33; background: linear-gradient(135deg, #191a1f, #101115); display: flex; gap: 15px; align-items: center; }
+.today-result.empty { color: var(--muted); }
+.today-result p { margin-top: 5px; color: var(--muted); font-size: .88rem; }
+.today-result .today-name { font-size: clamp(1.2rem, 2vw, 1.75rem); font-weight: 850; letter-spacing: -.035em; color: var(--text); }
+.today-icon { width: 52px; height: 52px; border-radius: 15px; background: #23242a; display: grid; place-items: center; font-size: 1.7rem; flex: 0 0 auto; }
+.today-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.today-actions { display: flex; gap: 10px; margin-top: 12px; }
+.today-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.today-filters select, .location-picker-btn { width: 100%; }
+.location-picker-btn { min-height:42px; padding:0 12px; display:flex; align-items:center; justify-content:space-between; gap:10px; color:var(--text); background:#17181c; border:1px solid #30323a; border-radius:12px; font-weight:760; text-align:left; }
+.location-picker-btn:active { border-color:var(--accent); }
+.picker-chevron { color:var(--muted); font-size:1rem; }
+.picker-grid { display:grid; gap:14px; }
+.picker-section { display:grid; gap:8px; }
+.picker-section-title { color:var(--muted); font-size:.72rem; font-weight:850; letter-spacing:.08em; }
+.picker-options { display:flex; flex-wrap:wrap; gap:8px; }
+.picker-option { min-height:38px; padding:0 12px; border-radius:999px; border:1px solid #30323a; background:#17181c; color:#d9dae0; font-weight:760; }
+.picker-option.active { color:#111; border-color:var(--accent); background:var(--accent); }
+.rating-stars { letter-spacing: .04em; color: var(--accent-2); font-weight: 900; }
+.return-yes { color: var(--good); }
+.return-no { color: #ff9997; }
+.btn { border: 1px solid transparent; border-radius: 12px; min-height: 42px; padding: 0 14px; font-weight: 780; color: var(--text); background: transparent; transition: .18s ease; }
+.btn:hover { transform: translateY(-1px); }
+.btn-primary { color: #0a0a0a; background: linear-gradient(120deg, var(--accent), var(--accent-2)); box-shadow: 0 10px 28px rgba(255,122,0,.18); }
+.btn-ghost { background: #1b1c21; border-color: #30323a; }
+.btn-danger { background: rgba(255,98,95,.10); border-color: rgba(255,98,95,.3); color: #ff9997; }
+.stats-card { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-content: start; }
+.stat { min-height: 76px; border-radius: 14px; border: 1px solid #292b31; background: #15161a; padding: 12px; display: flex; flex-direction: column; justify-content: space-between; }
+.stat span { color: var(--muted); font-size: .78rem; }
+.stat strong { font-size: 1.45rem; }
+.sync-status { grid-column: 1 / -1; padding: 10px 12px; color: var(--muted); font-size: .78rem; display: flex; align-items: center; gap: 8px; }
+.sync-status-btn { width:100%; border:0; border-top:1px solid #24262c; background:transparent; text-align:left; cursor:pointer; }
+.sync-status-btn:hover { color:var(--text); }
+.sync-status-btn .dot.offline { background:#777b84; box-shadow:none; }
+.sync-status-btn .dot.syncing { background:var(--accent-2); box-shadow:0 0 0 4px rgba(255,176,0,.08); }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 4px rgba(167,227,93,.08); }
+.toolbar { margin-bottom: 14px; display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+.region-tabs { display: flex; gap: 7px; overflow-x: auto; scrollbar-width: none; }
+.region-tabs::-webkit-scrollbar { display: none; }
+.chip { white-space: nowrap; border: 1px solid #2d2f35; background: #17181c; color: #b6b8c0; border-radius: 999px; padding: 8px 11px; }
+.chip.active { color: #0a0a0a; border-color: var(--accent); background: var(--accent); font-weight: 850; }
+.filters-row { display: flex; gap: 8px; align-items: center; }
+.search-wrap { height: 42px; width: min(320px, 32vw); display: flex; align-items: center; gap: 8px; border: 1px solid #30323a; background: #17181c; border-radius: 12px; padding: 0 11px; color: var(--muted); }
+.search-wrap input { min-width: 0; width: 100%; background: transparent; border: 0; outline: 0; color: var(--text); }
+select, .field input, .field textarea { color: var(--text); background: #17181c; border: 1px solid #30323a; border-radius: 12px; min-height: 42px; padding: 0 10px; outline: none; }
+.field textarea { min-height: 92px; padding-top: 10px; resize: vertical; }
+.content-grid { display: grid; grid-template-columns: 1fr; gap: 14px; align-items: start; }
+@media (max-width: 900px) {
+  .app-shell { width: min(100% - 18px, 760px); padding-top: 12px; }
+  .hero-grid, .content-grid { grid-template-columns: 1fr; }
+  .toolbar { align-items: stretch; flex-direction: column; }
+  .filters-row { width: 100%; }
+  .search-wrap { width: 100%; flex: 1; }
+  .list-card { order: 1; }
+  .place-list { height: auto; min-height: 0; max-height: none; }
+}
+@media (max-width: 560px) {
+  .topbar .btn { min-height: 38px; padding: 0 10px; font-size: .78rem; }
+  .hero-grid { gap: 10px; }
+  .today-card, .stats-card, .toolbar, .list-card { padding: 14px; }
+  .today-actions .btn { flex: 1; }
+  .filters-row { display: grid; grid-template-columns: 1fr 1fr; }
+  .search-wrap { grid-column: 1 / -1; }
+  .filters-row .btn, .filters-row select { width: 100%; }
+  .field-grid { grid-template-columns: 1fr; }
+  .field.full { grid-column: auto; }
+  .content-grid { gap: 10px; }
+
+  .modal-backdrop {
+    place-items:end center;
+    padding:0;
+    overflow:hidden;
+  }
+  .modal {
+    width:100%;
+    max-width:none;
+    max-height:82dvh;
+    overflow-y:auto;
+    overflow-x:hidden;
+    border-left:0;
+    border-right:0;
+    border-bottom:0;
+    border-radius:24px 24px 0 0;
+    padding:18px 16px calc(18px + env(safe-area-inset-bottom));
+  }
+  .modal h3 { font-size:1.15rem; }
+  .modal-desc { font-size:.8rem; margin-bottom:14px; }
+  .picker-grid { gap:16px; }
+  .picker-section { gap:7px; min-width:0; }
+  .picker-options {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+    width:100%;
+    min-width:0;
+  }
+  .picker-option {
+    width:100%;
+    min-width:0;
+    min-height:42px;
+    padding:0 7px;
+    border-radius:12px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    font-size:.9rem;
+  }
+  .picker-section:first-child .picker-options {
+    grid-template-columns:1fr;
+  }
+  .modal-actions {
+    position:sticky;
+    bottom:-18px;
+    margin:18px -16px -18px;
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+    background:linear-gradient(180deg,rgba(17,18,22,.1),#111216 28%);
+  }
+}
+
+
+
+/* Core UI styles restored after map removal */
+.place-list { height:auto; min-height:0; max-height:none; overflow:visible; padding-right:0; }
+.place-name { font-weight:820; line-height:1.35; }
+.place-sub { color:var(--muted); font-size:.76rem; margin-top:5px; display:flex; flex-wrap:wrap; gap:6px; }
+.tag { padding:3px 7px; border-radius:999px; background:#202126; color:#bbbcc3; }
+.tag.hot { color:#111; background:var(--accent-2); }
+.tag.eaten { color:#111; background:var(--good); }
+.place-note { color:#c8c9ce; margin-top:7px; font-size:.82rem; line-height:1.45; }
+.item-actions { display:flex; gap:6px; align-items:flex-start; }
+.icon-btn { width:36px; height:36px; border-radius:10px; border:1px solid #30323a; background:#1a1b20; color:#dadbe0; }
+.icon-btn:hover { border-color:#4a4d56; background:#22242a; }
+.empty-list { padding:32px 10px; text-align:center; color:var(--muted); }
+.muted-small { color:var(--muted); font-size:.72rem; }
+
+.modal-backdrop { position:fixed; inset:0; z-index:5000; background:rgba(0,0,0,.72); backdrop-filter:blur(8px); display:grid; place-items:center; padding:18px; }
+.modal-backdrop.hidden { display:none; }
+.modal { width:min(620px,100%); max-height:min(88vh,860px); overflow-y:auto; background:#111216; border:1px solid #30323a; border-radius:20px; padding:20px; box-shadow:0 28px 100px rgba(0,0,0,.55); }
+.modal h3 { font-size:1.25rem; margin-bottom:6px; }
+.modal-desc { color:var(--muted); font-size:.85rem; line-height:1.5; margin-bottom:16px; }
+.field-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.field { display:flex; flex-direction:column; gap:6px; margin-bottom:12px; }
+.field.full { grid-column:1 / -1; }
+.field label { color:#c9cad0; font-size:.76rem; font-weight:760; }
+.field input, .field textarea, .field select { width:100%; color:var(--text); background:#17181c; border:1px solid #30323a; border-radius:12px; min-height:42px; padding:0 10px; outline:none; }
+.field textarea { min-height:92px; padding-top:10px; resize:vertical; }
+.check-row { display:flex; align-items:center; justify-content:space-between; gap:12px; border:1px solid #2d2f35; background:#17181c; padding:11px 12px; border-radius:12px; }
+.check-row input { width:19px; height:19px; accent-color:var(--accent); }
+.modal-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:16px; flex-wrap:wrap; }
+.dropzone { border:1.5px dashed #474950; border-radius:16px; padding:28px 18px; text-align:center; background:#15161a; }
+.dropzone strong { display:block; margin-bottom:5px; }
+.dropzone p { color:var(--muted); font-size:.8rem; margin-bottom:13px; }
+.diff-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:13px 0; }
+.diff-box { padding:12px; border-radius:12px; border:1px solid #2d2f35; background:#17181c; text-align:center; }
+.diff-box strong { display:block; font-size:1.25rem; }
+.diff-box span { color:var(--muted); font-size:.72rem; }
+.toast { position:fixed; left:50%; bottom:max(24px, env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:9999; background:#202126; color:#f7f7f5; border:1px solid #34363e; box-shadow:var(--shadow); border-radius:999px; padding:10px 14px; font-size:.82rem; max-width:calc(100% - 32px); text-align:center; }
+
+/* Beta 1.2 — hierarchical filters + compact accordion browsing */
+.toolbar { margin-bottom:14px; display:flex; flex-direction:column; gap:12px; align-items:stretch; }
+.filter-block { display:grid; gap:8px; }
+.filter-line { display:flex; align-items:center; gap:9px; min-width:0; }
+.filter-label { width:54px; flex:0 0 54px; color:var(--muted); font-size:.72rem; font-weight:800; letter-spacing:.04em; }
+.region-tabs, .quick-tabs, .sub-tabs, .city-tabs, .type-tabs, .city-jump { display:flex; gap:7px; overflow-x:auto; scrollbar-width:none; padding-bottom:1px; }
+.region-tabs::-webkit-scrollbar, .quick-tabs::-webkit-scrollbar, .sub-tabs::-webkit-scrollbar, .city-tabs::-webkit-scrollbar, .type-tabs::-webkit-scrollbar, .city-jump::-webkit-scrollbar { display:none; }
+.sub-tabs:empty, .city-tabs:empty { display:none; }
+.filters-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.filters-row select { min-width:132px; }
+.place-group { margin-bottom:11px; scroll-margin-top:14px; }
+.place-group-title { position:sticky; top:0; z-index:3; padding:0; background:var(--panel); border-bottom:1px solid #292b31; }
+.group-toggle { width:100%; min-height:48px; border:0; background:transparent; color:var(--accent-2); display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 2px; font-size:.78rem; font-weight:900; letter-spacing:.06em; text-align:left; }
+.group-toggle .group-arrow { color:var(--muted); font-size:.9rem; transition:.16s ease; }
+.group-toggle.open .group-arrow { transform:rotate(180deg); }
+.city-jump { margin:-2px 0 12px; padding:2px 0 6px; }
+.jump-chip { border:1px solid #2d2f35; background:#15161a; color:#c8c9ce; border-radius:999px; padding:7px 10px; font-size:.72rem; white-space:nowrap; }
+.group-more { width:100%; margin-top:7px; border:1px solid #30323a; background:#17181c; color:#c8c9ce; border-radius:11px; min-height:38px; font-weight:760; }
+.place-item { padding:10px 2px; }
+@media (max-width:900px) {
+  .filter-label { width:46px; flex-basis:46px; }
+  .search-wrap { flex:1 1 100%; }
+}
+@media (max-width:560px) {
+  .filter-line { align-items:flex-start; }
+  .filter-label { padding-top:8px; }
+  .filters-row select { min-width:0; }
+}
+
+
+/* Beta 1.3.2 — location picker is viewport-safe without relying on media queries */
+.modal-backdrop.location-picker-backdrop {
+  place-items:end center;
+  padding:0;
+  overflow:hidden;
+}
+.modal.location-picker-modal {
+  width:min(620px, 100vw);
+  max-width:100vw;
+  max-height:min(82dvh, 720px);
+  overflow-y:auto;
+  overflow-x:hidden;
+  border-left:0;
+  border-right:0;
+  border-bottom:0;
+  border-radius:24px 24px 0 0;
+  padding:18px 16px calc(18px + env(safe-area-inset-bottom));
+}
+.modal.location-picker-modal .picker-grid {
+  width:100%;
+  min-width:0;
+  display:grid;
+  gap:16px;
+}
+.modal.location-picker-modal .picker-section,
+.modal.location-picker-modal .picker-options {
+  width:100%;
+  min-width:0;
+}
+.modal.location-picker-modal .picker-options {
+  display:grid !important;
+  grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+  gap:8px;
+  overflow:hidden;
+}
+.modal.location-picker-modal .picker-section:first-child .picker-options {
+  grid-template-columns:1fr !important;
+}
+.modal.location-picker-modal .picker-option {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  min-height:44px;
+  padding:0 8px;
+  border-radius:12px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-size:.92rem;
+}
+.modal.location-picker-modal .modal-actions {
+  position:sticky;
+  bottom:-18px;
+  margin:18px -16px -18px;
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,rgba(17,18,22,.08),#111216 28%);
+}
+</style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">PERSONAL FOOD OS</div>
+        <h1>Taiwan Food Map</h1>
+      </div>
+      <button id="syncBtn" class="btn btn-primary" type="button">Google Maps 清單</button>
+    </header>
+
+    <main>
+      <section class="hero-grid">
+        <article class="card today-card">
+          <div class="section-head">
+            <div>
+              <span class="kicker">TODAY</span>
+              <h2>今天要吃啥？</h2>
+            </div>
+            <span id="candidateCount" class="soft-pill">0 家可選</span>
+          </div>
+          <div id="todayResult" class="today-result empty">
+            <div class="today-icon">🍜</div>
+            <div>
+              <strong>共享清單已載入</strong>
+              <p>先選區域，再用系統推薦或純隨機抽一間。</p>
+            </div>
+          </div>
+          <div class="today-filters">
+            <button id="todayCityFilter" class="location-picker-btn" type="button" aria-label="今天吃啥地區">
+              <span id="todayCityLabel">全台</span><span class="picker-chevron">⌄</span>
+            </button>
+            <select id="todayStatusFilter" aria-label="今天吃啥條件">
+              <option value="全部">全部</option>
+              <option value="想吃">想吃</option>
+              <option value="沒吃過">沒吃過</option>
+            </select>
+          </div>
+          <div class="today-actions">
+            <button id="recommendBtn" class="btn btn-primary" type="button">✨ 系統推薦</button>
+            <button id="randomBtn" class="btn btn-ghost" type="button">🎲 隨機推</button>
+          </div>
+        </article>
+
+        <article class="card stats-card">
+          <div class="stat"><span>收藏</span><strong id="totalStat">0</strong></div>
+          <div class="stat"><span>吃過</span><strong id="eatenStat">0</strong></div>
+          <div class="stat"><span>想吃</span><strong id="wantStat">0</strong></div>
+          <div class="stat"><span>有備註</span><strong id="noteStat">0</strong></div>
+          <div class="sync-status">
+            <span class="dot"></span>
+            <span id="lastSyncText">尚未同步</span>
+          </div>
+          <button id="familySyncBtn" class="sync-status sync-status-btn" type="button">
+            <span id="familySyncDot" class="dot"></span>
+            <span id="familySyncText">家庭同步：連線中…</span>
+          </button>
+        </article>
+      </section>
+
+      <section class="toolbar card">
+        <div class="filter-block">
+          <div class="filter-line">
+            <span class="filter-label">常用</span>
+            <div class="quick-tabs" id="quickTabs">
+              <button class="chip" data-quick-city="沙梧清">沙梧清</button>
+              <button class="chip" data-quick-city="梧棲">梧棲</button>
+              <button class="chip" data-quick-city="清水">清水</button>
+              <button class="chip" data-quick-city="沙鹿">沙鹿</button>
+              <button class="chip" data-quick-city="台中">台中市區</button>
+              <button class="chip" data-quick-city="彰化">彰化</button>
+            </div>
+          </div>
+          <div class="filter-line">
+            <span class="filter-label">地區</span>
+            <div class="region-tabs" id="regionTabs">
+              <button class="chip active" data-region="全部">全部</button>
+              <button class="chip" data-region="北部">北部</button>
+              <button class="chip" data-region="中部">中部</button>
+              <button class="chip" data-region="南部">南部</button>
+              <button class="chip" data-region="東部">東部</button>
+            </div>
+          </div>
+          <div class="filter-line" id="areaFilterLine">
+            <span class="filter-label">縣市</span>
+            <div class="sub-tabs" id="areaTabs"></div>
+          </div>
+          <div class="filter-line" id="cityFilterLine">
+            <span class="filter-label">細區</span>
+            <div class="city-tabs" id="cityTabs"></div>
+          </div>
+          <div class="filter-line">
+            <span class="filter-label">類型</span>
+            <div class="type-tabs" id="typeTabs">
+              <button class="chip active" data-food-type="全部">全部</button>
+              <button class="chip" data-food-type="美食">美食</button>
+              <button class="chip" data-food-type="親子育樂">親子育樂</button>
+              <button class="chip" data-food-type="早餐">早餐</button>
+              <button class="chip" data-food-type="小吃">小吃</button>
+              <button class="chip" data-food-type="麵飯">麵飯</button>
+              <button class="chip" data-food-type="火鍋">火鍋</button>
+              <button class="chip" data-food-type="燒烤">燒烤</button>
+              <button class="chip" data-food-type="海鮮">海鮮</button>
+              <button class="chip" data-food-type="甜點飲料">甜點飲料</button>
+              <button class="chip" data-food-type="正餐">正餐</button>
+              <button class="chip" data-food-type="宵夜">宵夜</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="filters-row">
+          <label class="search-wrap">
+            <span>⌕</span>
+            <input id="searchInput" type="search" placeholder="搜尋店名、城市、備註…" autocomplete="off" />
+          </label>
+          <select id="statusFilter" aria-label="狀態篩選">
+            <option value="全部">全部狀態</option>
+            <option value="沒吃過">沒吃過</option>
+            <option value="吃過">吃過</option>
+            <option value="想吃">想吃</option>
+            <option value="會再吃">會再吃</option>
+            <option value="不再吃">不再吃</option>
+            <option value="30天內">30天內吃過</option>
+          </select>
+          <select id="myRatingFilter" aria-label="我的評分">
+            <option value="全部">全部星級</option>
+            <option value="未評分">未評分</option>
+            <option value="5">我的 5★</option>
+            <option value="4+">我的 4★+</option>
+            <option value="3-">我的 ≤3★</option>
+          </select>
+          <select id="googleFilter" aria-label="Google 人氣">
+            <option value="全部">Google 人氣</option>
+            <option value="4.5+">Google 4.5★+</option>
+            <option value="4.0+">Google 4.0★+</option>
+            <option value="1000+">評論 1000+</option>
+          </select>
+          <button id="addBtn" class="btn btn-ghost" type="button">＋ 新增</button>
+        </div>
+      </section>
+
+      <section class="content-grid">
+
+        <article class="card list-card">
+          <div class="section-head compact">
+            <div>
+              <span class="kicker">PLACES</span>
+              <h2>北到南</h2>
+            </div>
+            <span id="visibleCount" class="soft-pill">0 家</span>
+          </div>
+          <div id="placeList" class="place-list"></div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <div id="modalBackdrop" class="modal-backdrop hidden" aria-hidden="true">
+    <div id="modal" class="modal" role="dialog" aria-modal="true"></div>
+  </div>
+
+  <input id="zipInput" type="file" accept=".zip" hidden />
+  <input id="restoreInput" type="file" accept=".json,application/json" hidden />
+  <script src="./cloud-sync.js?v=1.4.0"></script>
+  <script>
+(() => {
+  'use strict';
+
+  const STORAGE_KEY = 'twFoodMap.v1';
+  const BUILD_VERSION = '1.4.0';
+  const SHARED_DATA_VERSION = '2026-10-07-shared-lists-v1';
+  const SHARED_DATA_UPDATED_AT = '2026-10-07T18:45:00+08:00';
+  const SHARED_SOURCES = [{"key":"keelung","label":"基隆","region":"北部","city":"基隆","kind":"food","declared":7,"url":"https://maps.app.goo.gl/4KACWmkaqChVpkvw6?g_st=ac","loaded":7},{"key":"wuqi","label":"梧棲","region":"中部","city":"梧棲","kind":"food","declared":76,"url":"https://maps.app.goo.gl/w1cTWpoC4z4itpZKA?g_st=ac","loaded":76},{"key":"family","label":"親子育樂","region":"其他","city":"親子育樂","kind":"family","declared":24,"url":"https://maps.app.goo.gl/f1mFM4Yjahaz9SyJ8?g_st=ac","loaded":24},{"key":"changhua","label":"彰化","region":"中部","city":"彰化","kind":"food","declared":29,"url":"https://maps.app.goo.gl/9oLNo3QeipNiEx7M7?g_st=ac","loaded":29},{"key":"tainan","label":"台南","region":"南部","city":"台南","kind":"food","declared":86,"url":"https://maps.app.goo.gl/EgamzKSobVtxUQHbA?g_st=ac","loaded":85},{"key":"kaohsiung","label":"高雄","region":"南部","city":"高雄","kind":"food","declared":9,"url":"https://maps.app.goo.gl/yANjiQEqpu76GJqc6?g_st=ac","loaded":9},{"key":"east","label":"東部","region":"東部","city":"東部","kind":"food","declared":3,"url":"https://maps.app.goo.gl/tKAFRrq6CMjShVeh6?g_st=ac","loaded":3},{"key":"chiayi","label":"嘉義","region":"南部","city":"嘉義","kind":"food","declared":14,"url":"https://maps.app.goo.gl/2bzH8oEPCLgnMUH67?g_st=ac","loaded":14},{"key":"qingshui","label":"清水","region":"中部","city":"清水","kind":"food","declared":43,"url":"https://maps.app.goo.gl/bZPPqHwSsL7VYN5v9?g_st=ac","loaded":44}];
+  const SHARED_SEED = [{"sourceKey":"keelung","title":"九份福山宮停車場","region":"北部","city":"基隆","kind":"food","rating":4.6,"reviews":19},{"sourceKey":"keelung","title":"安樂市場菜頭滷 （粉專：菜頭滷）","region":"北部","city":"基隆","kind":"food","rating":4.4,"reviews":191},{"sourceKey":"keelung","title":"許存睿 豬灶麵線羹","region":"北部","city":"基隆","kind":"food","rating":4.3,"reviews":160},{"sourceKey":"keelung","title":"九如營養三明治（常一嚐）","region":"北部","city":"基隆","kind":"food","rating":4.3,"reviews":2167},{"sourceKey":"keelung","title":"蓁好料小吃店","region":"北部","city":"基隆","kind":"food","rating":4,"reviews":693},{"sourceKey":"keelung","title":"美珠土雞店","region":"北部","city":"基隆","kind":"food","rating":4,"reviews":481},{"sourceKey":"keelung","title":"封神雞-黑白切白斬雞","region":"北部","city":"基隆","kind":"food","rating":4.1,"reviews":1072},{"sourceKey":"wuqi","title":"台北江麻辣臭豆腐-梧棲店","region":"中部","city":"梧棲","kind":"food","rating":4.1,"reviews":49},{"sourceKey":"wuqi","title":"舊車路桶仔雞","region":"中部","city":"梧棲","kind":"food","rating":4.7,"reviews":251},{"sourceKey":"wuqi","title":"欣來便當 自助餐","region":"中部","city":"梧棲","kind":"food","rating":4.5,"reviews":480},{"sourceKey":"wuqi","title":"家家香 早午餐（便當、粥）","region":"中部","city":"梧棲","kind":"food","rating":4.4,"reviews":23},{"sourceKey":"wuqi","title":"黃家腿庫飯","region":"中部","city":"梧棲","kind":"food","rating":4.7,"reviews":38},{"sourceKey":"wuqi","title":"薪食堂","region":"中部","city":"梧棲","kind":"food","rating":4.8,"reviews":25},{"sourceKey":"wuqi","title":"碗不吃","region":"中部","city":"梧棲","kind":"food","rating":4.1,"reviews":149},{"sourceKey":"wuqi","title":"Choumingy Café","region":"中部","city":"梧棲","kind":"food","rating":4.1,"reviews":1569},{"sourceKey":"wuqi","title":"炸炸臭豆腐-梧棲總店","region":"中部","city":"梧棲","kind":"food","rating":4.7,"reviews":133},{"sourceKey":"wuqi","title":"肆-雞肉飯","region":"中部","city":"梧棲","kind":"food","rating":4.6,"reviews":37},{"sourceKey":"wuqi","title":"禾憶餐酒館 Hoi Bistro＆Bar","region":"中部","city":"梧棲","kind":"food","rating":4.5,"reviews":203},{"sourceKey":"wuqi","title":"紀軍綻魯肉飯","region":"中部","city":"梧棲","kind":"food","rating":4.8,"reviews":130},{"sourceKey":"wuqi","title":"蔡ㄟ切仔麵","region":"中部","city":"梧棲","kind":"food","rating":4.5,"reviews":33},{"sourceKey":"wuqi","title":"麗麗早餐","region":"中部","city":"梧棲","kind":"food","rating":4.4,"reviews":143},{"sourceKey":"wuqi","title":"龍鳳漁港","region":"中部","city":"梧棲","kind":"food","rating":4.2,"reviews":1348},{"sourceKey":"wuqi","title":"掌櫃水產","region":"中部","city":"梧棲","kind":"food","rating":4.4,"reviews":122},{"sourceKey":"wuqi","title":"嗎哪活蝦","region":"中部","city":"梧棲","kind":"food","rating":4.9,"reviews":56},{"sourceKey":"wuqi","title":"惠子麵館","region":"中部","city":"梧棲","kind":"food","rating":4.2,"reviews":46},{"sourceKey":"wuqi","title":"一口糧","region":"中部","city":"梧棲","kind":"food","rating":3.4,"reviews":39},{"sourceKey":"wuqi","title":"紅蜻蜓食堂","region":"中部","city":"梧棲","kind":"food","rating":5,"reviews":25},{"sourceKey":"wuqi","title":"蔡料好 鍋燒麵•粥品專賣","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"日十。梧棲店｜粉漿蛋餅・刈包・飯糰","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"喜鵲森林","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"105休息點心站","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"興利鵝肉","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"元森綠豆沙仙草專賣店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"桂香坊冰糖醬滷味-梧棲店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"臺中市立圖書館梧棲親子館","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"醇壽司（不定期公休，請留意FB.IG)梧棲必吃｜熱門美食｜外帶美食","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"長袖廚房梧棲總館","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"十九甲雞排．梧棲店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"北港蔡三代筒仔米糕","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"鯨賀平價海鮮","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"第二香腸 香腸攤","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"肉圓榮","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"潮州牛肉陳（梧棲店）每週一店休","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"陳媽咪飯糰米糕刈包 梧棲店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"臭一色臭豆腐","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"青董食代 Green Style ｜在地美食｜海線必吃","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"老四季（梧棲概念店）-麻醬牛肉拌麵&鮮蚵滷肉飯/便當/鍋物","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"宇良食2.0","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"梧樂食光 | 創作料理 We Love Cuisine","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"一等香麵食館（梧棲店）","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"好紀鮮食館 (午餐預約制)","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"小時厚牛排-台中梧棲店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"吉好吃鹽水雞 梧棲東健店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"鴨寶食堂","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"阿裕食堂","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"台南一甲子","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"歌王豆花","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"牛家村麵食館","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"阿吉魯肉飯","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"好鄰居快餐","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"聖大麵食館","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"大庄臭豆腐","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"林家燒餅(懷念古早味燒餅)","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"慢食光","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"美申宏湯包","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"光慧水煎包（梧棲店）","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"大庄無名烤玉米","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"廟口意麵（梧棲店）","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"上福速食餐飲便當","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"溫叨灶腳便當專賣店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"梧棲芋頭王黑糖刨冰（文華店）","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"陳記滷味 梧棲分店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"麵線虹了","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"真口味烤鴨店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"好陽光早午餐","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"絕品鮮鍋-梧棲店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"順興芋冰老店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"二鍋頭梧棲店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"協力旺雞排（梧棲中央店）","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"紅香自助餐","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"不貳早午餐","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"台中港海味羹","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"朝司暮想 肉蛋吐司-梧棲民和店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"changhua","title":"Hong Ming's Kitchen","region":"中部","city":"彰化","kind":"food","rating":4.2,"reviews":3004},{"sourceKey":"changhua","title":"Company dinner","region":"中部","city":"彰化","kind":"food","rating":4.5,"reviews":138},{"sourceKey":"changhua","title":"舊車路桶仔雞","region":"中部","city":"彰化","kind":"food","rating":4.7,"reviews":251},{"sourceKey":"changhua","title":"吳頂釣魚場","region":"中部","city":"彰化","kind":"food","rating":4.3,"reviews":928},{"sourceKey":"changhua","title":"Ho-Lou Tea House","region":"中部","city":"彰化","kind":"food","rating":4.4,"reviews":1069},{"sourceKey":"changhua","title":"黃記素食","region":"中部","city":"彰化","kind":"food","rating":4.6,"reviews":580},{"sourceKey":"changhua","title":"鼎Q包子｜沙鹿靜宜店｜人氣老麵饅頭 DINGQ BAO","region":"中部","city":"彰化","kind":"food","rating":4.3,"reviews":13},{"sourceKey":"changhua","title":"屁格豬火鍋餐廳·親子樂園","region":"中部","city":"彰化","kind":"food","rating":4.5,"reviews":657},{"sourceKey":"changhua","title":"探索.迷宮親子童樂餐廳","region":"中部","city":"彰化","kind":"food","rating":4.4,"reviews":4092},{"sourceKey":"changhua","title":"漢強麵館","region":"中部","city":"彰化","kind":"food","rating":4.1,"reviews":575},{"sourceKey":"changhua","title":"劉家粽子 西門店","region":"中部","city":"彰化","kind":"food","rating":3.9,"reviews":4759},{"sourceKey":"changhua","title":"和美製鍋有限公司","region":"中部","city":"彰化","kind":"food","rating":4.3,"reviews":441},{"sourceKey":"changhua","title":"帢米德專業烘焙","region":"中部","city":"彰化","kind":"food","rating":4.4,"reviews":131},{"sourceKey":"changhua","title":"永靖天品","region":"中部","city":"彰化","kind":"food","rating":4.6,"reviews":150},{"sourceKey":"changhua","title":"Smile Gas Station","region":"中部","city":"彰化","kind":"food","rating":4,"reviews":360},{"sourceKey":"changhua","title":"蚵ㄚ仁","region":"中部","city":"彰化","kind":"food","rating":4.4,"reviews":4654},{"sourceKey":"changhua","title":"聰哥團長蛋黃酥","region":"中部","city":"彰化","kind":"food","rating":4.8,"reviews":636},{"sourceKey":"changhua","title":"玉鉁包子(提早售完即休息)","region":"中部","city":"彰化","kind":"food","rating":4.8,"reviews":157},{"sourceKey":"changhua","title":"十二段鍋物堂 | 彰化店","region":"中部","city":"彰化","kind":"food","rating":4.6,"reviews":3688},{"sourceKey":"changhua","title":"彰化老担阿璋肉圓","region":"中部","city":"彰化","kind":"food","rating":4.2,"reviews":16887},{"sourceKey":"changhua","title":"漢彬水晶餃","region":"中部","city":"彰化","kind":"food","rating":null,"reviews":null},{"sourceKey":"changhua","title":"施 豆花専賣店","region":"中部","city":"彰化","kind":"food","rating":null,"reviews":null},{"sourceKey":"changhua","title":"手工水餃","region":"中部","city":"彰化","kind":"food","rating":null,"reviews":null},{"sourceKey":"changhua","title":"第一豬腳飯","region":"中部","city":"彰化","kind":"food","rating":null,"reviews":null},{"sourceKey":"changhua","title":"和美花壇羊肉","region":"中部","city":"彰化","kind":"food","rating":null,"reviews":null},{"sourceKey":"changhua","title":"鴨篆脆皮烤鴨","region":"中部","city":"彰化","kind":"food","rating":null,"reviews":null},{"sourceKey":"changhua","title":"勇伯粉粿&米苔目","region":"中部","city":"彰化","kind":"food","rating":null,"reviews":null},{"sourceKey":"changhua","title":"長頸鹿休閒農場","region":"中部","city":"彰化","kind":"food","rating":null,"reviews":null},{"sourceKey":"changhua","title":"溪湖阿秀羊肉爐","region":"中部","city":"彰化","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿和肉燥飯","region":"南部","city":"台南","kind":"food","rating":4.1,"reviews":2567},{"sourceKey":"tainan","title":"老李螺肉大王（炒牛肉、炒螺肉）","region":"南部","city":"台南","kind":"food","rating":4.1,"reviews":1343},{"sourceKey":"tainan","title":"哈達客東山鴨頭－裕農店","region":"南部","city":"台南","kind":"food","rating":4.4,"reviews":643},{"sourceKey":"tainan","title":"好口福石頭火鍋","region":"南部","city":"台南","kind":"food","rating":4.2,"reviews":708},{"sourceKey":"tainan","title":"Hot Pot","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿月姨東山鴨頭 端午6/20六-6/22一店休","region":"南部","city":"台南","kind":"food","rating":4.3,"reviews":415},{"sourceKey":"tainan","title":"No. 161, Section 2, Minzu Rd, Chihkan Village, West Central District","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"Tainan City, Taiwan 700","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"Jue Ding Friedrice","region":"南部","city":"台南","kind":"food","rating":4.4,"reviews":1170},{"sourceKey":"tainan","title":"黃火木舊台味冰店 (北永康店)","region":"南部","city":"台南","kind":"food","rating":4.3,"reviews":203},{"sourceKey":"tainan","title":"Ice cream and drink shop","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"Lian Ying Fa Dim Sum","region":"南部","city":"台南","kind":"food","rating":4.2,"reviews":4511},{"sourceKey":"tainan","title":"Dim Sum","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"黑鼎鴻專業臭豆腐(正強店)","region":"南部","city":"台南","kind":"food","rating":4.3,"reviews":105},{"sourceKey":"tainan","title":"珍好味臭臭鍋","region":"南部","city":"台南","kind":"food","rating":4.3,"reviews":2186},{"sourceKey":"tainan","title":"阿銘牛肉湯","region":"南部","city":"台南","kind":"food","rating":4.4,"reviews":2798},{"sourceKey":"tainan","title":"阿足香雞排","region":"南部","city":"台南","kind":"food","rating":4.4,"reviews":209},{"sourceKey":"tainan","title":"鹽行路老鄭虱目魚","region":"南部","city":"台南","kind":"food","rating":3.9,"reviews":54},{"sourceKey":"tainan","title":"三赫老麵燒餅","region":"南部","city":"台南","kind":"food","rating":4.3,"reviews":1692},{"sourceKey":"tainan","title":"Breakfast","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"美味鹹酥雞","region":"南部","city":"台南","kind":"food","rating":4,"reviews":290},{"sourceKey":"tainan","title":"Liu Jia Juang","region":"南部","city":"台南","kind":"food","rating":4.3,"reviews":5089},{"sourceKey":"tainan","title":"十塩彌坊臭豆腐","region":"南部","city":"台南","kind":"food","rating":4.4,"reviews":249},{"sourceKey":"tainan","title":"竹力亭-雞排蛋沙拉－台南復國總店","region":"南部","city":"台南","kind":"food","rating":4.2,"reviews":839},{"sourceKey":"tainan","title":"阿明食堂-中華店","region":"南部","city":"台南","kind":"food","rating":4.6,"reviews":342},{"sourceKey":"tainan","title":"阿月手工豆花","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"王家牛肉湯","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"德興鱔魚意麵","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"冰鄉","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"冰ㄉ• かき氷 二號","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"七誠米粿","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"祿記（包仔祿）","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"東門圓環頂陽春麵專家","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"城邊真味鱔魚意麵","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"好味紅燒𩵚魠魚羹","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"瑪黑家紅茶專賣店","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"福來小棧沙茶爐－特色火鍋","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"吳家肉燥飯","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿興虱目魚","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"太陽牌冰品","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"𤦔鹹酥雞-安平店","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"你我他之家","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"河樂廣場","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"8818 比薩屋","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"VASO弘肉燥飯舖 安平店","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿明豬心冬粉","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"鄭記蔥肉餅-西門店","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"青山茶行","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"旨味日本料理","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"黑橋牌香腸博物館","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"夏林臭豆腐","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿裕牛肉涮涮鍋(崑崙店)","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"美鮮牛肉湯","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"富盛號","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"劉家粽子 西門店","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"蔡家豬血湯","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"黃火木舊台味冰店","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"赤峰鐵板燒 (安中店)","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"馨味胡椒白菜雞","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿忠螃蟹-府城蟳禮","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"嘟嘟牛排-西門店","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"二哥炒鱔魚","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"丹瓦樓","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"Walking Su 藥膳麻油雞","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿宏牛肉湯","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"陳家汕頭意麵","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"海龍肉粽","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"台南葡吉麵包店","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿杰溫體牛肉湯（每天售完為止）","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"豐收飯桌","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"無名羊肉湯-大菜市（每日上午五點半開賣，賣完為止，星期二固定店休，請追蹤臉書，感謝您！）","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"醇涎坊古早味鍋燒意麵","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"東山古腸新古早味糯米大腸","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"上好烤魯味","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"檨仔林阿全碗粿","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"台南市 基明飯桌仔－飯桌仔鮮魚自助餐","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"呷涮嘴東山鴨頭","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"克林台包","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"布萊恩紅茶正興總店","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"炸雞洋行(歡迎電話預訂)","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"保哥黑輪","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"鴻牛溫體牛肉湯-南門店｜中西區美食｜宵夜牛肉湯｜熱門牛肉湯｜台南美食推薦｜台南小吃推薦｜牛肉湯推薦｜溫體牛｜必吃牛肉鍋｜宵夜推薦｜熱炒推薦｜必吃美食｜評價牛肉湯｜","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"八寶彬 圓仔惠","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿棠牛肉湯","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿堂鹹粥","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"kaohsiung","title":"岡山名亨運動廣場","region":"南部","city":"高雄","kind":"food","rating":4.7,"reviews":170},{"sourceKey":"kaohsiung","title":"湖南味","region":"南部","city":"高雄","kind":"food","rating":4.1,"reviews":1556},{"sourceKey":"kaohsiung","title":"Gang Yuan Beef Noodle Restaurant","region":"南部","city":"高雄","kind":"food","rating":4.2,"reviews":9833},{"sourceKey":"kaohsiung","title":"Yancheng Duck Noodles","region":"南部","city":"高雄","kind":"food","rating":4.2,"reviews":1649},{"sourceKey":"kaohsiung","title":"冬粉王","region":"南部","city":"高雄","kind":"food","rating":4.1,"reviews":4858},{"sourceKey":"kaohsiung","title":"Duck Zhen","region":"南部","city":"高雄","kind":"food","rating":4.3,"reviews":11685},{"sourceKey":"kaohsiung","title":"鳳興麵線","region":"南部","city":"高雄","kind":"food","rating":4.1,"reviews":4439},{"sourceKey":"kaohsiung","title":"Bei Gang Tsai Rice Tube (Yancheng)","region":"南部","city":"高雄","kind":"food","rating":4.4,"reviews":6371},{"sourceKey":"kaohsiung","title":"古早味碳火芳德豬肉冬粉","region":"南部","city":"高雄","kind":"food","rating":4.4,"reviews":660},{"sourceKey":"east","title":"7-ELEVEN 金桔門市","region":"東部","city":"東部","kind":"food","rating":4.4,"reviews":118},{"sourceKey":"east","title":"上旺土雞城","region":"東部","city":"東部","kind":"food","rating":4.3,"reviews":835},{"sourceKey":"east","title":"松田釣魚池","region":"東部","city":"東部","kind":"food","rating":4.2,"reviews":516},{"sourceKey":"chiayi","title":"咱台灣人的冰","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"嘉義公園火雞肉飯（公休請看FB)","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"桃城三禾火雞肉飯","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"粉圓冰 愛玉冰","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"愛木村地方文化館","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"阿燕雞子粿","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"阿玲水餃煎餃","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"佳園汕頭火鍋","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"北歐工坊複合式餐廳","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"興加臭豆腐","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"古早時代-現炒鴨肉羹/福星藥頭排骨","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"錦記麻糬","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"阿明火雞肉飯","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"1961海鮮碳烤","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"西濱小吃","region":"中部","city":"清水","kind":"food","rating":4.6,"reviews":77},{"sourceKey":"qingshui","title":"清水區 蔡家涼麵（建國國小旁）","region":"中部","city":"清水","kind":"food","rating":4.7,"reviews":106},{"sourceKey":"qingshui","title":"Breakfast","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"陳媽媽涼麵","region":"中部","city":"清水","kind":"food","rating":4.3,"reviews":240},{"sourceKey":"qingshui","title":"伴甜豆花(原第一銀行旁冰店)","region":"中部","city":"清水","kind":"food","rating":4.6,"reviews":229},{"sourceKey":"qingshui","title":"联亭泡菜鍋（清水店）","region":"中部","city":"清水","kind":"food","rating":4.6,"reviews":581},{"sourceKey":"qingshui","title":"Hot Pot","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"泗陽大浯江（清水分局旁）","region":"中部","city":"清水","kind":"food","rating":4.4,"reviews":405},{"sourceKey":"qingshui","title":"蒸神女 （紅麴麻辣鴨血臭豆腐/素食麻辣臭豆腐、Yummy紅麴滷味）⚠️詳情請看本店說明欄位","region":"中部","city":"清水","kind":"food","rating":4.9,"reviews":116},{"sourceKey":"qingshui","title":"協力旺清水鎮政店","region":"中部","city":"清水","kind":"food","rating":4.4,"reviews":128},{"sourceKey":"qingshui","title":"炒飯不能王","region":"中部","city":"清水","kind":"food","rating":4.9,"reviews":1058},{"sourceKey":"qingshui","title":"阿騰米糕","region":"中部","city":"清水","kind":"food","rating":4.2,"reviews":1066},{"sourceKey":"qingshui","title":"潮州 手工製作 餛飩麵","region":"中部","city":"清水","kind":"food","rating":4.6,"reviews":160},{"sourceKey":"qingshui","title":"陳大牌排骨麵","region":"中部","city":"清水","kind":"food","rating":4.3,"reviews":782},{"sourceKey":"qingshui","title":"好口味包子饅頭店","region":"中部","city":"清水","kind":"food","rating":4.7,"reviews":21},{"sourceKey":"qingshui","title":"武鹿炸雞","region":"中部","city":"清水","kind":"food","rating":4.7,"reviews":21},{"sourceKey":"qingshui","title":"禎饌米食","region":"中部","city":"清水","kind":"food","rating":4.8,"reviews":8},{"sourceKey":"qingshui","title":"馬蔥餅雙胞胎清水店（將於3/14結束營業）","region":"中部","city":"清水","kind":"food","rating":4.6,"reviews":69},{"sourceKey":"qingshui","title":"陳寶包手工肉包饅頭丨民族店","region":"中部","city":"清水","kind":"food","rating":4.8,"reviews":235},{"sourceKey":"qingshui","title":"正牌米糕莊","region":"中部","city":"清水","kind":"food","rating":4.1,"reviews":3822},{"sourceKey":"qingshui","title":"鄭記油蔥酥","region":"中部","city":"清水","kind":"food","rating":4.8,"reviews":121},{"sourceKey":"qingshui","title":"小阿姨滷肉飯（清水店)蒸蛋滷肉飯/蚵仔滷肉飯/附近美食/在地小吃/休假詳情收尋FB","region":"中部","city":"清水","kind":"food","rating":4.8,"reviews":1347},{"sourceKey":"qingshui","title":"小籠包","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"老士官擀麵","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"小妍鮮食健康餐盒-遠8店-清水美食 清水健康餐 清水便當 梧棲美食 梧棲健康餐 梧棲便當","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"本一艸堂","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"小二哥麵館","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"阿邦小吃店","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"花蓮炸蛋蔥油餅清水店","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"馥香牛排 (清水必吃美食 | 港區藝術中心美食 | 清水推薦美食)","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"清水米苔目.福","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"楊媽媽牛肉麵","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"亮亮の牛肉麵","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"清馫脆皮烤鴨-清水烤鴨店","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"樸樂早午餐【清水店】/清水早午餐 [店休詳見公告及粉絲團]","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"小卓億杯 平價熱炒","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"揚記生煎包","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"通霄煎包","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"粿之世家","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"小林魯肉飯","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"飯糰小巴","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"釜山飯局l清水美食l沙鹿美食l梧棲美食l海線美食","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"老李魯肉飯","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"外婆的包粿（電話預訂。另有其他公休會在粉專另行公告）","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null}];
+
+  const REGION_ORDER = ['北部', '中部', '南部', '東部', '待分類'];
+  const AREA_META = {
+    '北部': { '基隆': ['基隆'], '台北': ['台北'], '新北': ['新北'], '桃園': ['桃園'], '新竹': ['新竹'] },
+    '中部': { '苗栗': ['苗栗'], '台中': ['台中','大甲','清水','梧棲','沙鹿'], '彰化': ['彰化'], '南投': ['南投'], '雲林': ['雲林'] },
+    '南部': { '嘉義': ['嘉義'], '台南': ['台南'], '高雄': ['高雄'], '屏東': ['屏東'] },
+    '東部': { '宜蘭': ['宜蘭'], '花蓮': ['花蓮'], '台東': ['台東'], '東部其他': ['東部'] }
+  };
+  const QUICK_CITY_META = {
+    '沙梧清': { region:'中部', area:'台中', city:'沙梧清' },
+    '梧棲': { region:'中部', area:'台中', city:'梧棲' },
+    '清水': { region:'中部', area:'台中', city:'清水' },
+    '沙鹿': { region:'中部', area:'台中', city:'沙鹿' },
+    '台中': { region:'中部', area:'台中', city:'台中' },
+    '彰化': { region:'中部', area:'彰化', city:'彰化' }
+  };
+  const TODAY_LOCATION_GROUPS = {
+    '常用': ['沙梧清','梧棲','清水','沙鹿','台中','彰化'],
+    '北部': ['基隆','台北','新北','桃園','新竹'],
+    '中部': ['苗栗','台中全區','沙梧清','台中','大甲','清水','梧棲','沙鹿','彰化','南投','雲林'],
+    '南部': ['嘉義','台南','高雄','屏東'],
+    '東部': ['宜蘭','花蓮','台東','東部']
+  };
+  const CITY_META = {
+    '基隆': { region: '北部', center: [25.1276, 121.7392] },
+    '台北': { region: '北部', center: [25.0330, 121.5654] },
+    '新北': { region: '北部', center: [25.0169, 121.4628] },
+    '桃園': { region: '北部', center: [24.9937, 121.3010] },
+    '新竹': { region: '北部', center: [24.8138, 120.9675] },
+    '苗栗': { region: '中部', center: [24.5602, 120.8214] },
+    '台中': { region: '中部', center: [24.1477, 120.6736] },
+    '大甲': { region: '中部', center: [24.3479, 120.6224], city: '台中' },
+    '清水': { region: '中部', center: [24.2700, 120.5760], city: '台中' },
+    '梧棲': { region: '中部', center: [24.2549, 120.5301], city: '台中' },
+    '沙鹿': { region: '中部', center: [24.2378, 120.5659], city: '台中' },
+    '彰化': { region: '中部', center: [24.0756, 120.5440] },
+    '南投': { region: '中部', center: [23.9609, 120.9719] },
+    '雲林': { region: '中部', center: [23.7092, 120.4313] },
+    '嘉義': { region: '南部', center: [23.4801, 120.4491] },
+    '台南': { region: '南部', center: [22.9997, 120.2270] },
+    '高雄': { region: '南部', center: [22.6273, 120.3014] },
+    '屏東': { region: '南部', center: [22.5519, 120.5488] },
+    '宜蘭': { region: '東部', center: [24.7021, 121.7378] },
+    '花蓮': { region: '東部', center: [23.9911, 121.6112] },
+    '台東': { region: '東部', center: [22.7554, 121.1500] },
+    '東部': { region: '東部', center: [23.55, 121.25] }
+  };
+
+  const FILENAME_CITY_RULES = [
+    ['基隆', '基隆'], ['大甲', '大甲'], ['沙鹿', '沙鹿'], ['梧棲', '梧棲'], ['清水', '清水'],
+    ['台中市區', '台中'], ['彰化', '彰化'], ['台南', '台南'], ['高雄', '高雄'], ['東部', '東部']
+  ];
+
+  let state = hydrateSharedData(loadState());
+  let activeRegion = '全部';
+  let activeArea = '全部';
+  let activeCity = '全部';
+  let activeFoodType = '全部';
+  let activeStatus = '全部';
+  let activeMyRating = '全部';
+  let activeGoogle = '全部';
+  let searchTerm = '';
+  const expandedCities = new Set();
+  const cityLimits = new Map();
+  let todayCity = '全部';
+  let todayStatus = '全部';
+  let deferredInstallPrompt = null;
+  let cloudClient = null;
+  let cloudReady = false;
+  let cloudVersion = null;
+  let cloudSaving = false;
+  let cloudRefreshing = false;
+  let cloudSaveTimer = null;
+  let cloudPollTimer = null;
+
+  const els = {
+    syncBtn: document.getElementById('syncBtn'), zipInput: document.getElementById('zipInput'),
+    addBtn: document.getElementById('addBtn'), placeList: document.getElementById('placeList'),
+    visibleCount: document.getElementById('visibleCount'), candidateCount: document.getElementById('candidateCount'),
+    totalStat: document.getElementById('totalStat'), eatenStat: document.getElementById('eatenStat'),
+    wantStat: document.getElementById('wantStat'), noteStat: document.getElementById('noteStat'),
+    lastSyncText: document.getElementById('lastSyncText'), familySyncBtn: document.getElementById('familySyncBtn'),
+    familySyncText: document.getElementById('familySyncText'), familySyncDot: document.getElementById('familySyncDot'),
+    todayResult: document.getElementById('todayResult'),
+    recommendBtn: document.getElementById('recommendBtn'), randomBtn: document.getElementById('randomBtn'),
+    todayCityFilter: document.getElementById('todayCityFilter'), todayCityLabel: document.getElementById('todayCityLabel'), todayStatusFilter: document.getElementById('todayStatusFilter'),
+    searchInput: document.getElementById('searchInput'), statusFilter: document.getElementById('statusFilter'),
+    myRatingFilter: document.getElementById('myRatingFilter'), googleFilter: document.getElementById('googleFilter'),
+    quickTabs: document.getElementById('quickTabs'), regionTabs: document.getElementById('regionTabs'), areaTabs: document.getElementById('areaTabs'),
+    cityTabs: document.getElementById('cityTabs'), typeTabs: document.getElementById('typeTabs'),
+    modalBackdrop: document.getElementById('modalBackdrop'),
+    modal: document.getElementById('modal'), restoreInput: document.getElementById('restoreInput')
+  };
+  bindEvents();
+  renderAll();
+  setupPwa();
+  initCloudSync();
+
+
+  function hydrateSharedData(base) {
+    const old = new Map((base.places || []).map(p => [p.id, p]));
+    const srcByKey = new Map(SHARED_SOURCES.map(s => [s.key, s]));
+    const shared = SHARED_SEED.map(item => {
+      const src = srcByKey.get(item.sourceKey);
+      const id = sharedPlaceId(item.sourceKey, item.title);
+      const prev = old.get(id);
+      return {
+        id,
+        title: item.title,
+        city: item.city,
+        region: item.region,
+        kind: item.kind,
+        rating: Number.isFinite(item.rating) ? item.rating : null,
+        reviews: Number.isFinite(item.reviews) ? item.reviews : null,
+        sourceKey: item.sourceKey,
+        sourceLists: [src?.label || item.city],
+        sourceUrl: src?.url || '',
+        url: mapsSearchUrl(item.title, item.city),
+        note: '',
+        comment: '',
+        localNote: prev?.localNote || '',
+        eaten: !!prev?.eaten,
+        myRating: Number.isFinite(prev?.myRating) ? prev.myRating : null,
+        wouldReturn: prev?.wouldReturn || '',
+        lastEatenAt: prev?.lastEatenAt || null,
+        forceFood: typeof prev?.forceFood === 'boolean' ? prev.forceFood : undefined,
+        manual: false,
+        removed: !!prev?.removed
+      };
+    });
+    const manual = (base.places || []).filter(p => p.manual);
+    const next = {
+      ...base,
+      places: dedupePlaces([...shared, ...manual]),
+      lastSync: SHARED_DATA_UPDATED_AT,
+      sharedVersion: SHARED_DATA_VERSION
+    };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
+    return next;
+  }
+
+  function sharedPlaceId(sourceKey, title) {
+    return 'shared:' + sourceKey + ':' + String(title || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+
+  function mapsSearchUrl(title, city) {
+    return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([title, city].filter(Boolean).join(' '));
+  }
+
+  function defaultState() {
+    return { version: 1, places: [], lastSync: null, lastImportName: null, modifiedAt: '1970-01-01T00:00:00.000Z' };
+  }
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? { ...defaultState(), ...JSON.parse(raw) } : defaultState();
+    } catch { return defaultState(); }
+  }
+
+  function saveState(syncCloud = true) {
+    if (syncCloud) state.modifiedAt = new Date().toISOString();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (syncCloud) queueCloudSave();
+  }
+
+  function cloudTime(v) {
+    const t = Date.parse(v || '1970-01-01T00:00:00.000Z');
+    return Number.isFinite(t) ? t : 0;
+  }
+
+  function setFamilySyncStatus(text, mode = 'ok') {
+    if (!els.familySyncText || !els.familySyncDot) return;
+    els.familySyncText.textContent = text;
+    els.familySyncDot.classList.toggle('offline', mode === 'offline');
+    els.familySyncDot.classList.toggle('syncing', mode === 'syncing');
+  }
+
+  async function initCloudSync() {
+    if (!window.TaiwanFoodCloud) {
+      setFamilySyncStatus('家庭同步：無法載入', 'offline');
+      return;
+    }
+    setFamilySyncStatus('家庭同步：連線中…', 'syncing');
+    try {
+      cloudClient = await window.TaiwanFoodCloud.connect({ createIfMissing: true });
+      const remote = await cloudClient.read();
+      cloudVersion = remote.version || null;
+
+      if (!remote.data) {
+        await pushCloudState();
+      } else {
+        const remoteState = hydrateSharedData({ ...defaultState(), ...remote.data });
+        if (cloudTime(remoteState.modifiedAt) > cloudTime(state.modifiedAt)) {
+          state = remoteState;
+          saveState(false);
+          renderAll(false);
+        } else if (cloudTime(state.modifiedAt) > cloudTime(remoteState.modifiedAt)) {
+          await pushCloudState();
+        }
+      }
+
+      cloudReady = true;
+      setFamilySyncStatus('家庭同步：已連線', 'ok');
+      if (cloudPollTimer) clearInterval(cloudPollTimer);
+      cloudPollTimer = setInterval(() => refreshCloudState(true), 30000);
+      window.addEventListener('focus', () => refreshCloudState(true));
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshCloudState(true); });
+    } catch (err) {
+      console.warn('family sync init failed', err);
+      cloudReady = false;
+      setFamilySyncStatus('家庭同步：離線，本機仍可用', 'offline');
+    }
+  }
+
+  function queueCloudSave() {
+    if (!cloudReady || !cloudClient) return;
+    clearTimeout(cloudSaveTimer);
+    cloudSaveTimer = setTimeout(() => pushCloudState(), 500);
+  }
+
+  async function pushCloudState() {
+    if (!cloudClient || cloudSaving) return;
+    cloudSaving = true;
+    setFamilySyncStatus('家庭同步：同步中…', 'syncing');
+    try {
+      let result = await cloudClient.write(state, cloudVersion);
+      if (result.conflict) {
+        const latest = await cloudClient.read();
+        cloudVersion = latest.version || null;
+        if (latest.data && cloudTime(latest.data.modifiedAt) > cloudTime(state.modifiedAt)) {
+          state = hydrateSharedData({ ...defaultState(), ...latest.data });
+          saveState(false);
+          renderAll(false);
+        } else {
+          result = await cloudClient.write(state, cloudVersion);
+          if (result.conflict) throw new Error('sync conflict');
+          cloudVersion = result.version;
+        }
+      } else {
+        cloudVersion = result.version;
+      }
+      cloudReady = true;
+      setFamilySyncStatus('家庭同步：已同步 ' + new Intl.DateTimeFormat('zh-TW',{hour:'2-digit',minute:'2-digit'}).format(new Date()), 'ok');
+    } catch (err) {
+      console.warn('family sync save failed', err);
+      cloudReady = false;
+      setFamilySyncStatus('家庭同步：待重新連線', 'offline');
+    } finally {
+      cloudSaving = false;
+    }
+  }
+
+  async function refreshCloudState(silent = false) {
+    if (!cloudClient || cloudRefreshing || cloudSaving) return;
+    cloudRefreshing = true;
+    if (!silent) setFamilySyncStatus('家庭同步：檢查更新…', 'syncing');
+    try {
+      const remote = await cloudClient.read();
+      if (remote.version && remote.version !== cloudVersion) {
+        cloudVersion = remote.version;
+        if (remote.data && cloudTime(remote.data.modifiedAt) > cloudTime(state.modifiedAt)) {
+          state = hydrateSharedData({ ...defaultState(), ...remote.data });
+          saveState(false);
+          renderAll(false);
+        } else if (remote.data && cloudTime(state.modifiedAt) > cloudTime(remote.data.modifiedAt)) {
+          await pushCloudState();
+        }
+      }
+      cloudReady = true;
+      if (!silent) setFamilySyncStatus('家庭同步：已是最新', 'ok');
+      else setFamilySyncStatus('家庭同步：已連線', 'ok');
+    } catch (err) {
+      console.warn('family sync refresh failed', err);
+      cloudReady = false;
+      setFamilySyncStatus('家庭同步：離線，本機仍可用', 'offline');
+    } finally {
+      cloudRefreshing = false;
+    }
+  }
+
+  async function shareFamilySync() {
+    if (!cloudClient) return;
+    const url = cloudClient.inviteUrl();
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Taiwan Food 家庭同步', text: '用這個連結加入我們的美食清單', url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast('老婆設定連結已複製');
+      }
+    } catch {}
+  }
+
+  function openFamilySyncModal() {
+    const ready = !!cloudClient;
+    els.modal.innerHTML = `
+      <h3>家庭同步</h3>
+      <p class="modal-desc">你和老婆可共用同一份「吃過、評分、備註、手動新增」資料。資料使用 Cloudflare D1 儲存，內容在瀏覽器端加密後才上傳。</p>
+      <div class="check-row"><div><strong>${ready ? '已建立家庭空間' : '尚未連線'}</strong><div class="muted-small">${ready ? '分享設定連結給老婆，只需設定一次。' : '請先確認網路後再試一次。'}</div></div><span>${ready ? '✓' : '!'}</span></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="closeModalBtn">關閉</button>
+        ${ready ? '<button class="btn btn-ghost" id="syncNowBtn">立即同步</button><button class="btn btn-primary" id="shareFamilyBtn">分享給老婆</button>' : ''}
+      </div>`;
+    openModal();
+    document.getElementById('closeModalBtn').onclick = closeModal;
+    const syncNow = document.getElementById('syncNowBtn');
+    if (syncNow) syncNow.onclick = () => refreshCloudState(false);
+    const shareBtn = document.getElementById('shareFamilyBtn');
+    if (shareBtn) shareBtn.onclick = shareFamilySync;
+  }
+
+  function bindEvents() {
+    els.syncBtn.addEventListener('click', openSourcesModal);
+    els.familySyncBtn.addEventListener('click', openFamilySyncModal);
+    els.zipInput.addEventListener('change', handleZipSelect);
+    els.addBtn.addEventListener('click', () => openEditModal());
+    els.recommendBtn.addEventListener('click', () => pickToday('recommend'));
+    els.randomBtn.addEventListener('click', () => pickToday('random'));
+    els.todayCityFilter.addEventListener('click', openTodayLocationPicker);
+    els.todayStatusFilter.addEventListener('change', e => { todayStatus = e.target.value; renderAll(false); });
+    els.restoreInput.addEventListener('change', restoreBackupFile);
+    window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstallPrompt = e; });
+    els.searchInput.addEventListener('input', e => { searchTerm = e.target.value.trim().toLowerCase(); renderAll(false); });
+    els.statusFilter.addEventListener('change', e => { activeStatus = e.target.value; renderAll(false); });
+    els.myRatingFilter.addEventListener('change', e => { activeMyRating = e.target.value; renderAll(false); });
+    els.googleFilter.addEventListener('change', e => { activeGoogle = e.target.value; renderAll(false); });
+
+    els.quickTabs.addEventListener('click', e => {
+      const btn = e.target.closest('[data-quick-city]'); if (!btn) return;
+      const meta = QUICK_CITY_META[btn.dataset.quickCity]; if (!meta) return;
+      activeRegion = meta.region;
+      activeArea = meta.area;
+      activeCity = meta.city;
+      [...els.regionTabs.querySelectorAll('.chip')].forEach(x => x.classList.toggle('active', x.dataset.region === activeRegion));
+      expandedCities.add(activeCity);
+      renderHierarchyFilters();
+      renderAll(false);
+    });
+
+    els.regionTabs.addEventListener('click', e => {
+      const btn = e.target.closest('[data-region]'); if (!btn) return;
+      activeRegion = btn.dataset.region;
+      activeArea = '全部';
+      activeCity = '全部';
+      [...els.regionTabs.querySelectorAll('.chip')].forEach(x => x.classList.toggle('active', x === btn));
+      renderHierarchyFilters();
+      renderAll(false);
+    });
+
+    els.areaTabs.addEventListener('click', e => {
+      const btn = e.target.closest('[data-area]'); if (!btn) return;
+      activeArea = btn.dataset.area;
+      activeCity = '全部';
+      renderHierarchyFilters();
+      renderAll(false);
+    });
+
+    els.cityTabs.addEventListener('click', e => {
+      const btn = e.target.closest('[data-city]'); if (!btn) return;
+      activeCity = btn.dataset.city;
+      if (activeCity !== '全部' && activeCity !== '沙梧清') expandedCities.add(activeCity);
+      renderHierarchyFilters();
+      renderAll(false);
+    });
+
+    els.typeTabs.addEventListener('click', e => {
+      const btn = e.target.closest('[data-food-type]'); if (!btn) return;
+      activeFoodType = btn.dataset.foodType;
+      [...els.typeTabs.querySelectorAll('.chip')].forEach(x => x.classList.toggle('active', x === btn));
+      renderAll(false);
+    });
+
+    els.modalBackdrop.addEventListener('click', e => { if (e.target === els.modalBackdrop) closeModal(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    renderHierarchyFilters();
+  }
+
+  function renderHierarchyFilters() {
+    const areaLine = document.getElementById('areaFilterLine');
+    const cityLine = document.getElementById('cityFilterLine');
+    syncQuickTabs();
+
+    if (activeCity === '沙梧清') {
+      activeRegion = '中部';
+      activeArea = '台中';
+    }
+
+    if (activeRegion === '全部') {
+      activeArea = '全部';
+      activeCity = '全部';
+      els.areaTabs.innerHTML = '';
+      els.cityTabs.innerHTML = '';
+      if (areaLine) areaLine.style.display = 'none';
+      if (cityLine) cityLine.style.display = 'none';
+      return;
+    }
+
+    if (areaLine) areaLine.style.display = 'flex';
+    const areas = Object.entries(AREA_META[activeRegion] || {});
+    els.areaTabs.innerHTML = [
+      `<button class="chip ${activeArea==='全部'?'active':''}" data-area="全部">全部</button>`,
+      ...areas.map(([area]) => `<button class="chip ${activeArea===area?'active':''}" data-area="${escapeAttr(area)}">${escapeHtml(area)}</button>`)
+    ].join('');
+
+    if (activeArea === '全部') {
+      activeCity = '全部';
+      els.cityTabs.innerHTML = '';
+      if (cityLine) cityLine.style.display = 'none';
+      return;
+    }
+
+    const cities = AREA_META[activeRegion]?.[activeArea] || [];
+    if (activeCity === '沙梧清') {
+      if (cityLine) cityLine.style.display = 'flex';
+      els.cityTabs.innerHTML = [
+        `<button class="chip" data-city="全部">全部台中</button>`,
+        `<button class="chip active" data-city="沙梧清">沙梧清</button>`,
+        ...cities.map(city => `<button class="chip" data-city="${escapeAttr(city)}">${escapeHtml(cityDisplayName(city))}</button>`)
+      ].join('');
+      return;
+    }
+    if (cities.length <= 1) {
+      activeCity = cities[0] || '全部';
+      els.cityTabs.innerHTML = '';
+      if (cityLine) cityLine.style.display = 'none';
+      if (activeCity !== '全部') expandedCities.add(activeCity);
+      return;
+    }
+
+    if (cityLine) cityLine.style.display = 'flex';
+    els.cityTabs.innerHTML = [
+      `<button class="chip ${activeCity==='全部'?'active':''}" data-city="全部">${activeArea==='台中'?'全部台中':'全部'}</button>`,
+      ...(activeArea==='台中' ? [`<button class="chip ${activeCity==='沙梧清'?'active':''}" data-city="沙梧清">沙梧清</button>`] : []),
+      ...cities.map(city => `<button class="chip ${activeCity===city?'active':''}" data-city="${escapeAttr(city)}">${escapeHtml(cityDisplayName(city))}</button>`)
+    ].join('');
+  }
+
+  function syncQuickTabs() {
+    [...els.quickTabs.querySelectorAll('[data-quick-city]')].forEach(btn => {
+      const meta = QUICK_CITY_META[btn.dataset.quickCity];
+      btn.classList.toggle('active', !!meta && activeRegion===meta.region && activeArea===meta.area && activeCity===meta.city);
+    });
+  }
+
+  function cityDisplayName(city) { return city === '台中' ? '台中市區' : city; }
+  function todayLocationLabel(value) {
+    if (value === '全部') return '全台';
+    if (value === '台中全區') return '台中全區';
+    return cityDisplayName(value);
+  }
+
+  function openTodayLocationPicker() {
+    els.modalBackdrop.classList.add('location-picker-backdrop');
+    els.modal.classList.add('location-picker-modal');
+    const sections = Object.entries(TODAY_LOCATION_GROUPS).map(([group, values]) => `
+      <div class="picker-section">
+        <div class="picker-section-title">${escapeHtml(group)}</div>
+        <div class="picker-options">
+          ${values.map(value => `<button class="picker-option ${todayCity===value?'active':''}" type="button" data-today-location="${escapeAttr(value)}">${escapeHtml(todayLocationLabel(value))}</button>`).join('')}
+        </div>
+      </div>`).join('');
+
+    els.modal.innerHTML = `
+      <h3>選擇地區</h3>
+      <p class="modal-desc">常用地區放最前面；「沙梧清」＝沙鹿＋梧棲＋清水。</p>
+      <div class="picker-grid">
+        <div class="picker-section"><div class="picker-options"><button class="picker-option ${todayCity==='全部'?'active':''}" type="button" data-today-location="全部">全台</button></div></div>
+        ${sections}
+      </div>
+      <div class="modal-actions"><button class="btn btn-ghost" id="closeModalBtn" type="button">取消</button></div>`;
+    openModal();
+    document.getElementById('closeModalBtn').onclick = closeModal;
+    els.modal.querySelectorAll('[data-today-location]').forEach(btn => btn.onclick = () => {
+      todayCity = btn.dataset.todayLocation;
+      els.todayCityLabel.textContent = todayLocationLabel(todayCity);
+      closeModal();
+      renderAll(false);
+    });
+  }
+
+  function renderAll(fitMap = true) {
+    if (els.todayCityLabel) els.todayCityLabel.textContent = todayLocationLabel(todayCity);
+    const list = getFilteredPlaces();
+    renderStats();
+    renderPlaces(list);
+    els.visibleCount.textContent = `${list.length} 家`;
+    els.candidateCount.textContent = `${getTodayCandidates().length} 家可選`;
+  }
+
+  function renderStats() {
+    const p = state.places.filter(x => !x.removed && isFoodPlace(x));
+    els.totalStat.textContent = p.length;
+    els.eatenStat.textContent = p.filter(x => x.eaten || hasList(x, '吃過')).length;
+    els.wantStat.textContent = p.filter(x => !x.eaten || x.wouldReturn === 'yes').length;
+    els.noteStat.textContent = p.filter(x => (x.localNote || x.note || x.comment || '').trim()).length;
+    els.lastSyncText.textContent = `共享清單快取：${formatDateTime(SHARED_DATA_UPDATED_AT)}`;
+  }
+
+  function isFoodPlace(p) {
+    if (p.kind === 'family') return false;
+    if (p.forceFood === true) return true;
+    if (p.forceFood === false) return false;
+    const t = String(p.title || '').toLowerCase();
+    const nonFood = [
+      /停車場/, /圖書館/, /親子館/, /運動廣場/, /gas station/, /加油站/,
+      /製鍋/, /漁港/, /seafood wholesaler/, /休閒農場/, /博物館/, /7-eleven/,
+      /便利商店/, /文化館/, /(^|[^餐])公園$/, /河樂廣場/, /釣魚場/
+    ];
+    return !nonFood.some(re => re.test(t));
+  }
+
+  function getFilteredPlaces() {
+    return state.places.filter(p => !p.removed).filter(p => {
+      if (activeFoodType === '美食' && !isFoodPlace(p)) return false;
+      if (activeFoodType === '親子育樂' && p.kind !== 'family') return false;
+      if (!['全部','美食','親子育樂'].includes(activeFoodType) && (!isFoodPlace(p) || !matchesFoodType(p, activeFoodType))) return false;
+      if (activeRegion !== '全部' && (p.region || '待分類') !== activeRegion) return false;
+      if (activeArea !== '全部') {
+        const cities = AREA_META[activeRegion]?.[activeArea] || [];
+        if (!cities.includes(p.city)) return false;
+      }
+      if (activeCity === '沙梧清' && !['沙鹿','梧棲','清水'].includes(p.city)) return false;
+      if (activeCity !== '全部' && activeCity !== '沙梧清' && p.city !== activeCity) return false;
+      const eaten = p.eaten || hasList(p, '吃過');
+      if (activeStatus === '沒吃過' && eaten) return false;
+      if (activeStatus === '吃過' && !eaten) return false;
+      if (activeStatus === '想吃' && eaten && p.wouldReturn !== 'yes') return false;
+      if (activeStatus === '會再吃' && p.wouldReturn !== 'yes') return false;
+      if (activeStatus === '不再吃' && p.wouldReturn !== 'no') return false;
+      if (activeStatus === '30天內' && !isRecentEaten(p)) return false;
+
+      if (activeMyRating === '未評分' && (!eaten || Number.isFinite(p.myRating))) return false;
+      if (activeMyRating === '5' && p.myRating !== 5) return false;
+      if (activeMyRating === '4+' && !(Number.isFinite(p.myRating) && p.myRating >= 4)) return false;
+      if (activeMyRating === '3-' && !(Number.isFinite(p.myRating) && p.myRating <= 3)) return false;
+
+      if (activeGoogle === '4.5+' && !(Number.isFinite(p.rating) && p.rating >= 4.5)) return false;
+      if (activeGoogle === '4.0+' && !(Number.isFinite(p.rating) && p.rating >= 4.0)) return false;
+      if (activeGoogle === '1000+' && !(Number.isFinite(p.reviews) && p.reviews >= 1000)) return false;
+
+      if (searchTerm) {
+        const hay = [p.title, p.city, p.localNote, p.note, p.comment, ...(p.sourceLists || [])].join(' ').toLowerCase();
+        if (!hay.includes(searchTerm)) return false;
+      }
+      return true;
+    }).sort(placeSort);
+  }
+
+  function matchesFoodType(p, type) {
+    const t = String(p.title || '').toLowerCase();
+    const tests = {
+      '早餐': /早餐|早午餐|飯糰|蛋餅|燒餅|水煎包|生煎包|饅頭|包子|吐司|三明治|刈包/,
+      '小吃': /小吃|臭豆腐|雞排|香腸|滷味|肉圓|鹹酥|蔥油餅|麵線羹|切仔|米苔目|豬血|米粿|雞子粿|筒仔米糕/,
+      '麵飯': /麵|飯|粥|炒飯|米糕|冬粉|水餃|煎餃|粽|肉燥|魯肉|滷肉|豬腳|米粉|意麵|鱔魚|餛飩/,
+      '火鍋': /火鍋|鍋物|涮涮|沙茶爐|羊肉爐|臭臭鍋|泡菜鍋|鮮鍋/,
+      '燒烤': /燒烤|烤鴨|桶仔雞|烤玉米|燒肉|碳火|炭火|烤雞/,
+      '海鮮': /海鮮|水產|活蝦|螃蟹|蚵|虱目魚|魚羹|𩵚魠|鴨肉羹/,
+      '甜點飲料': /豆花|冰|甜|麻糬|綠豆沙|仙草|紅茶|茶行|飲料|咖啡|café|刨冰|粉圓|愛玉/,
+      '宵夜': /宵夜|鹹酥|雞排|滷味|臭豆腐|熱炒|燒烤|烤鴨|酒館|bistro/,
+      '正餐': /餐廳|食堂|料理|牛排|土雞|牛肉爐|火鍋|鍋物|海鮮|餐酒|bistro|cuisine/
+    };
+    return tests[type]?.test(t) || false;
+  }
+
+  function getTodayCandidates() {
+    return state.places.filter(p => !p.removed && isFoodPlace(p)).filter(p => {
+      if (todayCity === '台中全區' && !['台中','大甲','清水','梧棲','沙鹿'].includes(p.city || '')) return false;
+      if (todayCity === '沙梧清' && !['沙鹿','梧棲','清水'].includes(p.city || '')) return false;
+      if (todayCity !== '全部' && todayCity !== '台中全區' && todayCity !== '沙梧清' && (p.city || '') !== todayCity) return false;
+      const eaten = p.eaten || hasList(p, '吃過');
+      if (todayStatus === '沒吃過' && eaten) return false;
+      if (todayStatus === '想吃' && eaten && p.wouldReturn !== 'yes') return false;
+      return true;
+    });
+  }
+
+  function daysSinceLastEaten(p) {
+    if (!p.lastEatenAt) return Infinity;
+    const ms = Date.now() - new Date(p.lastEatenAt).getTime();
+    return Number.isFinite(ms) ? ms / 86400000 : Infinity;
+  }
+
+  function isRecentEaten(p) {
+    return daysSinceLastEaten(p) < 30;
+  }
+
+  function placeSort(a, b) {
+    const ra = REGION_ORDER.indexOf(a.region || '待分類');
+    const rb = REGION_ORDER.indexOf(b.region || '待分類');
+    if (ra !== rb) return ra - rb;
+    const ca = citySortKey(a.city), cb = citySortKey(b.city);
+    if (ca !== cb) return ca - cb;
+    return (a.title || '').localeCompare(b.title || '', 'zh-Hant');
+  }
+
+  function citySortKey(city) {
+    const order = ['基隆','台北','新北','桃園','新竹','苗栗','台中','大甲','清水','梧棲','沙鹿','彰化','南投','雲林','嘉義','台南','高雄','屏東','宜蘭','花蓮','台東','東部','親子育樂','待分類'];
+    const idx = order.indexOf(city || '待分類'); return idx < 0 ? 999 : idx;
+  }
+
+  function renderPlaces(list) {
+    if (!list.length) {
+      els.placeList.innerHTML = `<div class="empty-list">沒有符合條件的店家。<br><small>換個地區、狀態或星級看看。</small></div>`;
+      return;
+    }
+
+    const groups = new Map();
+    for (const p of list) {
+      const key = p.city || '待分類';
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(p);
+    }
+
+    const forceExpanded = !!searchTerm;
+    const cities = [...groups.keys()];
+    const jump = cities.length > 1
+      ? `<div class="city-jump">${cities.map(city => `<button class="jump-chip" data-jump-city="${escapeAttr(city)}">${escapeHtml(city)} · ${groups.get(city).length}</button>`).join('')}</div>`
+      : '';
+
+    els.placeList.innerHTML = jump + [...groups.entries()].map(([city, places]) => {
+      const open = forceExpanded || expandedCities.has(city);
+      const limit = searchTerm ? Infinity : (cityLimits.get(city) || 10);
+      const shown = open ? places.slice(0, limit) : [];
+      let more = '';
+
+      if (open && !searchTerm && places.length > 10) {
+        if (limit < places.length) {
+          const label = limit < 30 && places.length > 30
+            ? `顯示更多 · ${Math.min(30, places.length)} / ${places.length}`
+            : `顯示全部 · ${places.length}`;
+          more = `<button class="group-more" data-more-city="${escapeAttr(city)}">${label}</button>`;
+        } else {
+          more = `<button class="group-more" data-collapse-city="${escapeAttr(city)}">收合 ↑</button>`;
+        }
+      }
+
+      return `
+        <section class="place-group" id="city-${safeDomId(city)}">
+          <div class="place-group-title">
+            <button class="group-toggle ${open?'open':''}" data-toggle-city="${escapeAttr(city)}">
+              <span>${escapeHtml(city)} · ${places.length}</span>
+              <span class="group-arrow">⌄</span>
+            </button>
+          </div>
+          ${open ? shown.map(renderPlaceItem).join('') + more : ''}
+        </section>`;
+    }).join('');
+
+    els.placeList.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openEditModal(btn.dataset.edit)));
+    els.placeList.querySelectorAll('[data-eaten]').forEach(btn => btn.addEventListener('click', () => toggleEaten(btn.dataset.eaten)));
+
+    els.placeList.querySelectorAll('[data-toggle-city]').forEach(btn => btn.addEventListener('click', () => {
+      const city = btn.dataset.toggleCity;
+      if (expandedCities.has(city)) expandedCities.delete(city); else expandedCities.add(city);
+      renderPlaces(getFilteredPlaces());
+    }));
+
+    els.placeList.querySelectorAll('[data-more-city]').forEach(btn => btn.addEventListener('click', () => {
+      const city = btn.dataset.moreCity;
+      const current = cityLimits.get(city) || 10;
+      cityLimits.set(city, current < 30 ? 30 : Infinity);
+      expandedCities.add(city);
+      renderPlaces(getFilteredPlaces());
+      requestAnimationFrame(() => document.getElementById('city-'+safeDomId(city))?.scrollIntoView({behavior:'smooth',block:'start'}));
+    }));
+
+    els.placeList.querySelectorAll('[data-collapse-city]').forEach(btn => btn.addEventListener('click', () => {
+      const city = btn.dataset.collapseCity;
+      cityLimits.set(city, 10);
+      expandedCities.delete(city);
+      renderPlaces(getFilteredPlaces());
+      requestAnimationFrame(() => document.getElementById('city-'+safeDomId(city))?.scrollIntoView({behavior:'smooth',block:'start'}));
+    }));
+
+    els.placeList.querySelectorAll('[data-jump-city]').forEach(btn => btn.addEventListener('click', () => {
+      const city = btn.dataset.jumpCity;
+      expandedCities.add(city);
+      renderPlaces(getFilteredPlaces());
+      requestAnimationFrame(() => document.getElementById('city-'+safeDomId(city))?.scrollIntoView({behavior:'smooth',block:'start'}));
+    }));
+  }
+
+  function safeDomId(v) {
+    return encodeURIComponent(String(v || '')).replace(/%/g,'_');
+  }
+
+  function renderPlaceItem(p) {
+    const eaten = p.eaten || hasList(p, '吃過');
+    const hot = hasList(p, '五星') || hasList(p, '最愛');
+    const note = p.localNote || p.note || p.comment || '';
+    return `<div class="place-item">
+      <div>
+        <div class="place-name">${escapeHtml(p.title || '未命名地點')}</div>
+        <div class="place-sub">
+          ${eaten ? '<span class="tag eaten">吃過</span>' : '<span class="tag">沒吃過</span>'}
+          ${Number.isFinite(p.rating) ? `<span class="tag">Google ★ ${p.rating}${Number.isFinite(p.reviews) ? ` · ${p.reviews.toLocaleString('zh-TW')}` : ''}</span>` : ''}
+          ${Number.isFinite(p.myRating) ? `<span class="tag hot">我的 ${'★'.repeat(p.myRating)}</span>` : ''}
+          ${p.wouldReturn === 'yes' ? '<span class="tag eaten">會再吃</span>' : p.wouldReturn === 'no' ? '<span class="tag">不再吃</span>' : ''}
+          ${hot ? '<span class="tag hot">推薦</span>' : ''}
+          ${p.manual ? '<span class="tag">手動</span>' : ''}
+        </div>
+        ${note ? `<div class="place-note">${escapeHtml(note)}</div>` : ''}
+      </div>
+      <div class="item-actions">
+        ${p.url ? `<button class="icon-btn" title="Google Maps" onclick="window.open('${escapeAttr(p.url)}','_blank','noopener')">↗</button>` : ''}
+        <button class="icon-btn" data-eaten="${p.id}" title="切換吃過">${eaten ? '✓' : '○'}</button>
+        <button class="icon-btn" data-edit="${p.id}" title="編輯">✎</button>
+      </div>
+    </div>`;
+  }
+
+  function pickToday(mode) {
+    const candidates = getTodayCandidates();
+    if (!candidates.length) { toast('目前沒有符合條件的店家'); return; }
+    const fresh = candidates.filter(p => !isRecentEaten(p));
+    const pool = fresh.length ? fresh : candidates;
+    let pick;
+    if (mode === 'random') pick = pool[Math.floor(Math.random() * pool.length)];
+    else {
+      const ranked = pool.map(p => ({ p, s: recommendationScore(p) })).sort((a,b) => b.s - a.s);
+      const top = ranked.slice(0, Math.max(1, Math.ceil(ranked.length * .25)));
+      pick = top[Math.floor(Math.random() * top.length)].p;
+    }
+    const reason = mode === 'random' ? '完全隨機抽選' : recommendationReason(pick);
+    els.todayResult.classList.remove('empty');
+    els.todayResult.innerHTML = `<div class="today-icon">${mode === 'random' ? '🎲' : '🔥'}</div>
+      <div style="min-width:0;flex:1">
+        <div class="today-name">${escapeHtml(pick.title)}</div>
+        <p>${escapeHtml(pick.city || '待分類')} · ${escapeHtml(reason)}</p>
+        <div class="today-meta">
+          ${pick.eaten || hasList(pick,'吃過') ? '<span class="tag eaten">吃過</span>' : '<span class="tag">沒吃過</span>'}
+          ${Number.isFinite(pick.myRating) ? `<span class="tag hot">我的 ${'★'.repeat(pick.myRating)}</span>` : ''}
+          ${pick.wouldReturn === 'yes' ? '<span class="tag eaten">會再吃</span>' : ''}
+          ${pick.url ? `<button class="chip" onclick="window.open('${escapeAttr(pick.url)}','_blank','noopener')">Google Maps ↗</button>` : ''}
+          <button class="chip" data-edit="${escapeAttr(pick.id)}">評分 / 備註</button>
+        </div>
+      </div>`;
+    const editBtn = els.todayResult.querySelector('[data-edit]');
+    if (editBtn) editBtn.onclick = () => openEditModal(editBtn.dataset.edit);
+  }
+
+  function recommendationScore(p) {
+    let s = 0;
+    if (Number.isFinite(p.rating)) s += Math.max(0, p.rating - 3.5) * 34;
+    if (Number.isFinite(p.reviews)) s += Math.log10(Math.max(1, p.reviews) + 1) * 14;
+    if (Number.isFinite(p.myRating)) s += (p.myRating - 3) * 24;
+    if (p.wouldReturn === 'yes') s += 28;
+    if (p.wouldReturn === 'no') s -= 90;
+    if (hasList(p, '555') || hasList(p, '五星')) s += 24;
+    if (hasList(p, '最愛')) s += 20;
+    if (hasList(p, '吃過的名店')) s += 12;
+    if ((p.localNote || '').trim()) s += 2;
+    if (isRecentEaten(p)) s -= 80;
+    if (Number.isFinite(p.manualScore)) s += p.manualScore;
+    return s;
+  }
+
+  function recommendationReason(p) {
+    const r = [];
+    if (Number.isFinite(p.myRating)) r.push(`你給 ${p.myRating}★`);
+    if (p.wouldReturn === 'yes') r.push('你會再吃');
+    if (Number.isFinite(p.rating)) r.push(`${p.rating}★${Number.isFinite(p.reviews) ? ' · ' + p.reviews.toLocaleString('zh-TW') + ' 則評論' : ''}`);
+    if (!r.length) r.push('依目前條件綜合人氣推薦');
+    return r.slice(0,2).join('＋');
+  }
+
+  function openSourcesModal() {
+    const foodCount = SHARED_SOURCES.filter(s => s.kind === 'food').reduce((n, s) => n + (s.declared || 0), 0);
+    const rows = SHARED_SOURCES.map(s => `
+      <div class="check-row" style="margin-bottom:8px">
+        <div>
+          <strong>${escapeHtml(s.label)}</strong>
+          <div class="muted-small">${s.kind === 'family' ? '親子育樂' : escapeHtml(s.region)} · Google Maps ${s.declared} 個地點</div>
+        </div>
+        <button class="btn btn-ghost" type="button" data-source-open="${escapeAttr(s.url)}">開啟 ↗</button>
+      </div>`).join('');
+    els.modal.innerHTML = `
+      <h3>Google Maps 來源清單</h3>
+      <p class="modal-desc">目前以你提供的共享清單做主資料來源；非美食會自動排除，不會進入「今天要吃啥」。</p>
+      ${rows}
+      <div class="check-row" style="margin-top:14px">
+        <div><strong>我的資料</strong><div class="muted-small">備份吃過、我的評分、會不會再吃與備註。</div></div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+          <button class="btn btn-ghost" id="backupBtn" type="button">匯出備份</button>
+          <button class="btn btn-ghost" id="restoreBtn" type="button">還原備份</button>
+          <button class="btn btn-ghost" id="installBtn" type="button">安裝 App</button>
+        </div>
+      </div>
+      <div class="modal-actions"><button class="btn btn-ghost" id="closeModalBtn">關閉</button></div>`;
+    openModal();
+    document.getElementById('closeModalBtn').onclick = closeModal;
+    document.getElementById('backupBtn').onclick = exportBackup;
+    document.getElementById('restoreBtn').onclick = () => els.restoreInput.click();
+    document.getElementById('installBtn').onclick = installApp;
+    els.modal.querySelectorAll('[data-source-open]').forEach(btn => btn.onclick = () => window.open(btn.dataset.sourceOpen, '_blank', 'noopener'));
+  }
+
+  function openSyncModal() {
+    els.modal.innerHTML = `
+      <h3>同步 Google Maps</h3>
+      <p class="modal-desc">備用匯入工具。主要資料來源已改為你提供的 Google Maps 共享清單。</p>
+      <div class="dropzone" id="dropzone">
+        <strong>拖曳 Takeout ZIP 到這裡</strong>
+        <p>會自動讀取美食清單、合併重複店家，並保留「吃過」與你的備註。</p>
+        <button id="chooseZipBtn" class="btn btn-primary" type="button">選擇 ZIP</button>
+      </div>
+      <div class="modal-actions"><button class="btn btn-ghost" id="closeModalBtn">取消</button></div>`;
+    openModal();
+    document.getElementById('chooseZipBtn').onclick = () => els.zipInput.click();
+    document.getElementById('closeModalBtn').onclick = closeModal;
+    const dz = document.getElementById('dropzone');
+    ['dragenter','dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.style.borderColor = '#ff7a00'; }));
+    ['dragleave','drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.style.borderColor = ''; }));
+    dz.addEventListener('drop', e => { const f = e.dataTransfer.files?.[0]; if (f) importTakeoutZip(f); });
+  }
+
+  async function handleZipSelect(e) {
+    const file = e.target.files?.[0]; e.target.value = '';
+    if (file) await importTakeoutZip(file);
+  }
+
+  async function importTakeoutZip(file) {
+    if (!file.name.toLowerCase().endsWith('.zip')) { toast('請選擇 ZIP 檔'); return; }
+    els.modal.innerHTML = `<h3>正在解析…</h3><p class="modal-desc">${escapeHtml(file.name)}</p><div class="dropzone"><strong>讀取 Google Maps 收藏中</strong><p>不會上傳檔案。</p></div>`;
+    openModal();
+    try {
+      const zip = await JSZip.loadAsync(file);
+      const csvFiles = Object.values(zip.files).filter(x => !x.dir && x.name.toLowerCase().endsWith('.csv'));
+      if (!csvFiles.length) throw new Error('這個 ZIP 裡沒有 CSV。請確認 Takeout 選的是「已儲存」。');
+
+      const rows = [];
+      for (const entry of csvFiles) {
+        const text = await entry.async('string');
+        const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
+        const listName = decodeListName(entry.name);
+        for (const raw of parsed.data || []) rows.push(normalizeTakeoutRow(raw, listName));
+      }
+
+      const imported = buildTaiwanFoodPlaces(rows);
+      const diff = diffImport(imported);
+      showImportPreview(file.name, imported, diff, csvFiles.length);
+    } catch (err) {
+      els.modal.innerHTML = `<h3>無法匯入</h3><p class="modal-desc">${escapeHtml(err?.message || '解析失敗')}</p><div class="modal-actions"><button class="btn btn-ghost" id="closeModalBtn">關閉</button></div>`;
+      document.getElementById('closeModalBtn').onclick = closeModal;
+    }
+  }
+
+  function showImportPreview(fileName, imported, diff, csvCount) {
+    els.modal.innerHTML = `
+      <h3>同步預覽</h3>
+      <p class="modal-desc">讀到 ${csvCount} 個清單；台灣美食候選 ${imported.length} 家。套用後會保留你在本工具設定的「吃過 / 備註 / 手動城市」。</p>
+      <div class="diff-grid">
+        <div class="diff-box"><strong>+${diff.added}</strong><span>新增</span></div>
+        <div class="diff-box"><strong>${diff.updated}</strong><span>更新</span></div>
+        <div class="diff-box"><strong>−${diff.removed}</strong><span>Maps 已移除</span></div>
+      </div>
+      <div class="check-row"><div><strong>只處理台灣美食</strong><div class="muted-small">以「美食＋城市」清單為主，跨區清單只用來補五星/最愛/吃過/想去標記。</div></div><span>✓</span></div>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="closeModalBtn">取消</button>
+        <button class="btn btn-primary" id="applyImportBtn">套用更新</button>
+      </div>`;
+    document.getElementById('closeModalBtn').onclick = closeModal;
+    document.getElementById('applyImportBtn').onclick = () => {
+      applyImport(imported, fileName); closeModal(); toast(`同步完成：新增 ${diff.added} 家`);
+    };
+  }
+
+  function buildTaiwanFoodPlaces(rows) {
+    const index = new Map();
+    const cross = new Map();
+    const crossNames = ['555 五星好評','吃過的名店','最愛的地點','想去的餐廳'];
+
+    for (const r of rows) {
+      const key = canonicalKey(r.url, r.title);
+      if (!key) continue;
+      if (!cross.has(key)) cross.set(key, new Set());
+      if (crossNames.some(n => r.listName.includes(n))) cross.get(key).add(r.listName);
+    }
+
+    for (const r of rows) {
+      if (!isPrimaryTaiwanFoodList(r.listName)) continue;
+      const city = inferCityFromList(r.listName) || inferCityFromText([r.title,r.note,r.comment].join(' ')) || '待分類';
+      const meta = CITY_META[city] || {};
+      const key = canonicalKey(r.url, r.title); if (!key) continue;
+      const coords = parseCoordinates(r.url);
+      if (!index.has(key)) {
+        index.set(key, {
+          id: key, title: r.title || '未命名地點', url: r.url || '', note: r.note || '', comment: r.comment || '',
+          sourceLists: [r.listName], city, region: meta.region || '待分類', lat: coords?.lat ?? null, lng: coords?.lng ?? null,
+          eaten: false, localNote: '', manual: false, removed: false
+        });
+      } else {
+        const p = index.get(key);
+        if (!p.sourceLists.includes(r.listName)) p.sourceLists.push(r.listName);
+        if (!p.note && r.note) p.note = r.note;
+        if (!p.comment && r.comment) p.comment = r.comment;
+      }
+    }
+
+    for (const [key, p] of index.entries()) {
+      for (const name of cross.get(key) || []) if (!p.sourceLists.includes(name)) p.sourceLists.push(name);
+    }
+
+    return [...index.values()];
+  }
+
+  function isPrimaryTaiwanFoodList(name) {
+    return /美食/.test(name) && !/新加坡|中國|比利時|日本|沖繩|東京/i.test(name);
+  }
+
+  function normalizeTakeoutRow(raw, listName) {
+    const get = (...names) => {
+      for (const n of names) {
+        const k = Object.keys(raw).find(x => x.trim().toLowerCase() === n.toLowerCase());
+        if (k && raw[k] != null) return String(raw[k]).trim();
+      }
+      return '';
+    };
+    return { listName, title: get('Title','名稱','標題'), note: get('Note','備註'), url: get('URL','Url','網址'), comment: get('Comment','Comments','留言','評論') };
+  }
+
+  function decodeListName(path) {
+    const leaf = path.split('/').pop() || path;
+    return leaf.replace(/\.csv$/i, '').trim();
+  }
+
+  function diffImport(imported) {
+    const oldImported = state.places.filter(p => !p.manual);
+    const old = new Map(oldImported.map(p => [p.id, p]));
+    const neu = new Map(imported.map(p => [p.id, p]));
+    let added = 0, updated = 0, removed = 0;
+    for (const [id, p] of neu) {
+      if (!old.has(id)) added++;
+      else if (JSON.stringify((old.get(id).sourceLists||[]).slice().sort()) !== JSON.stringify((p.sourceLists||[]).slice().sort())) updated++;
+    }
+    for (const id of old.keys()) if (!neu.has(id)) removed++;
+    return { added, updated, removed };
+  }
+
+  function applyImport(imported, fileName) {
+    const old = new Map(state.places.map(p => [p.id, p]));
+    const incomingIds = new Set(imported.map(p => p.id));
+    const merged = imported.map(p => {
+      const prev = old.get(p.id);
+      return prev ? {
+        ...p,
+        eaten: !!prev.eaten,
+        localNote: prev.localNote || '',
+        myRating: Number.isFinite(prev.myRating) ? prev.myRating : null,
+        wouldReturn: prev.wouldReturn || '',
+        lastEatenAt: prev.lastEatenAt || null,
+        city: prev.manualCity ? prev.city : p.city,
+        region: prev.manualCity ? prev.region : p.region,
+        manualCity: !!prev.manualCity,
+        manualScore: prev.manualScore,
+        removed: false
+      } : p;
+    });
+
+    for (const p of state.places) {
+      if (p.manual) merged.push(p);
+      else if (!incomingIds.has(p.id)) merged.push({ ...p, removed: true });
+    }
+
+    state.places = dedupePlaces(merged);
+    state.lastSync = new Date().toISOString();
+    state.lastImportName = fileName;
+    saveState(); renderAll();
+  }
+
+  function dedupePlaces(arr) {
+    const map = new Map();
+    for (const p of arr) {
+      if (!map.has(p.id)) map.set(p.id, p);
+      else {
+        const a = map.get(p.id);
+        a.sourceLists = [...new Set([...(a.sourceLists||[]), ...(p.sourceLists||[])])];
+        a.localNote = a.localNote || p.localNote || '';
+        a.eaten = a.eaten || p.eaten;
+        a.myRating = Number.isFinite(a.myRating) ? a.myRating : p.myRating;
+        a.wouldReturn = a.wouldReturn || p.wouldReturn || '';
+        a.lastEatenAt = a.lastEatenAt || p.lastEatenAt || null;
+      }
+    }
+    return [...map.values()];
+  }
+
+  function openEditModal(id = null) {
+    const p = id ? state.places.find(x => x.id === id) : null;
+    els.modal.innerHTML = `
+      <h3>${p ? '編輯店家' : '手動新增'}</h3>
+      <p class="modal-desc">吃過、我的評分、會不會再吃與備註都只存在你的裝置，可用「Google Maps 清單 → 匯出備份」保存。</p>
+      <div class="field-grid">
+        <div class="field full"><label>店名</label><input id="fTitle" value="${escapeAttr(p?.title || '')}" placeholder="例如：阿裕牛肉涮涮鍋" /></div>
+        <div class="field full"><label>Google Maps 連結</label><input id="fUrl" value="${escapeAttr(p?.url || '')}" placeholder="https://maps.app.goo.gl/..." /></div>
+        <div class="field"><label>城市 / 區域</label><select id="fCity">${cityOptions(p?.city || '台中')}</select></div>
+        <div class="field"><label>狀態</label><select id="fStatus"><option value="一般">一般</option><option value="想去" ${hasList(p||{},'想去')?'selected':''}>想去</option><option value="五星" ${hasList(p||{},'五星')||hasList(p||{},'最愛')?'selected':''}>五星 / 最愛</option></select></div>
+        <div class="field"><label>我的評分</label><select id="fMyRating">
+          <option value="">未評分</option>
+          ${[1,2,3,4,5].map(n => `<option value="${n}" ${p?.myRating===n?'selected':''}>${'★'.repeat(n)} ${n} 分</option>`).join('')}
+        </select></div>
+        <div class="field"><label>會不會再吃</label><select id="fWouldReturn">
+          <option value="" ${!p?.wouldReturn?'selected':''}>未設定</option>
+          <option value="yes" ${p?.wouldReturn==='yes'?'selected':''}>會再吃</option>
+          <option value="no" ${p?.wouldReturn==='no'?'selected':''}>不會再吃</option>
+        </select></div>
+        <div class="field full"><label>我的備註</label><textarea id="fNote" placeholder="必點、停車、家人喜好…">${escapeHtml(p?.localNote || '')}</textarea></div>
+        <div class="field full"><div class="check-row"><div><strong>吃過</strong><div class="muted-small">第一次標記會記錄日期；30 天內系統會降低推薦頻率。</div></div><input id="fEaten" type="checkbox" ${p?.eaten ? 'checked' : ''}/></div></div>
+      </div>
+      <div class="modal-actions">
+        ${p ? '<button class="btn btn-danger" id="deleteBtn">刪除</button>' : ''}
+        <button class="btn btn-ghost" id="closeModalBtn">取消</button>
+        <button class="btn btn-primary" id="savePlaceBtn">儲存</button>
+      </div>`;
+    openModal();
+    document.getElementById('closeModalBtn').onclick = closeModal;
+    document.getElementById('savePlaceBtn').onclick = () => savePlaceForm(p);
+    if (p) document.getElementById('deleteBtn').onclick = () => deletePlace(p.id);
+  }
+
+  function cityOptions(selected) {
+    const cities = ['基隆','台北','新北','桃園','新竹','苗栗','台中','大甲','清水','梧棲','沙鹿','彰化','南投','雲林','嘉義','台南','高雄','屏東','宜蘭','花蓮','台東','東部','待分類'];
+    return cities.map(c => `<option value="${c}" ${c===selected?'selected':''}>${cityDisplayName(c)}</option>`).join('');
+  }
+
+  function savePlaceForm(existing) {
+    const title = document.getElementById('fTitle').value.trim();
+    const url = document.getElementById('fUrl').value.trim();
+    const city = document.getElementById('fCity').value;
+    const status = document.getElementById('fStatus').value;
+    const localNote = document.getElementById('fNote').value.trim();
+    const eaten = document.getElementById('fEaten').checked;
+    const ratingRaw = document.getElementById('fMyRating').value;
+    const myRating = ratingRaw ? Number(ratingRaw) : null;
+    const wouldReturn = document.getElementById('fWouldReturn').value;
+    if (!title) { toast('請輸入店名'); return; }
+    const meta = CITY_META[city] || {};
+    const coords = parseCoordinates(url);
+    let sourceLists = existing?.sourceLists ? [...existing.sourceLists] : [];
+    sourceLists = sourceLists.filter(x => !['手動：想去','手動：五星'].includes(x));
+    if (status === '想去') sourceLists.push('手動：想去');
+    if (status === '五星') sourceLists.push('手動：五星');
+    const lastEatenAt = eaten ? (existing?.lastEatenAt || new Date().toISOString()) : null;
+
+    if (existing) {
+      Object.assign(existing, { title, url, city, region: meta.region || existing.region || '待分類', localNote, eaten, myRating, wouldReturn, lastEatenAt, sourceLists, manualCity: true,
+        lat: coords?.lat ?? existing.lat ?? null, lng: coords?.lng ?? existing.lng ?? null, removed: false });
+    } else {
+      const id = canonicalKey(url, title) || `manual:${Date.now()}`;
+      const same = state.places.find(x => x.id === id);
+      if (same) { toast('這家店已經存在'); return; }
+      state.places.push({ id, title, url, city, region: meta.region || '待分類', localNote, eaten, myRating, wouldReturn, lastEatenAt, sourceLists, manual: true, manualCity: true,
+        note: '', comment: '', lat: coords?.lat ?? null, lng: coords?.lng ?? null, removed: false, forceFood: true });
+    }
+    saveState(); closeModal(); renderAll(); toast('已儲存');
+  }
+
+  function deletePlace(id) {
+    const p = state.places.find(x => x.id === id); if (!p) return;
+    if (p.manual) state.places = state.places.filter(x => x.id !== id);
+    else p.removed = true;
+    saveState(); closeModal(); renderAll(); toast('已從工具中移除');
+  }
+
+  function toggleEaten(id) {
+    const p = state.places.find(x => x.id === id); if (!p) return;
+    p.eaten = !p.eaten;
+    p.lastEatenAt = p.eaten ? new Date().toISOString() : null;
+    saveState(); renderAll(false);
+  }
+
+  function exportBackup() {
+    const payload = {
+      app: 'Taiwan Food Map',
+      backupVersion: 1,
+      exportedAt: new Date().toISOString(),
+      state
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `taiwan-food-map-backup-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast('備份已匯出');
+  }
+
+  async function restoreBackupFile(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const raw = JSON.parse(await file.text());
+      const restored = raw?.state || raw;
+      if (!restored || !Array.isArray(restored.places)) throw new Error('格式不正確');
+      state = hydrateSharedData({ ...defaultState(), ...restored });
+      saveState();
+      closeModal();
+      renderAll();
+      toast('備份已還原');
+    } catch (err) {
+      toast('還原失敗：' + (err?.message || '檔案錯誤'));
+    }
+  }
+
+  async function installApp() {
+    if (deferredInstallPrompt) {
+      deferredInstallPrompt.prompt();
+      await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      return;
+    }
+    toast('若沒有跳出安裝視窗：Chrome 選單 → 加到主畫面');
+  }
+
+  function setupPwa() {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        try {
+          const reg = await navigator.serviceWorker.register('./sw.js?v=1.4.0');
+          await reg.update();
+        } catch {}
+      });
+    }
+  }
+
+  function inferCityFromList(name) {
+    for (const [needle, city] of FILENAME_CITY_RULES) if (name.includes(needle)) return city;
+    return null;
+  }
+
+  function inferCityFromText(text) {
+    if (!text) return null;
+    for (const city of Object.keys(CITY_META)) if (text.includes(city)) return city;
+    const aliases = [
+      ['臺北','台北'],['臺中','台中'],['臺南','台南'],['臺東','台東'],
+      ['北投','台北'],['信義','台北'],['士林','台北'],['板橋','新北'],['新店','新北'],
+      ['西屯','台中'],['北屯','台中'],['南屯','台中'],['豐原','台中'],['龍井','台中'],['烏日','台中'],
+      ['永康','台南'],['安平','台南'],['左營','高雄'],['苓雅','高雄']
+    ];
+    for (const [k,v] of aliases) if (text.includes(k)) return v;
+    return null;
+  }
+
+  function parseCoordinates(url) {
+    if (!url) return null;
+    const patterns = [
+      /@(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/,
+      /[?&](?:q|query|ll)=(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/,
+      /!3d(-?\d{1,3}\.\d+)!4d(-?\d{1,3}\.\d+)/
+    ];
+    for (const re of patterns) {
+      const m = url.match(re);
+      if (m) return { lat: Number(m[1]), lng: Number(m[2]) };
+    }
+    return null;
+  }
+
+  function canonicalKey(url, title) {
+    if (url) {
+      try {
+        const decoded = decodeURIComponent(url);
+        let m = decoded.match(/[?&](?:ludocid|cid)=([0-9]+)/i); if (m) return `cid:${m[1]}`;
+        m = decoded.match(/!1s(0x[0-9a-f]+:0x[0-9a-f]+)/i); if (m) return `hex:${m[1].toLowerCase()}`;
+        const u = new URL(url);
+        ['utm_source','utm_medium','utm_campaign','g_st','entry','sa'].forEach(k => u.searchParams.delete(k));
+        u.hash = '';
+        return `url:${u.toString().replace(/\/$/,'')}`;
+      } catch {}
+    }
+    const t = (title || '').trim().toLowerCase();
+    return t ? `title:${t}` : null;
+  }
+
+  function hasList(p, needle) { return (p.sourceLists || []).some(x => String(x).includes(needle)); }
+  function formatDateTime(iso) { try { return new Intl.DateTimeFormat('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(iso)); } catch { return iso; } }
+  function openModal() { els.modalBackdrop.classList.remove('hidden'); els.modalBackdrop.setAttribute('aria-hidden','false'); }
+  function closeModal() { els.modalBackdrop.classList.add('hidden'); els.modalBackdrop.classList.remove('location-picker-backdrop'); els.modal.classList.remove('location-picker-modal'); els.modalBackdrop.setAttribute('aria-hidden','true'); }
+  function toast(msg) { const el = document.createElement('div'); el.className='toast'; el.textContent=msg; document.body.appendChild(el); setTimeout(()=>el.remove(),2200); }
+  function escapeHtml(v='') { return String(v).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+  function escapeAttr(v='') { return escapeHtml(v).replace(/`/g,'&#96;'); }
+})();
+
+</script>
+</body>
+</html>
