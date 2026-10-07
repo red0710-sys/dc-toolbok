@@ -1,0 +1,51 @@
+name: Refresh food review highlights
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/refresh-food-reviews.yml'
+      - 'scripts/refresh-food-reviews.mjs'
+  schedule:
+    - cron: '17 19 * * 2,5'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: food-review-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Refresh Google Maps review highlights
+        env:
+          MAX_PLACES: 300
+          CONCURRENCY: 4
+          STALE_DAYS: 14
+        run: node scripts/refresh-food-reviews.mjs
+      - name: Commit updated review cache
+        run: |
+          if git diff --quiet -- food-map/review-highlights.json; then
+            echo "No review-cache changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add food-map/review-highlights.json
+          git commit -m "chore: refresh food review highlights"
+          git push
