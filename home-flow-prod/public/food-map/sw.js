@@ -1,4 +1,4 @@
-const CACHE = 'tw-food-cloud-1-5-3-v1';
+const CACHE = 'tw-food-cloud-1-5-4-v1';
 const CORE = ['./', './index.html', './cloud-sync.js', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', event => {
