@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-07T13:51:35.773Z",
+  "updatedAt": "2026-10-07T13:53:08.690Z",
   "source": "Google Maps public review pages; cached snapshot, not live API",
-  "count": 250,
+  "count": 255,
   "places": {
     "shared:keelung:九如營養三明治（常一嚐）": {
       "title": "九如營養三明治（常一嚐）",
@@ -3805,6 +3805,81 @@
         "整體語氣：目前可見 Google 評論以正面描述為主。"
       ],
       "fetchedAt": "2026-10-07T13:51:35.773Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:陳媽媽涼麵": {
+      "title": "陳媽媽涼麵",
+      "city": "清水",
+      "rating": 4.3,
+      "reviewCount": 240,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "closed": false,
+      "fetchedAt": "2026-10-07T13:53:08.689Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:泗陽大浯江（清水分局旁）": {
+      "title": "泗陽大浯江（清水分局旁）",
+      "city": "清水",
+      "rating": 4.4,
+      "reviewCount": 405,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "closed": false,
+      "fetchedAt": "2026-10-07T13:53:08.690Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:阿騰米糕": {
+      "title": "阿騰米糕",
+      "city": "清水",
+      "rating": 4.2,
+      "reviewCount": 1066,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "closed": false,
+      "fetchedAt": "2026-10-07T13:53:08.690Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:馬蔥餅雙胞胎清水店（將於3/14結束營業）": {
+      "title": "馬蔥餅雙胞胎清水店（將於3/14結束營業）",
+      "city": "清水",
+      "rating": 4.6,
+      "reviewCount": 69,
+      "topics": [],
+      "highlights": [
+        "營業狀態：Google 顯示永久歇業。",
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "closed": true,
+      "fetchedAt": "2026-10-07T13:53:08.690Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:亮亮の牛肉麵": {
+      "title": "亮亮の牛肉麵",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": 231,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "closed": false,
+      "fetchedAt": "2026-10-07T13:53:08.690Z",
       "source": "Google Maps public review page"
     }
   }
