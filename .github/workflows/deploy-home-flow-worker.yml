@@ -1,11 +1,7 @@
 name: Deploy Home Flow Worker
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "home-flow-prod/**"
-      - ".github/workflows/deploy-home-flow-worker.yml"
+  workflow_dispatch:
 
 jobs:
   deploy:
