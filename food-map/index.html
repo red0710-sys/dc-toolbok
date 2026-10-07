@@ -6,8 +6,6 @@
   <meta name="theme-color" content="#0b0b0c" />
   <meta name="description" content="台灣美食地圖：Google Maps 收藏整理、吃過紀錄、備註與今天吃什麼推薦。" />
   <title>Taiwan Food Map</title>
-  <link rel="preconnect" href="https://unpkg.com" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
   <style>
 :root {
   color-scheme: dark;
@@ -69,7 +67,7 @@ h2 { font-size: 1.05rem; letter-spacing: -.02em; }
 .search-wrap input { min-width: 0; width: 100%; background: transparent; border: 0; outline: 0; color: var(--text); }
 select, .field input, .field textarea { color: var(--text); background: #17181c; border: 1px solid #30323a; border-radius: 12px; min-height: 42px; padding: 0 10px; outline: none; }
 .field textarea { min-height: 92px; padding-top: 10px; resize: vertical; }
-.content-grid { display: grid; grid-template-columns: minmax(0, 1.16fr) minmax(360px, .84fr); gap: 14px; align-items: start; }
+.content-grid { display: grid; grid-template-columns: 1fr; gap: 14px; align-items: start; }
 #map { height: min(68vh, 720px); min-height: 460px; border-radius: 14px; overflow: hidden; background: #0d0e11; }
 .leaflet-container { font-family: inherit; background: #0d0e11; }
 .leaflet-control-attribution { font-size: 9px; }
@@ -208,16 +206,6 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
       </section>
 
       <section class="content-grid">
-        <article class="card map-card">
-          <div class="section-head compact">
-            <div>
-              <span class="kicker">MAP</span>
-              <h2>美食地圖</h2>
-            </div>
-            <span id="mapHint" class="muted-small">有座標的店家會顯示圖釘</span>
-          </div>
-          <div id="map"></div>
-        </article>
 
         <article class="card list-card">
           <div class="section-head compact">
@@ -241,7 +229,6 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
 
   <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
   <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
   <script>
 (() => {
   'use strict';
@@ -282,8 +269,6 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   let activeRegion = '全部';
   let activeStatus = '全部';
   let searchTerm = '';
-  let map;
-  let markerLayer;
 
   const els = {
     syncBtn: document.getElementById('syncBtn'), zipInput: document.getElementById('zipInput'),
@@ -297,8 +282,6 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     regionTabs: document.getElementById('regionTabs'), modalBackdrop: document.getElementById('modalBackdrop'),
     modal: document.getElementById('modal')
   };
-
-  initMap();
   bindEvents();
   renderAll();
 
@@ -315,15 +298,6 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
 
   function saveState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }
-
-  function initMap() {
-    map = L.map('map', { zoomControl: true, attributionControl: true }).setView([23.75, 120.95], 7);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
-    markerLayer = L.layerGroup().addTo(map);
   }
 
   function bindEvents() {
@@ -348,7 +322,6 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     const list = getFilteredPlaces();
     renderStats();
     renderPlaces(list);
-    renderMap(list, fitMap);
     els.visibleCount.textContent = `${list.length} 家`;
     els.candidateCount.textContent = `${list.length} 家可選`;
   }
@@ -432,19 +405,6 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
         <button class="icon-btn" data-edit="${p.id}" title="編輯">✎</button>
       </div>
     </div>`;
-  }
-
-  function renderMap(list, fit = true) {
-    markerLayer.clearLayers();
-    const bounds = [];
-    for (const p of list) {
-      if (!Number.isFinite(p.lat) || !Number.isFinite(p.lng)) continue;
-      const icon = L.divIcon({ className: '', html: '<div class="marker-pin"><span></span></div>', iconSize: [22,22], iconAnchor: [10,20] });
-      const m = L.marker([p.lat, p.lng], { icon }).bindPopup(`<strong>${escapeHtml(p.title)}</strong><br><small>${escapeHtml(p.city || '')}</small>${p.url ? `<br><a href="${escapeAttr(p.url)}" target="_blank" rel="noopener">開啟 Google Maps</a>` : ''}`);
-      markerLayer.addLayer(m); bounds.push([p.lat, p.lng]);
-    }
-    if (fit && bounds.length) map.fitBounds(bounds, { padding: [28,28], maxZoom: 14 });
-    else if (fit && !bounds.length) map.setView([23.75, 120.95], 7);
   }
 
   function pickToday(mode) {
