@@ -88,17 +88,24 @@ function buildHighlights(rating, reviewCount, topics, summaryText) {
   return lines.slice(0,3);
 }
 
-function parseBody(text, fallbackRating, fallbackReviews) {
+function parseBody(text, place) {
   const lines = text.split('\n').map(s=>s.trim()).filter(Boolean);
-  let rating = Number.isFinite(fallbackRating) ? Number(fallbackRating) : null;
-  let reviewCount = Number.isFinite(fallbackReviews) ? Number(fallbackReviews) : null;
+  let rating = Number.isFinite(place.rating) ? Number(place.rating) : null;
+  let reviewCount = Number.isFinite(place.reviews) ? Number(place.reviews) : null;
 
-  for (let i=0;i<Math.min(lines.length,80);i++) {
-    if (/^[1-5](?:\.\d)$/.test(lines[i])) {
-      const n = Number(lines[i]);
-      const near = lines.slice(i+1,i+5).join(' ');
-      const m = near.match(/\(?([\d,]{2,})\)?/);
-      if (m) { rating = n; reviewCount = num(m[1]); break; }
+  const targetTitle = compact(place.title);
+  let titleIdx = lines.findIndex(x => compact(x) === targetTitle);
+  if (titleIdx < 0 && targetTitle.length > 5) {
+    titleIdx = lines.findIndex(x => compact(x).includes(targetTitle.slice(0, Math.min(18,targetTitle.length))));
+  }
+  if (titleIdx >= 0) {
+    for (let i=titleIdx+1;i<Math.min(lines.length,titleIdx+12);i++) {
+      if (/^[1-5](?:\.\d)$/.test(lines[i])) {
+        const n = Number(lines[i]);
+        const near = lines.slice(i+1,i+5).join(' ');
+        const m = near.match(/\(?([\d,]{2,})\)?/);
+        if (m) { rating = n; reviewCount = num(m[1]); break; }
+      }
     }
   }
 
@@ -143,7 +150,7 @@ async function scrape(p) {
     if (/接受所有|Before you continue|驗證你不是機器人|unusual traffic/i.test(text)) {
       throw new Error('Google consent/captcha');
     }
-    const parsed = parseBody(text, p.rating, p.reviews);
+    const parsed = parseBody(text, p);
     return {
       title:p.title,
       city:p.city,
