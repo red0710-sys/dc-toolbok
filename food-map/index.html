@@ -349,6 +349,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
           <div class="filter-line">
             <span class="filter-label">常用</span>
             <div class="quick-tabs" id="quickTabs">
+              <button class="chip" data-quick-city="沙梧清">沙梧清</button>
               <button class="chip" data-quick-city="梧棲">梧棲</button>
               <button class="chip" data-quick-city="清水">清水</button>
               <button class="chip" data-quick-city="沙鹿">沙鹿</button>
@@ -451,7 +452,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   'use strict';
 
   const STORAGE_KEY = 'twFoodMap.v1';
-  const BUILD_VERSION = '1.3.2';
+  const BUILD_VERSION = '1.3.3';
   const SHARED_DATA_VERSION = '2026-10-07-shared-lists-v1';
   const SHARED_DATA_UPDATED_AT = '2026-10-07T18:45:00+08:00';
   const SHARED_SOURCES = [{"key":"keelung","label":"基隆","region":"北部","city":"基隆","kind":"food","declared":7,"url":"https://maps.app.goo.gl/4KACWmkaqChVpkvw6?g_st=ac","loaded":7},{"key":"wuqi","label":"梧棲","region":"中部","city":"梧棲","kind":"food","declared":76,"url":"https://maps.app.goo.gl/w1cTWpoC4z4itpZKA?g_st=ac","loaded":76},{"key":"family","label":"親子育樂","region":"其他","city":"親子育樂","kind":"family","declared":24,"url":"https://maps.app.goo.gl/f1mFM4Yjahaz9SyJ8?g_st=ac","loaded":24},{"key":"changhua","label":"彰化","region":"中部","city":"彰化","kind":"food","declared":29,"url":"https://maps.app.goo.gl/9oLNo3QeipNiEx7M7?g_st=ac","loaded":29},{"key":"tainan","label":"台南","region":"南部","city":"台南","kind":"food","declared":86,"url":"https://maps.app.goo.gl/EgamzKSobVtxUQHbA?g_st=ac","loaded":85},{"key":"kaohsiung","label":"高雄","region":"南部","city":"高雄","kind":"food","declared":9,"url":"https://maps.app.goo.gl/yANjiQEqpu76GJqc6?g_st=ac","loaded":9},{"key":"east","label":"東部","region":"東部","city":"東部","kind":"food","declared":3,"url":"https://maps.app.goo.gl/tKAFRrq6CMjShVeh6?g_st=ac","loaded":3},{"key":"chiayi","label":"嘉義","region":"南部","city":"嘉義","kind":"food","declared":14,"url":"https://maps.app.goo.gl/2bzH8oEPCLgnMUH67?g_st=ac","loaded":14},{"key":"qingshui","label":"清水","region":"中部","city":"清水","kind":"food","declared":43,"url":"https://maps.app.goo.gl/bZPPqHwSsL7VYN5v9?g_st=ac","loaded":44}];
@@ -465,6 +466,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     '東部': { '宜蘭': ['宜蘭'], '花蓮': ['花蓮'], '台東': ['台東'], '東部其他': ['東部'] }
   };
   const QUICK_CITY_META = {
+    '沙梧清': { region:'中部', area:'台中', city:'沙梧清' },
     '梧棲': { region:'中部', area:'台中', city:'梧棲' },
     '清水': { region:'中部', area:'台中', city:'清水' },
     '沙鹿': { region:'中部', area:'台中', city:'沙鹿' },
@@ -472,9 +474,9 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     '彰化': { region:'中部', area:'彰化', city:'彰化' }
   };
   const TODAY_LOCATION_GROUPS = {
-    '常用': ['梧棲','清水','沙鹿','台中','彰化'],
+    '常用': ['沙梧清','梧棲','清水','沙鹿','台中','彰化'],
     '北部': ['基隆','台北','新北','桃園','新竹'],
-    '中部': ['苗栗','台中全區','台中','大甲','清水','梧棲','沙鹿','彰化','南投','雲林'],
+    '中部': ['苗栗','台中全區','沙梧清','台中','大甲','清水','梧棲','沙鹿','彰化','南投','雲林'],
     '南部': ['嘉義','台南','高雄','屏東'],
     '東部': ['宜蘭','花蓮','台東','東部']
   };
@@ -657,7 +659,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     els.cityTabs.addEventListener('click', e => {
       const btn = e.target.closest('[data-city]'); if (!btn) return;
       activeCity = btn.dataset.city;
-      if (activeCity !== '全部') expandedCities.add(activeCity);
+      if (activeCity !== '全部' && activeCity !== '沙梧清') expandedCities.add(activeCity);
       renderHierarchyFilters();
       renderAll(false);
     });
@@ -678,6 +680,11 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     const areaLine = document.getElementById('areaFilterLine');
     const cityLine = document.getElementById('cityFilterLine');
     syncQuickTabs();
+
+    if (activeCity === '沙梧清') {
+      activeRegion = '中部';
+      activeArea = '台中';
+    }
 
     if (activeRegion === '全部') {
       activeArea = '全部';
@@ -704,6 +711,15 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     }
 
     const cities = AREA_META[activeRegion]?.[activeArea] || [];
+    if (activeCity === '沙梧清') {
+      if (cityLine) cityLine.style.display = 'flex';
+      els.cityTabs.innerHTML = [
+        `<button class="chip" data-city="全部">全部台中</button>`,
+        `<button class="chip active" data-city="沙梧清">沙梧清</button>`,
+        ...cities.map(city => `<button class="chip" data-city="${escapeAttr(city)}">${escapeHtml(cityDisplayName(city))}</button>`)
+      ].join('');
+      return;
+    }
     if (cities.length <= 1) {
       activeCity = cities[0] || '全部';
       els.cityTabs.innerHTML = '';
@@ -715,6 +731,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     if (cityLine) cityLine.style.display = 'flex';
     els.cityTabs.innerHTML = [
       `<button class="chip ${activeCity==='全部'?'active':''}" data-city="全部">${activeArea==='台中'?'全部台中':'全部'}</button>`,
+      ...(activeArea==='台中' ? [`<button class="chip ${activeCity==='沙梧清'?'active':''}" data-city="沙梧清">沙梧清</button>`] : []),
       ...cities.map(city => `<button class="chip ${activeCity===city?'active':''}" data-city="${escapeAttr(city)}">${escapeHtml(cityDisplayName(city))}</button>`)
     ].join('');
   }
@@ -803,7 +820,8 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
         const cities = AREA_META[activeRegion]?.[activeArea] || [];
         if (!cities.includes(p.city)) return false;
       }
-      if (activeCity !== '全部' && p.city !== activeCity) return false;
+      if (activeCity === '沙梧清' && !['沙鹿','梧棲','清水'].includes(p.city)) return false;
+      if (activeCity !== '全部' && activeCity !== '沙梧清' && p.city !== activeCity) return false;
       const eaten = p.eaten || hasList(p, '吃過');
       if (activeStatus === '沒吃過' && eaten) return false;
       if (activeStatus === '吃過' && !eaten) return false;
@@ -848,7 +866,8 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   function getTodayCandidates() {
     return state.places.filter(p => !p.removed && isFoodPlace(p)).filter(p => {
       if (todayCity === '台中全區' && !['台中','大甲','清水','梧棲','沙鹿'].includes(p.city || '')) return false;
-      if (todayCity !== '全部' && todayCity !== '台中全區' && (p.city || '') !== todayCity) return false;
+      if (todayCity === '沙梧清' && !['沙鹿','梧棲','清水'].includes(p.city || '')) return false;
+      if (todayCity !== '全部' && todayCity !== '台中全區' && todayCity !== '沙梧清' && (p.city || '') !== todayCity) return false;
       const eaten = p.eaten || hasList(p, '吃過');
       if (todayStatus === '沒吃過' && eaten) return false;
       if (todayStatus === '想吃' && eaten && p.wouldReturn !== 'yes') return false;
@@ -1400,7 +1419,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
-          const reg = await navigator.serviceWorker.register('./sw.js?v=1.3.2');
+          const reg = await navigator.serviceWorker.register('./sw.js?v=1.3.3');
           await reg.update();
         } catch {}
       });
