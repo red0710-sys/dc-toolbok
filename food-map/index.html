@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#0b0b0c" />
+  <meta name="theme-color" content="#087f8c" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="manifest" href="./manifest.webmanifest" />
@@ -291,6 +291,236 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   padding:10px 16px calc(10px + env(safe-area-inset-bottom));
   background:linear-gradient(180deg,rgba(17,18,22,.08),#111216 28%);
 }
+
+/* Beta 1.5 — Okinawa Trip visual language */
+:root{
+  color-scheme:light;
+  --bg:#f5f1e8;
+  --panel:#fffdf8;
+  --panel-2:#e9f5f5;
+  --line:#d8e2df;
+  --text:#16323b;
+  --muted:#68777b;
+  --accent:#087f8c;
+  --accent-2:#dceff0;
+  --good:#2d8a67;
+  --danger:#d94242;
+  --radius:17px;
+  --shadow:0 8px 24px rgba(22,50,59,.07);
+}
+html,body{
+  background:#f5f1e8;
+  color:var(--text);
+}
+body{
+  background:#f5f1e8;
+}
+.app-shell{
+  width:min(680px,calc(100% - 28px));
+  padding-top:20px;
+}
+.topbar{
+  margin-bottom:16px;
+}
+.eyebrow,.kicker{
+  color:var(--accent);
+  font-family:ui-rounded,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;
+  letter-spacing:.13em;
+}
+h1,h2,h3,.today-name,.stat strong{
+  font-family:ui-rounded,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",sans-serif;
+}
+h1{font-size:clamp(1.65rem,5vw,2rem);letter-spacing:-.035em;}
+.card{
+  background:var(--panel);
+  border-color:var(--line);
+  box-shadow:var(--shadow);
+}
+.today-card{
+  background:var(--panel);
+}
+.today-result{
+  min-height:112px;
+  border:0;
+  background:var(--accent);
+  color:#fff;
+  box-shadow:0 8px 24px rgba(8,127,140,.16);
+}
+.today-result.empty{color:#fff;}
+.today-result p{color:rgba(255,255,255,.78);}
+.today-result .today-name{color:#fff;}
+.today-icon{
+  background:rgba(255,255,255,.16);
+  color:#fff;
+}
+.soft-pill{
+  color:var(--accent);
+  background:var(--accent-2);
+  border-color:transparent;
+  font-weight:750;
+}
+.btn{
+  border-radius:11px;
+}
+.btn-primary{
+  color:#fff;
+  background:var(--accent);
+  box-shadow:none;
+}
+.btn-ghost{
+  color:var(--text);
+  background:var(--panel);
+  border-color:var(--line);
+}
+.btn-danger{
+  color:#a53a32;
+  background:#fff0ed;
+  border-color:#f0c9c4;
+}
+.location-picker-btn,
+select,
+.field input,.field textarea,.field select{
+  color:var(--text);
+  background:#fff;
+  border-color:var(--line);
+}
+.location-picker-btn:active{border-color:var(--accent);}
+.picker-chevron{color:var(--muted);}
+.picker-option{
+  color:var(--muted);
+  background:var(--panel);
+  border-color:var(--line);
+}
+.picker-option.active{
+  color:#fff;
+  background:var(--accent);
+  border-color:var(--accent);
+}
+.stats-card{
+  background:var(--panel);
+}
+.stat{
+  background:#fbfaf5;
+  border-color:var(--line);
+}
+.stat span{color:var(--muted);}
+.stat strong{color:var(--text);}
+.sync-status{
+  color:var(--muted);
+}
+.sync-status-btn{
+  border-top-color:var(--line);
+}
+.dot{
+  background:var(--good);
+  box-shadow:0 0 0 4px rgba(45,138,103,.09);
+}
+.sync-status-btn .dot.syncing{
+  background:var(--accent);
+  box-shadow:0 0 0 4px rgba(8,127,140,.09);
+}
+.toolbar{
+  background:var(--panel);
+}
+.filter-label{
+  color:var(--muted);
+}
+.chip{
+  color:var(--muted);
+  background:var(--panel);
+  border-color:var(--line);
+}
+.chip.active{
+  color:#fff;
+  background:var(--accent);
+  border-color:var(--accent);
+}
+.search-wrap{
+  background:#fff;
+  border-color:var(--line);
+  color:var(--muted);
+}
+.search-wrap input{
+  color:var(--text);
+}
+.place-group-title{
+  background:var(--panel);
+  border-bottom-color:var(--line);
+}
+.group-toggle{
+  color:var(--accent);
+}
+.group-toggle .group-arrow{color:var(--muted);}
+.jump-chip,.group-more{
+  color:var(--muted);
+  background:#fbfaf5;
+  border-color:var(--line);
+}
+.place-item{
+  border-bottom:1px solid rgba(216,226,223,.72);
+}
+.place-name{
+  color:var(--text);
+}
+.place-sub,.place-note{color:var(--muted);}
+.tag{
+  background:var(--surface,#e9f5f5);
+  color:var(--muted);
+}
+.tag.hot{
+  color:var(--accent);
+  background:var(--accent-2);
+}
+.tag.eaten{
+  color:#fff;
+  background:var(--good);
+}
+.icon-btn{
+  color:var(--accent);
+  background:var(--accent-2);
+  border-color:transparent;
+}
+.icon-btn:hover{
+  background:#cfe9ea;
+  border-color:transparent;
+}
+.modal-backdrop{
+  background:rgba(13,37,43,.44);
+  backdrop-filter:blur(6px);
+}
+.modal{
+  background:var(--panel);
+  border-color:var(--line);
+  box-shadow:0 18px 60px rgba(22,50,59,.18);
+}
+.modal-desc,.muted-small{color:var(--muted);}
+.check-row,.dropzone,.diff-box{
+  background:#fbfaf5;
+  border-color:var(--line);
+}
+.field label{color:var(--muted);}
+.toast{
+  background:#16323b;
+  color:#fff;
+  border-color:#16323b;
+}
+.modal.location-picker-modal{
+  background:var(--panel);
+}
+.modal.location-picker-modal .modal-actions{
+  background:linear-gradient(180deg,rgba(255,253,248,.08),#fffdf8 28%);
+}
+@media(max-width:560px){
+  .app-shell{
+    width:min(100% - 24px,520px);
+    padding-top:16px;
+  }
+  .today-card,.stats-card,.toolbar,.list-card{padding:14px;}
+  .topbar{align-items:flex-start;}
+  .topbar .btn{background:var(--accent-2);color:var(--accent);border-color:transparent;}
+  .filters-row{gap:7px;}
+  .place-item{padding:12px 2px;}
+}
 </style>
 </head>
 <body>
@@ -461,7 +691,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   'use strict';
 
   const STORAGE_KEY = 'twFoodMap.v1';
-  const BUILD_VERSION = '1.4.0';
+  const BUILD_VERSION = '1.5.0';
   const SHARED_DATA_VERSION = '2026-10-07-shared-lists-v1';
   const SHARED_DATA_UPDATED_AT = '2026-10-07T18:45:00+08:00';
   const SHARED_SOURCES = [{"key":"keelung","label":"基隆","region":"北部","city":"基隆","kind":"food","declared":7,"url":"https://maps.app.goo.gl/4KACWmkaqChVpkvw6?g_st=ac","loaded":7},{"key":"wuqi","label":"梧棲","region":"中部","city":"梧棲","kind":"food","declared":76,"url":"https://maps.app.goo.gl/w1cTWpoC4z4itpZKA?g_st=ac","loaded":76},{"key":"family","label":"親子育樂","region":"其他","city":"親子育樂","kind":"family","declared":24,"url":"https://maps.app.goo.gl/f1mFM4Yjahaz9SyJ8?g_st=ac","loaded":24},{"key":"changhua","label":"彰化","region":"中部","city":"彰化","kind":"food","declared":29,"url":"https://maps.app.goo.gl/9oLNo3QeipNiEx7M7?g_st=ac","loaded":29},{"key":"tainan","label":"台南","region":"南部","city":"台南","kind":"food","declared":86,"url":"https://maps.app.goo.gl/EgamzKSobVtxUQHbA?g_st=ac","loaded":85},{"key":"kaohsiung","label":"高雄","region":"南部","city":"高雄","kind":"food","declared":9,"url":"https://maps.app.goo.gl/yANjiQEqpu76GJqc6?g_st=ac","loaded":9},{"key":"east","label":"東部","region":"東部","city":"東部","kind":"food","declared":3,"url":"https://maps.app.goo.gl/tKAFRrq6CMjShVeh6?g_st=ac","loaded":3},{"key":"chiayi","label":"嘉義","region":"南部","city":"嘉義","kind":"food","declared":14,"url":"https://maps.app.goo.gl/2bzH8oEPCLgnMUH67?g_st=ac","loaded":14},{"key":"qingshui","label":"清水","region":"中部","city":"清水","kind":"food","declared":43,"url":"https://maps.app.goo.gl/bZPPqHwSsL7VYN5v9?g_st=ac","loaded":44}];
@@ -1587,7 +1817,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
-          const reg = await navigator.serviceWorker.register('./sw.js?v=1.4.0');
+          const reg = await navigator.serviceWorker.register('./sw.js?v=1.5.0');
           await reg.update();
         } catch {}
       });
