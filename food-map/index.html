@@ -35,7 +35,7 @@ h2 { font-size: 1.05rem; letter-spacing: -.02em; }
 .eyebrow, .kicker { color: var(--accent); font-size: .68rem; letter-spacing: .16em; font-weight: 800; }
 .card { background: linear-gradient(180deg, rgba(255,255,255,.025), transparent), var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
 .hero-grid { display: grid; grid-template-columns: 1.65fr .75fr; gap: 14px; margin-bottom: 14px; }
-.today-card, .stats-card, .toolbar, .map-card, .list-card { padding: 18px; }
+.today-card, .stats-card, .toolbar, .list-card { padding: 18px; }
 .section-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
 .section-head.compact { align-items: center; }
 .soft-pill { color: #d7d8dc; background: #202126; border: 1px solid #2d2f35; border-radius: 999px; padding: 6px 9px; font-size: .72rem; white-space: nowrap; }
@@ -68,54 +68,12 @@ h2 { font-size: 1.05rem; letter-spacing: -.02em; }
 select, .field input, .field textarea { color: var(--text); background: #17181c; border: 1px solid #30323a; border-radius: 12px; min-height: 42px; padding: 0 10px; outline: none; }
 .field textarea { min-height: 92px; padding-top: 10px; resize: vertical; }
 .content-grid { display: grid; grid-template-columns: 1fr; gap: 14px; align-items: start; }
-#map { height: min(68vh, 720px); min-height: 460px; border-radius: 14px; overflow: hidden; background: #0d0e11; }
-.leaflet-container { font-family: inherit; background: #0d0e11; }
-.leaflet-control-attribution { font-size: 9px; }
-.place-list { height: min(68vh, 720px); min-height: 460px; overflow-y: auto; padding-right: 4px; }
-.place-group { margin-bottom: 19px; }
-.place-group-title { position: sticky; top: 0; z-index: 2; padding: 8px 0; background: linear-gradient(180deg, var(--panel) 75%, transparent); font-size: .74rem; font-weight: 900; letter-spacing: .08em; color: var(--accent-2); }
-.place-item { border-top: 1px solid #27292f; padding: 13px 2px; display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 9px; }
-.place-item:first-of-type { border-top: 0; }
-.place-name { font-weight: 820; line-height: 1.35; }
-.place-sub { color: var(--muted); font-size: .76rem; margin-top: 5px; display: flex; flex-wrap: wrap; gap: 6px; }
-.tag { padding: 3px 7px; border-radius: 999px; background: #202126; color: #bbbcc3; }
-.tag.hot { color: #111; background: var(--accent-2); }
-.tag.eaten { color: #111; background: var(--good); }
-.place-note { color: #c8c9ce; margin-top: 8px; font-size: .82rem; line-height: 1.45; }
-.item-actions { display: flex; gap: 6px; align-items: flex-start; }
-.icon-btn { width: 36px; height: 36px; border-radius: 10px; border: 1px solid #30323a; background: #1a1b20; color: #dadbe0; }
-.empty-list { padding: 32px 10px; text-align: center; color: var(--muted); }
-.muted-small { color: var(--muted); font-size: .72rem; }
-.modal-backdrop { position: fixed; inset: 0; z-index: 5000; background: rgba(0,0,0,.72); backdrop-filter: blur(8px); display: grid; place-items: center; padding: 18px; }
-.modal-backdrop.hidden { display: none; }
-.modal { width: min(620px, 100%); max-height: min(88vh, 860px); overflow-y: auto; background: #111216; border: 1px solid #30323a; border-radius: 20px; padding: 20px; box-shadow: 0 28px 100px rgba(0,0,0,.55); }
-.modal h3 { font-size: 1.25rem; margin-bottom: 6px; }
-.modal-desc { color: var(--muted); font-size: .85rem; line-height: 1.5; margin-bottom: 16px; }
-.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-.field.full { grid-column: 1 / -1; }
-.field label { color: #c9cad0; font-size: .76rem; font-weight: 760; }
-.field input, .field textarea, .field select { width: 100%; }
-.check-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid #2d2f35; background: #17181c; padding: 11px 12px; border-radius: 12px; }
-.check-row input { width: 19px; height: 19px; accent-color: var(--accent); }
-.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
-.dropzone { border: 1.5px dashed #474950; border-radius: 16px; padding: 28px 18px; text-align: center; background: #15161a; }
-.dropzone strong { display: block; margin-bottom: 5px; }
-.dropzone p { color: var(--muted); font-size: .8rem; margin-bottom: 13px; }
-.diff-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 13px 0; }
-.diff-box { padding: 12px; border-radius: 12px; border: 1px solid #2d2f35; background: #17181c; text-align: center; }
-.diff-box strong { display: block; font-size: 1.25rem; }
-.diff-box span { color: var(--muted); font-size: .72rem; }
-.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 9999; background: #202126; color: #f7f7f5; border: 1px solid #34363e; box-shadow: var(--shadow); border-radius: 999px; padding: 10px 14px; font-size: .82rem; }
-.marker-pin { width: 18px; height: 18px; background: var(--accent); border: 3px solid #0e0f12; box-shadow: 0 0 0 2px rgba(255,122,0,.45); border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
-.marker-pin > span { display: none; }
 @media (max-width: 900px) {
   .app-shell { width: min(100% - 18px, 760px); padding-top: 12px; }
   .hero-grid, .content-grid { grid-template-columns: 1fr; }
   .toolbar { align-items: stretch; flex-direction: column; }
   .filters-row { width: 100%; }
   .search-wrap { width: 100%; flex: 1; }
-  .map-card { order: 2; }
   .list-card { order: 1; }
   #map { height: 52vh; min-height: 360px; }
   .place-list { height: auto; min-height: 0; max-height: none; }
@@ -123,7 +81,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
 @media (max-width: 560px) {
   .topbar .btn { min-height: 38px; padding: 0 10px; font-size: .78rem; }
   .hero-grid { gap: 10px; }
-  .today-card, .stats-card, .toolbar, .map-card, .list-card { padding: 14px; }
+  .today-card, .stats-card, .toolbar, .list-card { padding: 14px; }
   .today-actions .btn { flex: 1; }
   .filters-row { display: grid; grid-template-columns: 1fr 1fr; }
   .search-wrap { grid-column: 1 / -1; }
