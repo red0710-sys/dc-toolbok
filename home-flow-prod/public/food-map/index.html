@@ -737,7 +737,7 @@ html,body{
             <div class="today-icon">🍜</div>
             <div>
               <strong>共享清單已載入</strong>
-              <p>先選區域；系統推薦直接給你 3 間，隨機推則抽 1 間。</p>
+              <p>先選區域；系統推薦依個人偏好 40%＋Google 口碑 35%＋評論熱度 15%＋新鮮度 10% 選 3 間。</p>
             </div>
           </div>
           <div class="today-filters">
@@ -881,7 +881,7 @@ html,body{
   'use strict';
 
   const STORAGE_KEY = 'twFoodMap.v1';
-  const BUILD_VERSION = '1.6.0';
+  const BUILD_VERSION = '1.6.1';
   const SHARED_DATA_VERSION = '2026-10-07-shared-lists-v1';
   const SHARED_DATA_UPDATED_AT = '2026-10-07T18:45:00+08:00';
   const SHARED_SOURCES = [{"key":"keelung","label":"基隆","region":"北部","city":"基隆","kind":"food","declared":7,"url":"https://maps.app.goo.gl/4KACWmkaqChVpkvw6?g_st=ac","loaded":7},{"key":"wuqi","label":"梧棲","region":"中部","city":"梧棲","kind":"food","declared":76,"url":"https://maps.app.goo.gl/w1cTWpoC4z4itpZKA?g_st=ac","loaded":76},{"key":"family","label":"親子育樂","region":"其他","city":"親子育樂","kind":"family","declared":24,"url":"https://maps.app.goo.gl/f1mFM4Yjahaz9SyJ8?g_st=ac","loaded":24},{"key":"changhua","label":"彰化","region":"中部","city":"彰化","kind":"food","declared":29,"url":"https://maps.app.goo.gl/9oLNo3QeipNiEx7M7?g_st=ac","loaded":29},{"key":"tainan","label":"台南","region":"南部","city":"台南","kind":"food","declared":86,"url":"https://maps.app.goo.gl/EgamzKSobVtxUQHbA?g_st=ac","loaded":85},{"key":"kaohsiung","label":"高雄","region":"南部","city":"高雄","kind":"food","declared":9,"url":"https://maps.app.goo.gl/yANjiQEqpu76GJqc6?g_st=ac","loaded":9},{"key":"east","label":"東部","region":"東部","city":"東部","kind":"food","declared":3,"url":"https://maps.app.goo.gl/tKAFRrq6CMjShVeh6?g_st=ac","loaded":3},{"key":"chiayi","label":"嘉義","region":"南部","city":"嘉義","kind":"food","declared":14,"url":"https://maps.app.goo.gl/2bzH8oEPCLgnMUH67?g_st=ac","loaded":14},{"key":"qingshui","label":"清水","region":"中部","city":"清水","kind":"food","declared":43,"url":"https://maps.app.goo.gl/bZPPqHwSsL7VYN5v9?g_st=ac","loaded":44}];
@@ -1660,10 +1660,11 @@ html,body{
 
     if (mode === 'recommend') {
       const ranked = pool.map(p => ({ p, s: recommendationScore(p) })).sort((a,b) => b.s - a.s);
-      const cachedRanked = ranked.filter(x => !!reviewCacheFor(x.p));
-      const sourceRanked = cachedRanked.length >= 3 ? cachedRanked : ranked;
-      const topPool = sourceRanked.slice(0, Math.max(3, Math.ceil(sourceRanked.length * .25))).map(x => x.p);
-      const picks = shufflePlaces(topPool).slice(0, Math.min(3, topPool.length));
+      const topCount = Math.min(ranked.length, Math.max(6, Math.ceil(ranked.length * .25)));
+      const topPool = ranked.slice(0, topCount);
+      const picks = topPool.length <= 3
+        ? topPool.map(x => x.p)
+        : [topPool[0].p, ...shufflePlaces(topPool.slice(1).map(x => x.p)).slice(0,2)];
       const cacheDate = reviewCacheDate();
       els.todayResult.classList.remove('empty');
       els.todayResult.classList.add('multi');
@@ -1711,30 +1712,67 @@ html,body{
     return out;
   }
 
+  function clampScore(v) {
+    return Math.max(0, Math.min(100, Number(v) || 0));
+  }
+
+  function recommendationBreakdown(p) {
+    const cache = reviewCacheFor(p);
+    const googleRating = Number.isFinite(cache?.rating) ? cache.rating : p.rating;
+    const reviewCount = Number.isFinite(cache?.reviewCount) ? cache.reviewCount : p.reviews;
+
+    let personal = 50;
+    if (Number.isFinite(p.myRating)) personal += (p.myRating - 3) * 15;
+    if (p.wouldReturn === 'yes') personal += 20;
+    if (p.wouldReturn === 'no') personal -= 45;
+    if (hasList(p, '最愛')) personal += 12;
+    if (hasList(p, '555') || hasList(p, '五星')) personal += 10;
+    if (hasList(p, '吃過的名店')) personal += 6;
+    if ((p.localNote || '').trim()) personal += 2;
+    if (Number.isFinite(p.manualScore)) personal += Math.max(-15, Math.min(15, p.manualScore));
+    personal = clampScore(personal);
+
+    const google = Number.isFinite(googleRating)
+      ? clampScore(20 + (googleRating - 3) * 40)
+      : 50;
+
+    const heat = Number.isFinite(reviewCount)
+      ? clampScore(Math.log10(Math.max(1, reviewCount) + 1) / 5 * 100)
+      : 20;
+
+    let freshness = 100;
+    const eaten = p.eaten || hasList(p, '吃過');
+    if (eaten) {
+      const days = daysSinceLastEaten(p);
+      if (!Number.isFinite(days)) freshness = 60;
+      else if (days >= 180) freshness = 100;
+      else if (days >= 90) freshness = 85;
+      else if (days >= 60) freshness = 70;
+      else if (days >= 30) freshness = 55;
+      else freshness = clampScore(days / 30 * 30);
+    }
+
+    const total =
+      personal * .40 +
+      google * .35 +
+      heat * .15 +
+      freshness * .10;
+
+    return { total, personal, google, heat, freshness, googleRating, reviewCount };
+  }
+
   function oneLineHighlight(p) {
     const city = p.city || '待分類';
-    const bits = [];
+    const b = recommendationBreakdown(p);
+    const bits = [`推薦 ${Math.round(b.total)} 分`];
     if (Number.isFinite(p.myRating)) bits.push(`你給 ${p.myRating}★`);
-    if (p.wouldReturn === 'yes') bits.push('你會再吃');
-    if (Number.isFinite(p.rating)) bits.push(`Google ${p.rating}★${Number.isFinite(p.reviews) ? '／' + p.reviews.toLocaleString('zh-TW') + ' 則' : ''}`);
-    if (!bits.length) bits.push('目前缺少 Google 評分資料');
-    return `${city}｜${bits.slice(0,2).join('，')}。`;
+    else if (p.wouldReturn === 'yes') bits.push('你會再吃');
+    else if (Number.isFinite(b.googleRating)) bits.push(`Google ${b.googleRating.toFixed(1)}★${Number.isFinite(b.reviewCount) ? '／' + b.reviewCount.toLocaleString('zh-TW') + ' 則' : ''}`);
+    return `${city}｜${bits.join('，')}。`;
   }
 
   function recommendationScore(p) {
-    let s = 0;
-    if (Number.isFinite(p.rating)) s += Math.max(0, p.rating - 3.5) * 34;
-    if (Number.isFinite(p.reviews)) s += Math.log10(Math.max(1, p.reviews) + 1) * 14;
-    if (Number.isFinite(p.myRating)) s += (p.myRating - 3) * 24;
-    if (p.wouldReturn === 'yes') s += 28;
-    if (p.wouldReturn === 'no') s -= 90;
-    if (hasList(p, '555') || hasList(p, '五星')) s += 24;
-    if (hasList(p, '最愛')) s += 20;
-    if (hasList(p, '吃過的名店')) s += 12;
-    if ((p.localNote || '').trim()) s += 2;
-    if (isRecentEaten(p)) s -= 80;
-    if (Number.isFinite(p.manualScore)) s += p.manualScore;
-    return s;
+    return recommendationBreakdown(p).total;
   }
 
   function recommendationReason(p) {
@@ -2100,7 +2138,7 @@ html,body{
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
-          const reg = await navigator.serviceWorker.register('./sw.js?v=1.6.0');
+          const reg = await navigator.serviceWorker.register('./sw.js?v=1.6.1');
           await reg.update();
         } catch {}
       });
