@@ -226,6 +226,67 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   .filters-row select { min-width:0; }
 }
 
+
+/* Beta 1.3.2 — location picker is viewport-safe without relying on media queries */
+.modal-backdrop.location-picker-backdrop {
+  place-items:end center;
+  padding:0;
+  overflow:hidden;
+}
+.modal.location-picker-modal {
+  width:min(620px, 100vw);
+  max-width:100vw;
+  max-height:min(82dvh, 720px);
+  overflow-y:auto;
+  overflow-x:hidden;
+  border-left:0;
+  border-right:0;
+  border-bottom:0;
+  border-radius:24px 24px 0 0;
+  padding:18px 16px calc(18px + env(safe-area-inset-bottom));
+}
+.modal.location-picker-modal .picker-grid {
+  width:100%;
+  min-width:0;
+  display:grid;
+  gap:16px;
+}
+.modal.location-picker-modal .picker-section,
+.modal.location-picker-modal .picker-options {
+  width:100%;
+  min-width:0;
+}
+.modal.location-picker-modal .picker-options {
+  display:grid !important;
+  grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+  gap:8px;
+  overflow:hidden;
+}
+.modal.location-picker-modal .picker-section:first-child .picker-options {
+  grid-template-columns:1fr !important;
+}
+.modal.location-picker-modal .picker-option {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  min-height:44px;
+  padding:0 8px;
+  border-radius:12px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-size:.92rem;
+}
+.modal.location-picker-modal .modal-actions {
+  position:sticky;
+  bottom:-18px;
+  margin:18px -16px -18px;
+  padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+  background:linear-gradient(180deg,rgba(17,18,22,.08),#111216 28%);
+}
 </style>
 </head>
 <body>
@@ -390,7 +451,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   'use strict';
 
   const STORAGE_KEY = 'twFoodMap.v1';
-  const BUILD_VERSION = '1.3.1';
+  const BUILD_VERSION = '1.3.2';
   const SHARED_DATA_VERSION = '2026-10-07-shared-lists-v1';
   const SHARED_DATA_UPDATED_AT = '2026-10-07T18:45:00+08:00';
   const SHARED_SOURCES = [{"key":"keelung","label":"基隆","region":"北部","city":"基隆","kind":"food","declared":7,"url":"https://maps.app.goo.gl/4KACWmkaqChVpkvw6?g_st=ac","loaded":7},{"key":"wuqi","label":"梧棲","region":"中部","city":"梧棲","kind":"food","declared":76,"url":"https://maps.app.goo.gl/w1cTWpoC4z4itpZKA?g_st=ac","loaded":76},{"key":"family","label":"親子育樂","region":"其他","city":"親子育樂","kind":"family","declared":24,"url":"https://maps.app.goo.gl/f1mFM4Yjahaz9SyJ8?g_st=ac","loaded":24},{"key":"changhua","label":"彰化","region":"中部","city":"彰化","kind":"food","declared":29,"url":"https://maps.app.goo.gl/9oLNo3QeipNiEx7M7?g_st=ac","loaded":29},{"key":"tainan","label":"台南","region":"南部","city":"台南","kind":"food","declared":86,"url":"https://maps.app.goo.gl/EgamzKSobVtxUQHbA?g_st=ac","loaded":85},{"key":"kaohsiung","label":"高雄","region":"南部","city":"高雄","kind":"food","declared":9,"url":"https://maps.app.goo.gl/yANjiQEqpu76GJqc6?g_st=ac","loaded":9},{"key":"east","label":"東部","region":"東部","city":"東部","kind":"food","declared":3,"url":"https://maps.app.goo.gl/tKAFRrq6CMjShVeh6?g_st=ac","loaded":3},{"key":"chiayi","label":"嘉義","region":"南部","city":"嘉義","kind":"food","declared":14,"url":"https://maps.app.goo.gl/2bzH8oEPCLgnMUH67?g_st=ac","loaded":14},{"key":"qingshui","label":"清水","region":"中部","city":"清水","kind":"food","declared":43,"url":"https://maps.app.goo.gl/bZPPqHwSsL7VYN5v9?g_st=ac","loaded":44}];
@@ -673,6 +734,8 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   }
 
   function openTodayLocationPicker() {
+    els.modalBackdrop.classList.add('location-picker-backdrop');
+    els.modal.classList.add('location-picker-modal');
     const sections = Object.entries(TODAY_LOCATION_GROUPS).map(([group, values]) => `
       <div class="picker-section">
         <div class="picker-section-title">${escapeHtml(group)}</div>
@@ -1337,7 +1400,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
-          const reg = await navigator.serviceWorker.register('./sw.js?v=1.3.1');
+          const reg = await navigator.serviceWorker.register('./sw.js?v=1.3.2');
           await reg.update();
         } catch {}
       });
@@ -1395,7 +1458,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   function hasList(p, needle) { return (p.sourceLists || []).some(x => String(x).includes(needle)); }
   function formatDateTime(iso) { try { return new Intl.DateTimeFormat('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(iso)); } catch { return iso; } }
   function openModal() { els.modalBackdrop.classList.remove('hidden'); els.modalBackdrop.setAttribute('aria-hidden','false'); }
-  function closeModal() { els.modalBackdrop.classList.add('hidden'); els.modalBackdrop.setAttribute('aria-hidden','true'); }
+  function closeModal() { els.modalBackdrop.classList.add('hidden'); els.modalBackdrop.classList.remove('location-picker-backdrop'); els.modal.classList.remove('location-picker-modal'); els.modalBackdrop.setAttribute('aria-hidden','true'); }
   function toast(msg) { const el = document.createElement('div'); el.className='toast'; el.textContent=msg; document.body.appendChild(el); setTimeout(()=>el.remove(),2200); }
   function escapeHtml(v='') { return String(v).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
   function escapeAttr(v='') { return escapeHtml(v).replace(/`/g,'&#96;'); }
