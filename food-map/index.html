@@ -101,6 +101,36 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   .content-grid { gap: 10px; }
 }
 
+
+/* Beta 1.2 — hierarchical filters + compact accordion browsing */
+.toolbar { margin-bottom:14px; display:flex; flex-direction:column; gap:12px; align-items:stretch; }
+.filter-block { display:grid; gap:8px; }
+.filter-line { display:flex; align-items:center; gap:9px; min-width:0; }
+.filter-label { width:54px; flex:0 0 54px; color:var(--muted); font-size:.72rem; font-weight:800; letter-spacing:.04em; }
+.region-tabs, .sub-tabs, .city-tabs, .type-tabs, .city-jump { display:flex; gap:7px; overflow-x:auto; scrollbar-width:none; padding-bottom:1px; }
+.region-tabs::-webkit-scrollbar, .sub-tabs::-webkit-scrollbar, .city-tabs::-webkit-scrollbar, .type-tabs::-webkit-scrollbar, .city-jump::-webkit-scrollbar { display:none; }
+.sub-tabs:empty, .city-tabs:empty { display:none; }
+.filters-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.filters-row select { min-width:132px; }
+.place-group { margin-bottom:11px; scroll-margin-top:14px; }
+.place-group-title { position:sticky; top:0; z-index:3; padding:0; background:var(--panel); border-bottom:1px solid #292b31; }
+.group-toggle { width:100%; min-height:48px; border:0; background:transparent; color:var(--accent-2); display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 2px; font-size:.78rem; font-weight:900; letter-spacing:.06em; text-align:left; }
+.group-toggle .group-arrow { color:var(--muted); font-size:.9rem; transition:.16s ease; }
+.group-toggle.open .group-arrow { transform:rotate(180deg); }
+.city-jump { margin:-2px 0 12px; padding:2px 0 6px; }
+.jump-chip { border:1px solid #2d2f35; background:#15161a; color:#c8c9ce; border-radius:999px; padding:7px 10px; font-size:.72rem; white-space:nowrap; }
+.group-more { width:100%; margin-top:7px; border:1px solid #30323a; background:#17181c; color:#c8c9ce; border-radius:11px; min-height:38px; font-weight:760; }
+.place-item { padding:10px 2px; }
+@media (max-width:900px) {
+  .filter-label { width:46px; flex-basis:46px; }
+  .search-wrap { flex:1 1 100%; }
+}
+@media (max-width:560px) {
+  .filter-line { align-items:flex-start; }
+  .filter-label { padding-top:8px; }
+  .filters-row select { min-width:0; }
+}
+
 </style>
 </head>
 <body>
@@ -157,7 +187,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
         <article class="card stats-card">
           <div class="stat"><span>收藏</span><strong id="totalStat">0</strong></div>
           <div class="stat"><span>吃過</span><strong id="eatenStat">0</strong></div>
-          <div class="stat"><span>想去</span><strong id="wantStat">0</strong></div>
+          <div class="stat"><span>想吃</span><strong id="wantStat">0</strong></div>
           <div class="stat"><span>有備註</span><strong id="noteStat">0</strong></div>
           <div class="sync-status">
             <span class="dot"></span>
@@ -167,14 +197,42 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
       </section>
 
       <section class="toolbar card">
-        <div class="region-tabs" id="regionTabs">
-          <button class="chip active" data-region="全部">全部</button>
-          <button class="chip" data-region="北部">北部</button>
-          <button class="chip" data-region="中部">中部</button>
-          <button class="chip" data-region="南部">南部</button>
-          <button class="chip" data-region="東部">東部</button>
-          <button class="chip" data-region="待分類">待分類</button>
+        <div class="filter-block">
+          <div class="filter-line">
+            <span class="filter-label">地區</span>
+            <div class="region-tabs" id="regionTabs">
+              <button class="chip active" data-region="全部">全部</button>
+              <button class="chip" data-region="北部">北部</button>
+              <button class="chip" data-region="中部">中部</button>
+              <button class="chip" data-region="南部">南部</button>
+              <button class="chip" data-region="東部">東部</button>
+            </div>
+          </div>
+          <div class="filter-line" id="areaFilterLine">
+            <span class="filter-label">生活圈</span>
+            <div class="sub-tabs" id="areaTabs"></div>
+          </div>
+          <div class="filter-line" id="cityFilterLine">
+            <span class="filter-label">城市</span>
+            <div class="city-tabs" id="cityTabs"></div>
+          </div>
+          <div class="filter-line">
+            <span class="filter-label">類型</span>
+            <div class="type-tabs" id="typeTabs">
+              <button class="chip active" data-food-type="全部">全部</button>
+              <button class="chip" data-food-type="早餐">早餐</button>
+              <button class="chip" data-food-type="小吃">小吃</button>
+              <button class="chip" data-food-type="麵飯">麵飯</button>
+              <button class="chip" data-food-type="火鍋">火鍋</button>
+              <button class="chip" data-food-type="燒烤">燒烤</button>
+              <button class="chip" data-food-type="海鮮">海鮮</button>
+              <button class="chip" data-food-type="甜點飲料">甜點飲料</button>
+              <button class="chip" data-food-type="正餐">正餐</button>
+              <button class="chip" data-food-type="宵夜">宵夜</button>
+            </div>
+          </div>
         </div>
+
         <div class="filters-row">
           <label class="search-wrap">
             <span>⌕</span>
@@ -182,10 +240,25 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
           </label>
           <select id="statusFilter" aria-label="狀態篩選">
             <option value="全部">全部狀態</option>
-            <option value="想去">想去</option>
-            <option value="吃過">吃過</option>
             <option value="沒吃過">沒吃過</option>
-            <option value="五星">五星 / 最愛</option>
+            <option value="吃過">吃過</option>
+            <option value="想吃">想吃</option>
+            <option value="會再吃">會再吃</option>
+            <option value="不再吃">不再吃</option>
+            <option value="30天內">30天內吃過</option>
+          </select>
+          <select id="myRatingFilter" aria-label="我的評分">
+            <option value="全部">全部星級</option>
+            <option value="未評分">未評分</option>
+            <option value="5">我的 5★</option>
+            <option value="4+">我的 4★+</option>
+            <option value="3-">我的 ≤3★</option>
+          </select>
+          <select id="googleFilter" aria-label="Google 人氣">
+            <option value="全部">Google 人氣</option>
+            <option value="4.5+">Google 4.5★+</option>
+            <option value="4.0+">Google 4.0★+</option>
+            <option value="1000+">評論 1000+</option>
           </select>
           <button id="addBtn" class="btn btn-ghost" type="button">＋ 新增</button>
         </div>
@@ -224,6 +297,12 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   const SHARED_SEED = [{"sourceKey":"keelung","title":"九份福山宮停車場","region":"北部","city":"基隆","kind":"food","rating":4.6,"reviews":19},{"sourceKey":"keelung","title":"安樂市場菜頭滷 （粉專：菜頭滷）","region":"北部","city":"基隆","kind":"food","rating":4.4,"reviews":191},{"sourceKey":"keelung","title":"許存睿 豬灶麵線羹","region":"北部","city":"基隆","kind":"food","rating":4.3,"reviews":160},{"sourceKey":"keelung","title":"九如營養三明治（常一嚐）","region":"北部","city":"基隆","kind":"food","rating":4.3,"reviews":2167},{"sourceKey":"keelung","title":"蓁好料小吃店","region":"北部","city":"基隆","kind":"food","rating":4,"reviews":693},{"sourceKey":"keelung","title":"美珠土雞店","region":"北部","city":"基隆","kind":"food","rating":4,"reviews":481},{"sourceKey":"keelung","title":"封神雞-黑白切白斬雞","region":"北部","city":"基隆","kind":"food","rating":4.1,"reviews":1072},{"sourceKey":"wuqi","title":"台北江麻辣臭豆腐-梧棲店","region":"中部","city":"梧棲","kind":"food","rating":4.1,"reviews":49},{"sourceKey":"wuqi","title":"舊車路桶仔雞","region":"中部","city":"梧棲","kind":"food","rating":4.7,"reviews":251},{"sourceKey":"wuqi","title":"欣來便當 自助餐","region":"中部","city":"梧棲","kind":"food","rating":4.5,"reviews":480},{"sourceKey":"wuqi","title":"家家香 早午餐（便當、粥）","region":"中部","city":"梧棲","kind":"food","rating":4.4,"reviews":23},{"sourceKey":"wuqi","title":"黃家腿庫飯","region":"中部","city":"梧棲","kind":"food","rating":4.7,"reviews":38},{"sourceKey":"wuqi","title":"薪食堂","region":"中部","city":"梧棲","kind":"food","rating":4.8,"reviews":25},{"sourceKey":"wuqi","title":"碗不吃","region":"中部","city":"梧棲","kind":"food","rating":4.1,"reviews":149},{"sourceKey":"wuqi","title":"Choumingy Café","region":"中部","city":"梧棲","kind":"food","rating":4.1,"reviews":1569},{"sourceKey":"wuqi","title":"炸炸臭豆腐-梧棲總店","region":"中部","city":"梧棲","kind":"food","rating":4.7,"reviews":133},{"sourceKey":"wuqi","title":"肆-雞肉飯","region":"中部","city":"梧棲","kind":"food","rating":4.6,"reviews":37},{"sourceKey":"wuqi","title":"禾憶餐酒館 Hoi Bistro＆Bar","region":"中部","city":"梧棲","kind":"food","rating":4.5,"reviews":203},{"sourceKey":"wuqi","title":"紀軍綻魯肉飯","region":"中部","city":"梧棲","kind":"food","rating":4.8,"reviews":130},{"sourceKey":"wuqi","title":"蔡ㄟ切仔麵","region":"中部","city":"梧棲","kind":"food","rating":4.5,"reviews":33},{"sourceKey":"wuqi","title":"麗麗早餐","region":"中部","city":"梧棲","kind":"food","rating":4.4,"reviews":143},{"sourceKey":"wuqi","title":"龍鳳漁港","region":"中部","city":"梧棲","kind":"food","rating":4.2,"reviews":1348},{"sourceKey":"wuqi","title":"掌櫃水產","region":"中部","city":"梧棲","kind":"food","rating":4.4,"reviews":122},{"sourceKey":"wuqi","title":"嗎哪活蝦","region":"中部","city":"梧棲","kind":"food","rating":4.9,"reviews":56},{"sourceKey":"wuqi","title":"惠子麵館","region":"中部","city":"梧棲","kind":"food","rating":4.2,"reviews":46},{"sourceKey":"wuqi","title":"一口糧","region":"中部","city":"梧棲","kind":"food","rating":3.4,"reviews":39},{"sourceKey":"wuqi","title":"紅蜻蜓食堂","region":"中部","city":"梧棲","kind":"food","rating":5,"reviews":25},{"sourceKey":"wuqi","title":"蔡料好 鍋燒麵•粥品專賣","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"日十。梧棲店｜粉漿蛋餅・刈包・飯糰","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"喜鵲森林","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"105休息點心站","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"興利鵝肉","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"元森綠豆沙仙草專賣店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"桂香坊冰糖醬滷味-梧棲店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"臺中市立圖書館梧棲親子館","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"醇壽司（不定期公休，請留意FB.IG)梧棲必吃｜熱門美食｜外帶美食","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"長袖廚房梧棲總館","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"十九甲雞排．梧棲店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"北港蔡三代筒仔米糕","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"鯨賀平價海鮮","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"第二香腸 香腸攤","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"肉圓榮","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"潮州牛肉陳（梧棲店）每週一店休","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"陳媽咪飯糰米糕刈包 梧棲店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"臭一色臭豆腐","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"青董食代 Green Style ｜在地美食｜海線必吃","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"老四季（梧棲概念店）-麻醬牛肉拌麵&鮮蚵滷肉飯/便當/鍋物","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"宇良食2.0","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"梧樂食光 | 創作料理 We Love Cuisine","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"一等香麵食館（梧棲店）","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"好紀鮮食館 (午餐預約制)","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"小時厚牛排-台中梧棲店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"吉好吃鹽水雞 梧棲東健店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"鴨寶食堂","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"阿裕食堂","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"台南一甲子","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"歌王豆花","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"牛家村麵食館","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"阿吉魯肉飯","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"好鄰居快餐","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"聖大麵食館","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"大庄臭豆腐","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"林家燒餅(懷念古早味燒餅)","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"慢食光","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"美申宏湯包","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"光慧水煎包（梧棲店）","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"大庄無名烤玉米","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"廟口意麵（梧棲店）","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"上福速食餐飲便當","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"溫叨灶腳便當專賣店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"梧棲芋頭王黑糖刨冰（文華店）","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"陳記滷味 梧棲分店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"麵線虹了","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"真口味烤鴨店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"好陽光早午餐","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"絕品鮮鍋-梧棲店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"順興芋冰老店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"二鍋頭梧棲店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"協力旺雞排（梧棲中央店）","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"紅香自助餐","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"不貳早午餐","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"台中港海味羹","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"wuqi","title":"朝司暮想 肉蛋吐司-梧棲民和店","region":"中部","city":"梧棲","kind":"food","rating":null,"reviews":null},{"sourceKey":"changhua","title":"Hong Ming's Kitchen","region":"中部","city":"彰化","kind":"food","rating":4.2,"reviews":3004},{"sourceKey":"changhua","title":"Company dinner","region":"中部","city":"彰化","kind":"food","rating":4.5,"reviews":138},{"sourceKey":"changhua","title":"舊車路桶仔雞","region":"中部","city":"彰化","kind":"food","rating":4.7,"reviews":251},{"sourceKey":"changhua","title":"吳頂釣魚場","region":"中部","city":"彰化","kind":"food","rating":4.3,"reviews":928},{"sourceKey":"changhua","title":"Ho-Lou Tea House","region":"中部","city":"彰化","kind":"food","rating":4.4,"reviews":1069},{"sourceKey":"changhua","title":"黃記素食","region":"中部","city":"彰化","kind":"food","rating":4.6,"reviews":580},{"sourceKey":"changhua","title":"鼎Q包子｜沙鹿靜宜店｜人氣老麵饅頭 DINGQ BAO","region":"中部","city":"彰化","kind":"food","rating":4.3,"reviews":13},{"sourceKey":"changhua","title":"屁格豬火鍋餐廳·親子樂園","region":"中部","city":"彰化","kind":"food","rating":4.5,"reviews":657},{"sourceKey":"changhua","title":"探索.迷宮親子童樂餐廳","region":"中部","city":"彰化","kind":"food","rating":4.4,"reviews":4092},{"sourceKey":"changhua","title":"漢強麵館","region":"中部","city":"彰化","kind":"food","rating":4.1,"reviews":575},{"sourceKey":"changhua","title":"劉家粽子 西門店","region":"中部","city":"彰化","kind":"food","rating":3.9,"reviews":4759},{"sourceKey":"changhua","title":"和美製鍋有限公司","region":"中部","city":"彰化","kind":"food","rating":4.3,"reviews":441},{"sourceKey":"changhua","title":"帢米德專業烘焙","region":"中部","city":"彰化","kind":"food","rating":4.4,"reviews":131},{"sourceKey":"changhua","title":"永靖天品","region":"中部","city":"彰化","kind":"food","rating":4.6,"reviews":150},{"sourceKey":"changhua","title":"Smile Gas Station","region":"中部","city":"彰化","kind":"food","rating":4,"reviews":360},{"sourceKey":"changhua","title":"蚵ㄚ仁","region":"中部","city":"彰化","kind":"food","rating":4.4,"reviews":4654},{"sourceKey":"changhua","title":"聰哥團長蛋黃酥","region":"中部","city":"彰化","kind":"food","rating":4.8,"reviews":636},{"sourceKey":"changhua","title":"玉鉁包子(提早售完即休息)","region":"中部","city":"彰化","kind":"food","rating":4.8,"reviews":157},{"sourceKey":"changhua","title":"十二段鍋物堂 | 彰化店","region":"中部","city":"彰化","kind":"food","rating":4.6,"reviews":3688},{"sourceKey":"changhua","title":"彰化老担阿璋肉圓","region":"中部","city":"彰化","kind":"food","rating":4.2,"reviews":16887},{"sourceKey":"changhua","title":"漢彬水晶餃","region":"中部","city":"彰化","kind":"food","rating":null,"reviews":null},{"sourceKey":"changhua","title":"施 豆花専賣店","region":"中部","city":"彰化","kind":"food","rating":null,"reviews":null},{"sourceKey":"changhua","title":"手工水餃","region":"中部","city":"彰化","kind":"food","rating":null,"reviews":null},{"sourceKey":"changhua","title":"第一豬腳飯","region":"中部","city":"彰化","kind":"food","rating":null,"reviews":null},{"sourceKey":"changhua","title":"和美花壇羊肉","region":"中部","city":"彰化","kind":"food","rating":null,"reviews":null},{"sourceKey":"changhua","title":"鴨篆脆皮烤鴨","region":"中部","city":"彰化","kind":"food","rating":null,"reviews":null},{"sourceKey":"changhua","title":"勇伯粉粿&米苔目","region":"中部","city":"彰化","kind":"food","rating":null,"reviews":null},{"sourceKey":"changhua","title":"長頸鹿休閒農場","region":"中部","city":"彰化","kind":"food","rating":null,"reviews":null},{"sourceKey":"changhua","title":"溪湖阿秀羊肉爐","region":"中部","city":"彰化","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿和肉燥飯","region":"南部","city":"台南","kind":"food","rating":4.1,"reviews":2567},{"sourceKey":"tainan","title":"老李螺肉大王（炒牛肉、炒螺肉）","region":"南部","city":"台南","kind":"food","rating":4.1,"reviews":1343},{"sourceKey":"tainan","title":"哈達客東山鴨頭－裕農店","region":"南部","city":"台南","kind":"food","rating":4.4,"reviews":643},{"sourceKey":"tainan","title":"好口福石頭火鍋","region":"南部","city":"台南","kind":"food","rating":4.2,"reviews":708},{"sourceKey":"tainan","title":"Hot Pot","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿月姨東山鴨頭 端午6/20六-6/22一店休","region":"南部","city":"台南","kind":"food","rating":4.3,"reviews":415},{"sourceKey":"tainan","title":"No. 161, Section 2, Minzu Rd, Chihkan Village, West Central District","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"Tainan City, Taiwan 700","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"Jue Ding Friedrice","region":"南部","city":"台南","kind":"food","rating":4.4,"reviews":1170},{"sourceKey":"tainan","title":"黃火木舊台味冰店 (北永康店)","region":"南部","city":"台南","kind":"food","rating":4.3,"reviews":203},{"sourceKey":"tainan","title":"Ice cream and drink shop","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"Lian Ying Fa Dim Sum","region":"南部","city":"台南","kind":"food","rating":4.2,"reviews":4511},{"sourceKey":"tainan","title":"Dim Sum","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"黑鼎鴻專業臭豆腐(正強店)","region":"南部","city":"台南","kind":"food","rating":4.3,"reviews":105},{"sourceKey":"tainan","title":"珍好味臭臭鍋","region":"南部","city":"台南","kind":"food","rating":4.3,"reviews":2186},{"sourceKey":"tainan","title":"阿銘牛肉湯","region":"南部","city":"台南","kind":"food","rating":4.4,"reviews":2798},{"sourceKey":"tainan","title":"阿足香雞排","region":"南部","city":"台南","kind":"food","rating":4.4,"reviews":209},{"sourceKey":"tainan","title":"鹽行路老鄭虱目魚","region":"南部","city":"台南","kind":"food","rating":3.9,"reviews":54},{"sourceKey":"tainan","title":"三赫老麵燒餅","region":"南部","city":"台南","kind":"food","rating":4.3,"reviews":1692},{"sourceKey":"tainan","title":"Breakfast","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"美味鹹酥雞","region":"南部","city":"台南","kind":"food","rating":4,"reviews":290},{"sourceKey":"tainan","title":"Liu Jia Juang","region":"南部","city":"台南","kind":"food","rating":4.3,"reviews":5089},{"sourceKey":"tainan","title":"十塩彌坊臭豆腐","region":"南部","city":"台南","kind":"food","rating":4.4,"reviews":249},{"sourceKey":"tainan","title":"竹力亭-雞排蛋沙拉－台南復國總店","region":"南部","city":"台南","kind":"food","rating":4.2,"reviews":839},{"sourceKey":"tainan","title":"阿明食堂-中華店","region":"南部","city":"台南","kind":"food","rating":4.6,"reviews":342},{"sourceKey":"tainan","title":"阿月手工豆花","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"王家牛肉湯","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"德興鱔魚意麵","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"冰鄉","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"冰ㄉ• かき氷 二號","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"七誠米粿","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"祿記（包仔祿）","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"東門圓環頂陽春麵專家","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"城邊真味鱔魚意麵","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"好味紅燒𩵚魠魚羹","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"瑪黑家紅茶專賣店","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"福來小棧沙茶爐－特色火鍋","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"吳家肉燥飯","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿興虱目魚","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"太陽牌冰品","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"𤦔鹹酥雞-安平店","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"你我他之家","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"河樂廣場","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"8818 比薩屋","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"VASO弘肉燥飯舖 安平店","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿明豬心冬粉","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"鄭記蔥肉餅-西門店","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"青山茶行","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"旨味日本料理","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"黑橋牌香腸博物館","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"夏林臭豆腐","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿裕牛肉涮涮鍋(崑崙店)","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"美鮮牛肉湯","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"富盛號","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"劉家粽子 西門店","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"蔡家豬血湯","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"黃火木舊台味冰店","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"赤峰鐵板燒 (安中店)","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"馨味胡椒白菜雞","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿忠螃蟹-府城蟳禮","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"嘟嘟牛排-西門店","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"二哥炒鱔魚","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"丹瓦樓","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"Walking Su 藥膳麻油雞","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿宏牛肉湯","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"陳家汕頭意麵","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"海龍肉粽","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"台南葡吉麵包店","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿杰溫體牛肉湯（每天售完為止）","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"豐收飯桌","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"無名羊肉湯-大菜市（每日上午五點半開賣，賣完為止，星期二固定店休，請追蹤臉書，感謝您！）","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"醇涎坊古早味鍋燒意麵","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"東山古腸新古早味糯米大腸","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"上好烤魯味","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"檨仔林阿全碗粿","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"台南市 基明飯桌仔－飯桌仔鮮魚自助餐","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"呷涮嘴東山鴨頭","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"克林台包","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"布萊恩紅茶正興總店","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"炸雞洋行(歡迎電話預訂)","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"保哥黑輪","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"鴻牛溫體牛肉湯-南門店｜中西區美食｜宵夜牛肉湯｜熱門牛肉湯｜台南美食推薦｜台南小吃推薦｜牛肉湯推薦｜溫體牛｜必吃牛肉鍋｜宵夜推薦｜熱炒推薦｜必吃美食｜評價牛肉湯｜","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"八寶彬 圓仔惠","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿棠牛肉湯","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"tainan","title":"阿堂鹹粥","region":"南部","city":"台南","kind":"food","rating":null,"reviews":null},{"sourceKey":"kaohsiung","title":"岡山名亨運動廣場","region":"南部","city":"高雄","kind":"food","rating":4.7,"reviews":170},{"sourceKey":"kaohsiung","title":"湖南味","region":"南部","city":"高雄","kind":"food","rating":4.1,"reviews":1556},{"sourceKey":"kaohsiung","title":"Gang Yuan Beef Noodle Restaurant","region":"南部","city":"高雄","kind":"food","rating":4.2,"reviews":9833},{"sourceKey":"kaohsiung","title":"Yancheng Duck Noodles","region":"南部","city":"高雄","kind":"food","rating":4.2,"reviews":1649},{"sourceKey":"kaohsiung","title":"冬粉王","region":"南部","city":"高雄","kind":"food","rating":4.1,"reviews":4858},{"sourceKey":"kaohsiung","title":"Duck Zhen","region":"南部","city":"高雄","kind":"food","rating":4.3,"reviews":11685},{"sourceKey":"kaohsiung","title":"鳳興麵線","region":"南部","city":"高雄","kind":"food","rating":4.1,"reviews":4439},{"sourceKey":"kaohsiung","title":"Bei Gang Tsai Rice Tube (Yancheng)","region":"南部","city":"高雄","kind":"food","rating":4.4,"reviews":6371},{"sourceKey":"kaohsiung","title":"古早味碳火芳德豬肉冬粉","region":"南部","city":"高雄","kind":"food","rating":4.4,"reviews":660},{"sourceKey":"east","title":"7-ELEVEN 金桔門市","region":"東部","city":"東部","kind":"food","rating":4.4,"reviews":118},{"sourceKey":"east","title":"上旺土雞城","region":"東部","city":"東部","kind":"food","rating":4.3,"reviews":835},{"sourceKey":"east","title":"松田釣魚池","region":"東部","city":"東部","kind":"food","rating":4.2,"reviews":516},{"sourceKey":"chiayi","title":"咱台灣人的冰","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"嘉義公園火雞肉飯（公休請看FB)","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"桃城三禾火雞肉飯","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"粉圓冰 愛玉冰","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"愛木村地方文化館","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"阿燕雞子粿","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"阿玲水餃煎餃","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"佳園汕頭火鍋","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"北歐工坊複合式餐廳","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"興加臭豆腐","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"古早時代-現炒鴨肉羹/福星藥頭排骨","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"錦記麻糬","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"阿明火雞肉飯","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"chiayi","title":"1961海鮮碳烤","region":"南部","city":"嘉義","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"西濱小吃","region":"中部","city":"清水","kind":"food","rating":4.6,"reviews":77},{"sourceKey":"qingshui","title":"清水區 蔡家涼麵（建國國小旁）","region":"中部","city":"清水","kind":"food","rating":4.7,"reviews":106},{"sourceKey":"qingshui","title":"Breakfast","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"陳媽媽涼麵","region":"中部","city":"清水","kind":"food","rating":4.3,"reviews":240},{"sourceKey":"qingshui","title":"伴甜豆花(原第一銀行旁冰店)","region":"中部","city":"清水","kind":"food","rating":4.6,"reviews":229},{"sourceKey":"qingshui","title":"联亭泡菜鍋（清水店）","region":"中部","city":"清水","kind":"food","rating":4.6,"reviews":581},{"sourceKey":"qingshui","title":"Hot Pot","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"泗陽大浯江（清水分局旁）","region":"中部","city":"清水","kind":"food","rating":4.4,"reviews":405},{"sourceKey":"qingshui","title":"蒸神女 （紅麴麻辣鴨血臭豆腐/素食麻辣臭豆腐、Yummy紅麴滷味）⚠️詳情請看本店說明欄位","region":"中部","city":"清水","kind":"food","rating":4.9,"reviews":116},{"sourceKey":"qingshui","title":"協力旺清水鎮政店","region":"中部","city":"清水","kind":"food","rating":4.4,"reviews":128},{"sourceKey":"qingshui","title":"炒飯不能王","region":"中部","city":"清水","kind":"food","rating":4.9,"reviews":1058},{"sourceKey":"qingshui","title":"阿騰米糕","region":"中部","city":"清水","kind":"food","rating":4.2,"reviews":1066},{"sourceKey":"qingshui","title":"潮州 手工製作 餛飩麵","region":"中部","city":"清水","kind":"food","rating":4.6,"reviews":160},{"sourceKey":"qingshui","title":"陳大牌排骨麵","region":"中部","city":"清水","kind":"food","rating":4.3,"reviews":782},{"sourceKey":"qingshui","title":"好口味包子饅頭店","region":"中部","city":"清水","kind":"food","rating":4.7,"reviews":21},{"sourceKey":"qingshui","title":"武鹿炸雞","region":"中部","city":"清水","kind":"food","rating":4.7,"reviews":21},{"sourceKey":"qingshui","title":"禎饌米食","region":"中部","city":"清水","kind":"food","rating":4.8,"reviews":8},{"sourceKey":"qingshui","title":"馬蔥餅雙胞胎清水店（將於3/14結束營業）","region":"中部","city":"清水","kind":"food","rating":4.6,"reviews":69},{"sourceKey":"qingshui","title":"陳寶包手工肉包饅頭丨民族店","region":"中部","city":"清水","kind":"food","rating":4.8,"reviews":235},{"sourceKey":"qingshui","title":"正牌米糕莊","region":"中部","city":"清水","kind":"food","rating":4.1,"reviews":3822},{"sourceKey":"qingshui","title":"鄭記油蔥酥","region":"中部","city":"清水","kind":"food","rating":4.8,"reviews":121},{"sourceKey":"qingshui","title":"小阿姨滷肉飯（清水店)蒸蛋滷肉飯/蚵仔滷肉飯/附近美食/在地小吃/休假詳情收尋FB","region":"中部","city":"清水","kind":"food","rating":4.8,"reviews":1347},{"sourceKey":"qingshui","title":"小籠包","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"老士官擀麵","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"小妍鮮食健康餐盒-遠8店-清水美食 清水健康餐 清水便當 梧棲美食 梧棲健康餐 梧棲便當","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"本一艸堂","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"小二哥麵館","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"阿邦小吃店","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"花蓮炸蛋蔥油餅清水店","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"馥香牛排 (清水必吃美食 | 港區藝術中心美食 | 清水推薦美食)","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"清水米苔目.福","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"楊媽媽牛肉麵","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"亮亮の牛肉麵","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"清馫脆皮烤鴨-清水烤鴨店","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"樸樂早午餐【清水店】/清水早午餐 [店休詳見公告及粉絲團]","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"小卓億杯 平價熱炒","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"揚記生煎包","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"通霄煎包","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"粿之世家","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"小林魯肉飯","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"飯糰小巴","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"釜山飯局l清水美食l沙鹿美食l梧棲美食l海線美食","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"老李魯肉飯","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null},{"sourceKey":"qingshui","title":"外婆的包粿（電話預訂。另有其他公休會在粉專另行公告）","region":"中部","city":"清水","kind":"food","rating":null,"reviews":null}];
 
   const REGION_ORDER = ['北部', '中部', '南部', '東部', '待分類'];
+  const AREA_META = {
+    '北部': { '基隆': ['基隆'], '台北生活圈': ['台北','新北'], '桃竹': ['桃園','新竹'] },
+    '中部': { '台中海線': ['大甲','清水','梧棲','沙鹿'], '台中市區': ['台中'], '彰化': ['彰化'], '苗栗': ['苗栗'], '南投': ['南投'], '雲林': ['雲林'] },
+    '南部': { '嘉義': ['嘉義'], '台南': ['台南'], '高雄': ['高雄'], '屏東': ['屏東'] },
+    '東部': { '宜蘭': ['宜蘭'], '花蓮': ['花蓮'], '台東': ['台東'], '東部其他': ['東部'] }
+  };
   const CITY_META = {
     '基隆': { region: '北部', center: [25.1276, 121.7392] },
     '台北': { region: '北部', center: [25.0330, 121.5654] },
@@ -256,8 +335,15 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
 
   let state = hydrateSharedData(loadState());
   let activeRegion = '全部';
+  let activeArea = '全部';
+  let activeCity = '全部';
+  let activeFoodType = '全部';
   let activeStatus = '全部';
+  let activeMyRating = '全部';
+  let activeGoogle = '全部';
   let searchTerm = '';
+  const expandedCities = new Set();
+  const cityLimits = new Map();
   let todayCity = '全部';
   let todayStatus = '全部';
   let deferredInstallPrompt = null;
@@ -272,7 +358,10 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     recommendBtn: document.getElementById('recommendBtn'), randomBtn: document.getElementById('randomBtn'),
     todayCityFilter: document.getElementById('todayCityFilter'), todayStatusFilter: document.getElementById('todayStatusFilter'),
     searchInput: document.getElementById('searchInput'), statusFilter: document.getElementById('statusFilter'),
-    regionTabs: document.getElementById('regionTabs'), modalBackdrop: document.getElementById('modalBackdrop'),
+    myRatingFilter: document.getElementById('myRatingFilter'), googleFilter: document.getElementById('googleFilter'),
+    regionTabs: document.getElementById('regionTabs'), areaTabs: document.getElementById('areaTabs'),
+    cityTabs: document.getElementById('cityTabs'), typeTabs: document.getElementById('typeTabs'),
+    modalBackdrop: document.getElementById('modalBackdrop'),
     modal: document.getElementById('modal'), restoreInput: document.getElementById('restoreInput')
   };
   bindEvents();
@@ -356,14 +445,83 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredInstallPrompt = e; });
     els.searchInput.addEventListener('input', e => { searchTerm = e.target.value.trim().toLowerCase(); renderAll(false); });
     els.statusFilter.addEventListener('change', e => { activeStatus = e.target.value; renderAll(false); });
+    els.myRatingFilter.addEventListener('change', e => { activeMyRating = e.target.value; renderAll(false); });
+    els.googleFilter.addEventListener('change', e => { activeGoogle = e.target.value; renderAll(false); });
+
     els.regionTabs.addEventListener('click', e => {
       const btn = e.target.closest('[data-region]'); if (!btn) return;
       activeRegion = btn.dataset.region;
+      activeArea = '全部';
+      activeCity = '全部';
       [...els.regionTabs.querySelectorAll('.chip')].forEach(x => x.classList.toggle('active', x === btn));
+      renderHierarchyFilters();
       renderAll(false);
     });
+
+    els.areaTabs.addEventListener('click', e => {
+      const btn = e.target.closest('[data-area]'); if (!btn) return;
+      activeArea = btn.dataset.area;
+      activeCity = '全部';
+      renderHierarchyFilters();
+      renderAll(false);
+    });
+
+    els.cityTabs.addEventListener('click', e => {
+      const btn = e.target.closest('[data-city]'); if (!btn) return;
+      activeCity = btn.dataset.city;
+      if (activeCity !== '全部') expandedCities.add(activeCity);
+      renderHierarchyFilters();
+      renderAll(false);
+    });
+
+    els.typeTabs.addEventListener('click', e => {
+      const btn = e.target.closest('[data-food-type]'); if (!btn) return;
+      activeFoodType = btn.dataset.foodType;
+      [...els.typeTabs.querySelectorAll('.chip')].forEach(x => x.classList.toggle('active', x === btn));
+      renderAll(false);
+    });
+
     els.modalBackdrop.addEventListener('click', e => { if (e.target === els.modalBackdrop) closeModal(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+    renderHierarchyFilters();
+  }
+
+  function renderHierarchyFilters() {
+    const current = state.places.filter(p => !p.removed && isFoodPlace(p));
+    const regionCities = new Set(current.filter(p => activeRegion === '全部' || p.region === activeRegion).map(p => p.city));
+
+    if (activeRegion === '全部') {
+      activeArea = '全部';
+      activeCity = '全部';
+      els.areaTabs.innerHTML = '';
+      els.cityTabs.innerHTML = '';
+      return;
+    }
+
+    const areas = Object.entries(AREA_META[activeRegion] || {}).filter(([,cities]) => cities.some(city => regionCities.has(city)));
+    els.areaTabs.innerHTML = [
+      `<button class="chip ${activeArea==='全部'?'active':''}" data-area="全部">全部</button>`,
+      ...areas.map(([area]) => `<button class="chip ${activeArea===area?'active':''}" data-area="${escapeAttr(area)}">${escapeHtml(area)}</button>`)
+    ].join('');
+
+    if (activeArea === '全部') {
+      activeCity = '全部';
+      els.cityTabs.innerHTML = '';
+      return;
+    }
+
+    const cities = (AREA_META[activeRegion]?.[activeArea] || []).filter(city => regionCities.has(city));
+    if (cities.length <= 1) {
+      activeCity = cities[0] || '全部';
+      els.cityTabs.innerHTML = '';
+      if (activeCity !== '全部') expandedCities.add(activeCity);
+      return;
+    }
+
+    els.cityTabs.innerHTML = [
+      `<button class="chip ${activeCity==='全部'?'active':''}" data-city="全部">全部</button>`,
+      ...cities.map(city => `<button class="chip ${activeCity===city?'active':''}" data-city="${escapeAttr(city)}">${escapeHtml(city)}</button>`)
+    ].join('');
   }
 
   function renderAll(fitMap = true) {
@@ -399,16 +557,52 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   function getFilteredPlaces() {
     return state.places.filter(p => !p.removed && isFoodPlace(p)).filter(p => {
       if (activeRegion !== '全部' && (p.region || '待分類') !== activeRegion) return false;
-      if (activeStatus === '想去' && !hasList(p, '想去')) return false;
-      if (activeStatus === '吃過' && !(p.eaten || hasList(p, '吃過'))) return false;
-      if (activeStatus === '沒吃過' && (p.eaten || hasList(p, '吃過'))) return false;
-      if (activeStatus === '五星' && !(hasList(p, '五星') || hasList(p, '最愛') || p.myRating === 5)) return false;
+      if (activeArea !== '全部') {
+        const cities = AREA_META[activeRegion]?.[activeArea] || [];
+        if (!cities.includes(p.city)) return false;
+      }
+      if (activeCity !== '全部' && p.city !== activeCity) return false;
+      if (activeFoodType !== '全部' && !matchesFoodType(p, activeFoodType)) return false;
+
+      const eaten = p.eaten || hasList(p, '吃過');
+      if (activeStatus === '沒吃過' && eaten) return false;
+      if (activeStatus === '吃過' && !eaten) return false;
+      if (activeStatus === '想吃' && eaten && p.wouldReturn !== 'yes') return false;
+      if (activeStatus === '會再吃' && p.wouldReturn !== 'yes') return false;
+      if (activeStatus === '不再吃' && p.wouldReturn !== 'no') return false;
+      if (activeStatus === '30天內' && !isRecentEaten(p)) return false;
+
+      if (activeMyRating === '未評分' && Number.isFinite(p.myRating)) return false;
+      if (activeMyRating === '5' && p.myRating !== 5) return false;
+      if (activeMyRating === '4+' && !(Number.isFinite(p.myRating) && p.myRating >= 4)) return false;
+      if (activeMyRating === '3-' && !(Number.isFinite(p.myRating) && p.myRating <= 3)) return false;
+
+      if (activeGoogle === '4.5+' && !(Number.isFinite(p.rating) && p.rating >= 4.5)) return false;
+      if (activeGoogle === '4.0+' && !(Number.isFinite(p.rating) && p.rating >= 4.0)) return false;
+      if (activeGoogle === '1000+' && !(Number.isFinite(p.reviews) && p.reviews >= 1000)) return false;
+
       if (searchTerm) {
         const hay = [p.title, p.city, p.localNote, p.note, p.comment, ...(p.sourceLists || [])].join(' ').toLowerCase();
         if (!hay.includes(searchTerm)) return false;
       }
       return true;
     }).sort(placeSort);
+  }
+
+  function matchesFoodType(p, type) {
+    const t = String(p.title || '').toLowerCase();
+    const tests = {
+      '早餐': /早餐|早午餐|飯糰|蛋餅|燒餅|水煎包|生煎包|饅頭|包子|吐司|三明治|刈包/,
+      '小吃': /小吃|臭豆腐|雞排|香腸|滷味|肉圓|鹹酥|蔥油餅|麵線羹|切仔|米苔目|豬血|米粿|雞子粿|筒仔米糕/,
+      '麵飯': /麵|飯|粥|炒飯|米糕|冬粉|水餃|煎餃|粽|肉燥|魯肉|滷肉|豬腳|米粉|意麵|鱔魚|餛飩/,
+      '火鍋': /火鍋|鍋物|涮涮|沙茶爐|羊肉爐|臭臭鍋|泡菜鍋|鮮鍋/,
+      '燒烤': /燒烤|烤鴨|桶仔雞|烤玉米|燒肉|碳火|炭火|烤雞/,
+      '海鮮': /海鮮|水產|活蝦|螃蟹|蚵|虱目魚|魚羹|𩵚魠|鴨肉羹/,
+      '甜點飲料': /豆花|冰|甜|麻糬|綠豆沙|仙草|紅茶|茶行|飲料|咖啡|café|刨冰|粉圓|愛玉/,
+      '宵夜': /宵夜|鹹酥|雞排|滷味|臭豆腐|熱炒|燒烤|烤鴨|酒館|bistro/,
+      '正餐': /餐廳|食堂|料理|牛排|土雞|牛肉爐|火鍋|鍋物|海鮮|餐酒|bistro|cuisine/
+    };
+    return tests[type]?.test(t) || false;
   }
 
   function getTodayCandidates() {
@@ -447,23 +641,88 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
 
   function renderPlaces(list) {
     if (!list.length) {
-      els.placeList.innerHTML = `<div class="empty-list">沒有符合條件的店家。<br><small>可從 Google Maps 共享清單載入，或手動新增。</small></div>`;
+      els.placeList.innerHTML = `<div class="empty-list">沒有符合條件的店家。<br><small>換個地區、狀態或星級看看。</small></div>`;
       return;
     }
+
     const groups = new Map();
     for (const p of list) {
       const key = p.city || '待分類';
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(p);
     }
-    els.placeList.innerHTML = [...groups.entries()].map(([city, places]) => `
-      <section class="place-group">
-        <div class="place-group-title">${escapeHtml(city)} · ${places.length}</div>
-        ${places.map(renderPlaceItem).join('')}
-      </section>`).join('');
+
+    const forceExpanded = !!searchTerm || activeCity !== '全部';
+    const cities = [...groups.keys()];
+    const jump = cities.length > 1
+      ? `<div class="city-jump">${cities.map(city => `<button class="jump-chip" data-jump-city="${escapeAttr(city)}">${escapeHtml(city)} · ${groups.get(city).length}</button>`).join('')}</div>`
+      : '';
+
+    els.placeList.innerHTML = jump + [...groups.entries()].map(([city, places]) => {
+      const open = forceExpanded || expandedCities.has(city);
+      const limit = searchTerm ? Infinity : (cityLimits.get(city) || 10);
+      const shown = open ? places.slice(0, limit) : [];
+      let more = '';
+
+      if (open && !searchTerm && places.length > 10) {
+        if (limit < places.length) {
+          const label = limit < 30 && places.length > 30
+            ? `顯示更多 · ${Math.min(30, places.length)} / ${places.length}`
+            : `顯示全部 · ${places.length}`;
+          more = `<button class="group-more" data-more-city="${escapeAttr(city)}">${label}</button>`;
+        } else {
+          more = `<button class="group-more" data-collapse-city="${escapeAttr(city)}">收合 ↑</button>`;
+        }
+      }
+
+      return `
+        <section class="place-group" id="city-${safeDomId(city)}">
+          <div class="place-group-title">
+            <button class="group-toggle ${open?'open':''}" data-toggle-city="${escapeAttr(city)}">
+              <span>${escapeHtml(city)} · ${places.length}</span>
+              <span class="group-arrow">⌄</span>
+            </button>
+          </div>
+          ${open ? shown.map(renderPlaceItem).join('') + more : ''}
+        </section>`;
+    }).join('');
 
     els.placeList.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openEditModal(btn.dataset.edit)));
     els.placeList.querySelectorAll('[data-eaten]').forEach(btn => btn.addEventListener('click', () => toggleEaten(btn.dataset.eaten)));
+
+    els.placeList.querySelectorAll('[data-toggle-city]').forEach(btn => btn.addEventListener('click', () => {
+      const city = btn.dataset.toggleCity;
+      if (expandedCities.has(city)) expandedCities.delete(city); else expandedCities.add(city);
+      renderPlaces(getFilteredPlaces());
+    }));
+
+    els.placeList.querySelectorAll('[data-more-city]').forEach(btn => btn.addEventListener('click', () => {
+      const city = btn.dataset.moreCity;
+      const current = cityLimits.get(city) || 10;
+      cityLimits.set(city, current < 30 ? 30 : Infinity);
+      expandedCities.add(city);
+      renderPlaces(getFilteredPlaces());
+      requestAnimationFrame(() => document.getElementById('city-'+safeDomId(city))?.scrollIntoView({behavior:'smooth',block:'start'}));
+    }));
+
+    els.placeList.querySelectorAll('[data-collapse-city]').forEach(btn => btn.addEventListener('click', () => {
+      const city = btn.dataset.collapseCity;
+      cityLimits.set(city, 10);
+      expandedCities.delete(city);
+      renderPlaces(getFilteredPlaces());
+      requestAnimationFrame(() => document.getElementById('city-'+safeDomId(city))?.scrollIntoView({behavior:'smooth',block:'start'}));
+    }));
+
+    els.placeList.querySelectorAll('[data-jump-city]').forEach(btn => btn.addEventListener('click', () => {
+      const city = btn.dataset.jumpCity;
+      expandedCities.add(city);
+      renderPlaces(getFilteredPlaces());
+      requestAnimationFrame(() => document.getElementById('city-'+safeDomId(city))?.scrollIntoView({behavior:'smooth',block:'start'}));
+    }));
+  }
+
+  function safeDomId(v) {
+    return encodeURIComponent(String(v || '')).replace(/%/g,'_');
   }
 
   function renderPlaceItem(p) {
@@ -474,8 +733,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
       <div>
         <div class="place-name">${escapeHtml(p.title || '未命名地點')}</div>
         <div class="place-sub">
-          <span>${escapeHtml(p.region || '待分類')} · ${escapeHtml(p.city || '待分類')}</span>
-          ${eaten ? '<span class="tag eaten">吃過</span>' : hasList(p,'想去') ? '<span class="tag">想去</span>' : ''}
+          ${eaten ? '<span class="tag eaten">吃過</span>' : '<span class="tag">沒吃過</span>'}
           ${Number.isFinite(p.rating) ? `<span class="tag">Google ★ ${p.rating}${Number.isFinite(p.reviews) ? ` · ${p.reviews.toLocaleString('zh-TW')}` : ''}</span>` : ''}
           ${Number.isFinite(p.myRating) ? `<span class="tag hot">我的 ${'★'.repeat(p.myRating)}</span>` : ''}
           ${p.wouldReturn === 'yes' ? '<span class="tag eaten">會再吃</span>' : p.wouldReturn === 'no' ? '<span class="tag">不再吃</span>' : ''}
