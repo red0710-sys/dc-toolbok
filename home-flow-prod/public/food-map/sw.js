@@ -1,4 +1,4 @@
-const CACHE = 'tw-food-cloud-1-5-5-v1';
+const CACHE = 'tw-food-cloud-1-6-0-v1';
 const CORE = ['./', './index.html', './cloud-sync.js', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', event => {
@@ -15,6 +15,10 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
+  if (new URL(req.url).pathname.endsWith('/review-highlights.json')) {
+    event.respondWith(fetch(req, { cache: 'no-store' }).catch(() => caches.match(req)));
+    return;
+  }
   if (req.mode === 'navigate') {
     event.respondWith(
       fetch(req, { cache: 'no-store' }).then(res => {
