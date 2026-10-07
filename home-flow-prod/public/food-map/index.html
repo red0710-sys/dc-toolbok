@@ -1114,7 +1114,7 @@ html,body{
   function updateReviewStatus() {
     if (!els.reviewUpdateText) return;
     if (!reviewHighlights.updatedAt) {
-      els.reviewUpdateText.textContent = 'Google 評論：尚無更新日期 · 手動更新 ↗';
+      els.reviewUpdateText.textContent = 'Google 評論：尚無更新日期 · 手動更新';
       return;
     }
     const d = new Date(reviewHighlights.updatedAt);
