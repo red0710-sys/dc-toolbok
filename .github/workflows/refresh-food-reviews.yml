@@ -40,12 +40,12 @@ jobs:
         run: node scripts/refresh-food-reviews.mjs
       - name: Commit updated review cache
         run: |
-          if git diff --quiet -- food-map/review-highlights.json; then
+          if git diff --quiet -- food-map/review-highlights.json home-flow-prod/public/food-map/review-highlights.json; then
             echo "No review-cache changes"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add food-map/review-highlights.json
+          git add food-map/review-highlights.json home-flow-prod/public/food-map/review-highlights.json
           git commit -m "chore: refresh food review highlights"
           git push
