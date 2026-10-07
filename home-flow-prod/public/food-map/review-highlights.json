@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-10-07T13:50:27.123Z",
+  "updatedAt": "2026-10-07T13:51:35.773Z",
   "source": "Google Maps public review pages; cached snapshot, not live API",
-  "count": 213,
+  "count": 250,
   "places": {
     "shared:keelung:九如營養三明治（常一嚐）": {
       "title": "九如營養三明治（常一嚐）",
@@ -3248,6 +3248,563 @@
         "整體語氣：目前可見 Google 評論以正面描述為主。"
       ],
       "fetchedAt": "2026-10-07T13:50:27.123Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:二哥炒鱔魚": {
+      "title": "二哥炒鱔魚",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.767Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:海龍肉粽": {
+      "title": "海龍肉粽",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.767Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:tainan:醇涎坊古早味鍋燒意麵": {
+      "title": "醇涎坊古早味鍋燒意麵",
+      "city": "台南",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "用餐節奏：排隊、等候或出餐速度是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.767Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:breakfast": {
+      "title": "Breakfast",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.768Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:伴甜豆花(原第一銀行旁冰店)": {
+      "title": "伴甜豆花(原第一銀行旁冰店)",
+      "city": "清水",
+      "rating": 4.6,
+      "reviewCount": 229,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.768Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:联亭泡菜鍋（清水店）": {
+      "title": "联亭泡菜鍋（清水店）",
+      "city": "清水",
+      "rating": 4.6,
+      "reviewCount": 581,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.768Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:hot pot": {
+      "title": "Hot Pot",
+      "city": "清水",
+      "rating": 4.6,
+      "reviewCount": 366,
+      "topics": [],
+      "highlights": [
+        "用餐節奏：排隊、等候或出餐速度是近期評論常見話題。",
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.768Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:蒸神女 （紅麴麻辣鴨血臭豆腐/素食麻辣臭豆腐、yummy紅麴滷味）⚠️詳情請看本店說明欄位": {
+      "title": "蒸神女 （紅麴麻辣鴨血臭豆腐/素食麻辣臭豆腐、Yummy紅麴滷味）⚠️詳情請看本店說明欄位",
+      "city": "清水",
+      "rating": 4.9,
+      "reviewCount": 116,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.769Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:協力旺清水鎮政店": {
+      "title": "協力旺清水鎮政店",
+      "city": "清水",
+      "rating": 4.4,
+      "reviewCount": 128,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.769Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:潮州 手工製作 餛飩麵": {
+      "title": "潮州 手工製作 餛飩麵",
+      "city": "清水",
+      "rating": 4.6,
+      "reviewCount": 160,
+      "topics": [],
+      "highlights": [
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.769Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:陳大牌排骨麵": {
+      "title": "陳大牌排骨麵",
+      "city": "清水",
+      "rating": 4.3,
+      "reviewCount": 782,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.769Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:好口味包子饅頭店": {
+      "title": "好口味包子饅頭店",
+      "city": "清水",
+      "rating": 4.7,
+      "reviewCount": 21,
+      "topics": [],
+      "highlights": [
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.769Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:武鹿炸雞": {
+      "title": "武鹿炸雞",
+      "city": "清水",
+      "rating": 4.7,
+      "reviewCount": 21,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.769Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:禎饌米食": {
+      "title": "禎饌米食",
+      "city": "清水",
+      "rating": 4.8,
+      "reviewCount": 8,
+      "topics": [],
+      "highlights": [
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.769Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:正牌米糕莊": {
+      "title": "正牌米糕莊",
+      "city": "清水",
+      "rating": 4.1,
+      "reviewCount": 3822,
+      "topics": [],
+      "highlights": [
+        "整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。",
+        "評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.769Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:鄭記油蔥酥": {
+      "title": "鄭記油蔥酥",
+      "city": "清水",
+      "rating": 4.8,
+      "reviewCount": 121,
+      "topics": [
+        {
+          "label": "拌麵",
+          "count": 9
+        },
+        {
+          "label": "料理",
+          "count": 9
+        },
+        {
+          "label": "香蔥",
+          "count": 5
+        }
+      ],
+      "highlights": [
+        "熱門主題：最常提到「拌麵」（9）與「料理」（9）。",
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.770Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:小籠包": {
+      "title": "小籠包",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.770Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:老士官擀麵": {
+      "title": "老士官擀麵",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.770Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:小妍鮮食健康餐盒-遠8店-清水美食 清水健康餐 清水便當 梧棲美食 梧棲健康餐 梧棲便當": {
+      "title": "小妍鮮食健康餐盒-遠8店-清水美食 清水健康餐 清水便當 梧棲美食 梧棲健康餐 梧棲便當",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.770Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:本一艸堂": {
+      "title": "本一艸堂",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.770Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:小二哥麵館": {
+      "title": "小二哥麵館",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.770Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:阿邦小吃店": {
+      "title": "阿邦小吃店",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.771Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:花蓮炸蛋蔥油餅清水店": {
+      "title": "花蓮炸蛋蔥油餅清水店",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.771Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:馥香牛排 (清水必吃美食 | 港區藝術中心美食 | 清水推薦美食)": {
+      "title": "馥香牛排 (清水必吃美食 | 港區藝術中心美食 | 清水推薦美食)",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.771Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:清水米苔目.福": {
+      "title": "清水米苔目.福",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.771Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:楊媽媽牛肉麵": {
+      "title": "楊媽媽牛肉麵",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.771Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:清馫脆皮烤鴨-清水烤鴨店": {
+      "title": "清馫脆皮烤鴨-清水烤鴨店",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.771Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:樸樂早午餐【清水店】/清水早午餐 [店休詳見公告及粉絲團]": {
+      "title": "樸樂早午餐【清水店】/清水早午餐 [店休詳見公告及粉絲團]",
+      "city": "清水",
+      "rating": 4.4,
+      "reviewCount": 133,
+      "topics": [
+        {
+          "label": "環境",
+          "count": 7
+        },
+        {
+          "label": "舒服",
+          "count": 7
+        },
+        {
+          "label": "套餐",
+          "count": 6
+        }
+      ],
+      "highlights": [
+        "熱門主題：最常提到「環境」（7）與「舒服」（7）。",
+        "環境交通：座位、環境或停車交通是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.772Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:小卓億杯 平價熱炒": {
+      "title": "小卓億杯 平價熱炒",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.772Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:揚記生煎包": {
+      "title": "揚記生煎包",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "用餐節奏：排隊、等候或出餐速度是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.772Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:通霄煎包": {
+      "title": "通霄煎包",
+      "city": "清水",
+      "rating": 4.4,
+      "reviewCount": 113,
+      "topics": [
+        {
+          "label": "韭菜",
+          "count": 15
+        },
+        {
+          "label": "內餡",
+          "count": 14
+        },
+        {
+          "label": "蛋餅",
+          "count": 8
+        }
+      ],
+      "highlights": [
+        "熱門主題：最常提到「韭菜」（15）與「內餡」（14）。",
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.772Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:粿之世家": {
+      "title": "粿之世家",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.772Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:小林魯肉飯": {
+      "title": "小林魯肉飯",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.772Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:飯糰小巴": {
+      "title": "飯糰小巴",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.773Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:釜山飯局l清水美食l沙鹿美食l梧棲美食l海線美食": {
+      "title": "釜山飯局l清水美食l沙鹿美食l梧棲美食l海線美食",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "價格份量：價位、CP 值與份量是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.773Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:老李魯肉飯": {
+      "title": "老李魯肉飯",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.773Z",
+      "source": "Google Maps public review page"
+    },
+    "shared:qingshui:外婆的包粿（電話預訂。另有其他公休會在粉專另行公告）": {
+      "title": "外婆的包粿（電話預訂。另有其他公休會在粉專另行公告）",
+      "city": "清水",
+      "rating": null,
+      "reviewCount": null,
+      "topics": [],
+      "highlights": [
+        "口味：味道、口感與招牌餐點是近期評論最常討論的核心。",
+        "服務體驗：店員態度與服務流程是近期評論常見話題。",
+        "整體語氣：目前可見 Google 評論以正面描述為主。"
+      ],
+      "fetchedAt": "2026-10-07T13:51:35.773Z",
       "source": "Google Maps public review page"
     }
   }
