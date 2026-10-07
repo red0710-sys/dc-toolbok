@@ -101,7 +101,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
         <div class="eyebrow">PERSONAL FOOD OS</div>
         <h1>Taiwan Food Map</h1>
       </div>
-      <button id="syncBtn" class="btn btn-primary" type="button">同步 Google Maps</button>
+      <button id="syncBtn" class="btn btn-primary" type="button">Google Maps 清單</button>
     </header>
 
     <main>
@@ -184,14 +184,16 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   </div>
 
   <input id="zipInput" type="file" accept=".zip" hidden />
-
-  <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="https://unpkg.com/papaparse@5.4.1/papaparse.min.js"></script>
   <script>
 (() => {
   'use strict';
 
   const STORAGE_KEY = 'twFoodMap.v1';
+  const SHARED_DATA_VERSION = '2026-10-07-shared-lists-v1';
+  const SHARED_DATA_UPDATED_AT = '2026-10-07T18:45:00+08:00';
+  const SHARED_SOURCES = [{"key":"keelung","label":"基隆","region":"北部","city":"基隆","kind":"food","declared":7,"url":"https://maps.app.goo.gl/4KACWmkaqChVpkvw6?g_st=ac","loaded":7},{"key":"wuqi","label":"梧棲","region":"中部","city":"梧棲","kind":"food","declared":76,"url":"https://maps.app.goo.gl/w1cTWpoC4z4itpZKA?g_st=ac","loaded":76},{"key":"family","label":"親子育樂","region":"其他","city":"親子育樂","kind":"family","declared":24,"url":"https://maps.app.goo.gl/f1mFM4Yjahaz9SyJ8?g_st=ac","loaded":24},{"key":"changhua","label":"彰化","region":"中部","city":"彰化","kind":"food","declared":29,"url":"https://maps.app.goo.gl/9oLNo3QeipNiEx7M7?g_st=ac","loaded":29},{"key":"tainan","label":"台南","region":"南部","city":"台南","kind":"food","declared":86,"url":"https://maps.app.goo.gl/EgamzKSobVtxUQHbA?g_st=ac","loaded":85},{"key":"kaohsiung","label":"高雄","region":"南部","city":"高雄","kind":"food","declared":9,"url":"https://maps.app.goo.gl/yANjiQEqpu76GJqc6?g_st=ac","loaded":9},{"key":"east","label":"東部","region":"東部","city":"東部","kind":"food","declared":3,"url":"https://maps.app.goo.gl/tKAFRrq6CMjShVeh6?g_st=ac","loaded":3},{"key":"chiayi","label":"嘉義","region":"南部","city":"嘉義","kind":"food","declared":14,"url":"https://maps.app.goo.gl/2bzH8oEPCLgnMUH67?g_st=ac","loaded":14},{"key":"qingshui","label":"清水","region":"中部","city":"清水","kind":"food","declared":43,"url":"https://maps.app.goo.gl/bZPPqHwSsL7VYN5v9?g_st=ac","loaded":44}];
+  const SHARED_SEED = [{"sourceKey":"keelung","title":"九份福山宮停車場","region":"北部","city":"基隆","kind":"food"},{"sourceKey":"keelung","title":"安樂市場菜頭滷 （粉專：菜頭滷）","region":"北部","city":"基隆","kind":"food"},{"sourceKey":"keelung","title":"許存睿 豬灶麵線羹","region":"北部","city":"基隆","kind":"food"},{"sourceKey":"keelung","title":"九如營養三明治（常一嚐）","region":"北部","city":"基隆","kind":"food"},{"sourceKey":"keelung","title":"蓁好料小吃店","region":"北部","city":"基隆","kind":"food"},{"sourceKey":"keelung","title":"美珠土雞店","region":"北部","city":"基隆","kind":"food"},{"sourceKey":"keelung","title":"封神雞-黑白切白斬雞","region":"北部","city":"基隆","kind":"food"},{"sourceKey":"wuqi","title":"台北江麻辣臭豆腐-梧棲店","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"舊車路桶仔雞","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"欣來便當 自助餐","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"家家香 早午餐（便當、粥）","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"黃家腿庫飯","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"薪食堂","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"碗不吃","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"Choumingy Café","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"炸炸臭豆腐-梧棲總店","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"肆-雞肉飯","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"禾憶餐酒館 Hoi Bistro＆Bar","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"紀軍綻魯肉飯","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"蔡ㄟ切仔麵","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"麗麗早餐","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"龍鳳漁港","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"掌櫃水產","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"嗎哪活蝦","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"惠子麵館","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"一口糧","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"紅蜻蜓食堂","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"蔡料好 鍋燒麵•粥品專賣","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"日十。梧棲店｜粉漿蛋餅・刈包・飯糰","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"喜鵲森林","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"105休息點心站","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"興利鵝肉","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"元森綠豆沙仙草專賣店","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"桂香坊冰糖醬滷味-梧棲店","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"臺中市立圖書館梧棲親子館","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"醇壽司（不定期公休，請留意FB.IG)梧棲必吃｜熱門美食｜外帶美食","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"長袖廚房梧棲總館","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"十九甲雞排．梧棲店","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"北港蔡三代筒仔米糕","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"鯨賀平價海鮮","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"第二香腸 香腸攤","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"肉圓榮","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"潮州牛肉陳（梧棲店）每週一店休","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"陳媽咪飯糰米糕刈包 梧棲店","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"臭一色臭豆腐","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"青董食代 Green Style ｜在地美食｜海線必吃","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"老四季（梧棲概念店）-麻醬牛肉拌麵&鮮蚵滷肉飯/便當/鍋物","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"宇良食2.0","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"梧樂食光 | 創作料理 We Love Cuisine","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"一等香麵食館（梧棲店）","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"好紀鮮食館 (午餐預約制)","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"小時厚牛排-台中梧棲店","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"吉好吃鹽水雞 梧棲東健店","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"鴨寶食堂","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"阿裕食堂","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"台南一甲子","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"歌王豆花","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"牛家村麵食館","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"阿吉魯肉飯","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"好鄰居快餐","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"聖大麵食館","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"大庄臭豆腐","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"林家燒餅(懷念古早味燒餅)","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"慢食光","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"美申宏湯包","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"光慧水煎包（梧棲店）","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"大庄無名烤玉米","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"廟口意麵（梧棲店）","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"上福速食餐飲便當","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"溫叨灶腳便當專賣店","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"梧棲芋頭王黑糖刨冰（文華店）","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"陳記滷味 梧棲分店","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"麵線虹了","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"真口味烤鴨店","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"好陽光早午餐","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"絕品鮮鍋-梧棲店","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"順興芋冰老店","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"二鍋頭梧棲店","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"協力旺雞排（梧棲中央店）","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"紅香自助餐","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"不貳早午餐","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"台中港海味羹","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"wuqi","title":"朝司暮想 肉蛋吐司-梧棲民和店","region":"中部","city":"梧棲","kind":"food"},{"sourceKey":"changhua","title":"Hong Ming's Kitchen","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"Company dinner","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"舊車路桶仔雞","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"吳頂釣魚場","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"Ho-Lou Tea House","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"黃記素食","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"鼎Q包子｜沙鹿靜宜店｜人氣老麵饅頭 DINGQ BAO","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"屁格豬火鍋餐廳·親子樂園","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"探索.迷宮親子童樂餐廳","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"漢強麵館","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"劉家粽子 西門店","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"和美製鍋有限公司","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"帢米德專業烘焙","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"永靖天品","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"Smile Gas Station","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"蚵ㄚ仁","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"聰哥團長蛋黃酥","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"玉鉁包子(提早售完即休息)","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"十二段鍋物堂 | 彰化店","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"彰化老担阿璋肉圓","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"漢彬水晶餃","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"施 豆花専賣店","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"手工水餃","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"第一豬腳飯","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"和美花壇羊肉","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"鴨篆脆皮烤鴨","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"勇伯粉粿&米苔目","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"長頸鹿休閒農場","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"changhua","title":"溪湖阿秀羊肉爐","region":"中部","city":"彰化","kind":"food"},{"sourceKey":"tainan","title":"阿和肉燥飯","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"老李螺肉大王（炒牛肉、炒螺肉）","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"哈達客東山鴨頭－裕農店","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"好口福石頭火鍋","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"Hot Pot","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"阿月姨東山鴨頭 端午6/20六-6/22一店休","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"No. 161, Section 2, Minzu Rd, Chihkan Village, West Central District","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"Tainan City, Taiwan 700","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"Jue Ding Friedrice","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"黃火木舊台味冰店 (北永康店)","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"Ice cream and drink shop","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"Lian Ying Fa Dim Sum","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"Dim Sum","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"黑鼎鴻專業臭豆腐(正強店)","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"珍好味臭臭鍋","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"阿銘牛肉湯","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"阿足香雞排","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"鹽行路老鄭虱目魚","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"三赫老麵燒餅","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"Breakfast","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"美味鹹酥雞","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"Liu Jia Juang","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"十塩彌坊臭豆腐","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"竹力亭-雞排蛋沙拉－台南復國總店","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"阿明食堂-中華店","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"阿月手工豆花","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"王家牛肉湯","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"德興鱔魚意麵","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"冰鄉","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"冰ㄉ• かき氷 二號","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"七誠米粿","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"祿記（包仔祿）","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"東門圓環頂陽春麵專家","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"城邊真味鱔魚意麵","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"好味紅燒𩵚魠魚羹","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"瑪黑家紅茶專賣店","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"福來小棧沙茶爐－特色火鍋","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"吳家肉燥飯","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"阿興虱目魚","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"太陽牌冰品","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"𤦔鹹酥雞-安平店","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"你我他之家","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"河樂廣場","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"8818 比薩屋","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"VASO弘肉燥飯舖 安平店","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"阿明豬心冬粉","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"鄭記蔥肉餅-西門店","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"青山茶行","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"旨味日本料理","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"黑橋牌香腸博物館","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"夏林臭豆腐","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"阿裕牛肉涮涮鍋(崑崙店)","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"美鮮牛肉湯","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"富盛號","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"劉家粽子 西門店","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"蔡家豬血湯","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"黃火木舊台味冰店","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"赤峰鐵板燒 (安中店)","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"馨味胡椒白菜雞","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"阿忠螃蟹-府城蟳禮","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"嘟嘟牛排-西門店","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"二哥炒鱔魚","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"丹瓦樓","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"Walking Su 藥膳麻油雞","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"阿宏牛肉湯","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"陳家汕頭意麵","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"海龍肉粽","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"台南葡吉麵包店","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"阿杰溫體牛肉湯（每天售完為止）","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"豐收飯桌","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"無名羊肉湯-大菜市（每日上午五點半開賣，賣完為止，星期二固定店休，請追蹤臉書，感謝您！）","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"醇涎坊古早味鍋燒意麵","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"東山古腸新古早味糯米大腸","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"上好烤魯味","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"檨仔林阿全碗粿","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"台南市 基明飯桌仔－飯桌仔鮮魚自助餐","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"呷涮嘴東山鴨頭","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"克林台包","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"布萊恩紅茶正興總店","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"炸雞洋行(歡迎電話預訂)","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"保哥黑輪","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"鴻牛溫體牛肉湯-南門店｜中西區美食｜宵夜牛肉湯｜熱門牛肉湯｜台南美食推薦｜台南小吃推薦｜牛肉湯推薦｜溫體牛｜必吃牛肉鍋｜宵夜推薦｜熱炒推薦｜必吃美食｜評價牛肉湯｜","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"八寶彬 圓仔惠","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"阿棠牛肉湯","region":"南部","city":"台南","kind":"food"},{"sourceKey":"tainan","title":"阿堂鹹粥","region":"南部","city":"台南","kind":"food"},{"sourceKey":"kaohsiung","title":"岡山名亨運動廣場","region":"南部","city":"高雄","kind":"food"},{"sourceKey":"kaohsiung","title":"湖南味","region":"南部","city":"高雄","kind":"food"},{"sourceKey":"kaohsiung","title":"Gang Yuan Beef Noodle Restaurant","region":"南部","city":"高雄","kind":"food"},{"sourceKey":"kaohsiung","title":"Yancheng Duck Noodles","region":"南部","city":"高雄","kind":"food"},{"sourceKey":"kaohsiung","title":"冬粉王","region":"南部","city":"高雄","kind":"food"},{"sourceKey":"kaohsiung","title":"Duck Zhen","region":"南部","city":"高雄","kind":"food"},{"sourceKey":"kaohsiung","title":"鳳興麵線","region":"南部","city":"高雄","kind":"food"},{"sourceKey":"kaohsiung","title":"Bei Gang Tsai Rice Tube (Yancheng)","region":"南部","city":"高雄","kind":"food"},{"sourceKey":"kaohsiung","title":"古早味碳火芳德豬肉冬粉","region":"南部","city":"高雄","kind":"food"},{"sourceKey":"east","title":"7-ELEVEN 金桔門市","region":"東部","city":"東部","kind":"food"},{"sourceKey":"east","title":"上旺土雞城","region":"東部","city":"東部","kind":"food"},{"sourceKey":"east","title":"松田釣魚池","region":"東部","city":"東部","kind":"food"},{"sourceKey":"chiayi","title":"咱台灣人的冰","region":"南部","city":"嘉義","kind":"food"},{"sourceKey":"chiayi","title":"嘉義公園火雞肉飯（公休請看FB)","region":"南部","city":"嘉義","kind":"food"},{"sourceKey":"chiayi","title":"桃城三禾火雞肉飯","region":"南部","city":"嘉義","kind":"food"},{"sourceKey":"chiayi","title":"粉圓冰 愛玉冰","region":"南部","city":"嘉義","kind":"food"},{"sourceKey":"chiayi","title":"愛木村地方文化館","region":"南部","city":"嘉義","kind":"food"},{"sourceKey":"chiayi","title":"阿燕雞子粿","region":"南部","city":"嘉義","kind":"food"},{"sourceKey":"chiayi","title":"阿玲水餃煎餃","region":"南部","city":"嘉義","kind":"food"},{"sourceKey":"chiayi","title":"佳園汕頭火鍋","region":"南部","city":"嘉義","kind":"food"},{"sourceKey":"chiayi","title":"北歐工坊複合式餐廳","region":"南部","city":"嘉義","kind":"food"},{"sourceKey":"chiayi","title":"興加臭豆腐","region":"南部","city":"嘉義","kind":"food"},{"sourceKey":"chiayi","title":"古早時代-現炒鴨肉羹/福星藥頭排骨","region":"南部","city":"嘉義","kind":"food"},{"sourceKey":"chiayi","title":"錦記麻糬","region":"南部","city":"嘉義","kind":"food"},{"sourceKey":"chiayi","title":"阿明火雞肉飯","region":"南部","city":"嘉義","kind":"food"},{"sourceKey":"chiayi","title":"1961海鮮碳烤","region":"南部","city":"嘉義","kind":"food"},{"sourceKey":"qingshui","title":"西濱小吃","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"清水區 蔡家涼麵（建國國小旁）","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"Breakfast","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"陳媽媽涼麵","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"伴甜豆花(原第一銀行旁冰店)","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"联亭泡菜鍋（清水店）","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"Hot Pot","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"泗陽大浯江（清水分局旁）","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"蒸神女 （紅麴麻辣鴨血臭豆腐/素食麻辣臭豆腐、Yummy紅麴滷味）⚠️詳情請看本店說明欄位","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"協力旺清水鎮政店","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"炒飯不能王","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"阿騰米糕","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"潮州 手工製作 餛飩麵","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"陳大牌排骨麵","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"好口味包子饅頭店","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"武鹿炸雞","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"禎饌米食","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"馬蔥餅雙胞胎清水店（將於3/14結束營業）","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"陳寶包手工肉包饅頭丨民族店","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"正牌米糕莊","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"鄭記油蔥酥","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"小阿姨滷肉飯（清水店)蒸蛋滷肉飯/蚵仔滷肉飯/附近美食/在地小吃/休假詳情收尋FB","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"小籠包","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"老士官擀麵","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"小妍鮮食健康餐盒-遠8店-清水美食 清水健康餐 清水便當 梧棲美食 梧棲健康餐 梧棲便當","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"本一艸堂","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"小二哥麵館","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"阿邦小吃店","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"花蓮炸蛋蔥油餅清水店","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"馥香牛排 (清水必吃美食 | 港區藝術中心美食 | 清水推薦美食)","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"清水米苔目.福","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"楊媽媽牛肉麵","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"亮亮の牛肉麵","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"清馫脆皮烤鴨-清水烤鴨店","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"樸樂早午餐【清水店】/清水早午餐 [店休詳見公告及粉絲團]","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"小卓億杯 平價熱炒","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"揚記生煎包","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"通霄煎包","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"粿之世家","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"小林魯肉飯","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"飯糰小巴","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"釜山飯局l清水美食l沙鹿美食l梧棲美食l海線美食","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"老李魯肉飯","region":"中部","city":"清水","kind":"food"},{"sourceKey":"qingshui","title":"外婆的包粿（電話預訂。另有其他公休會在粉專另行公告）","region":"中部","city":"清水","kind":"food"}];
+
   const REGION_ORDER = ['北部', '中部', '南部', '東部', '待分類'];
   const CITY_META = {
     '基隆': { region: '北部', center: [25.1276, 121.7392] },
@@ -223,7 +225,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     ['台中市區', '台中'], ['彰化', '彰化'], ['台南', '台南'], ['高雄', '高雄'], ['東部', '東部']
   ];
 
-  let state = loadState();
+  let state = hydrateSharedData(loadState());
   let activeRegion = '全部';
   let activeStatus = '全部';
   let searchTerm = '';
@@ -243,6 +245,51 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   bindEvents();
   renderAll();
 
+
+  function hydrateSharedData(base) {
+    const old = new Map((base.places || []).map(p => [p.id, p]));
+    const srcByKey = new Map(SHARED_SOURCES.map(s => [s.key, s]));
+    const shared = SHARED_SEED.map(item => {
+      const src = srcByKey.get(item.sourceKey);
+      const id = sharedPlaceId(item.sourceKey, item.title);
+      const prev = old.get(id);
+      return {
+        id,
+        title: item.title,
+        city: item.city,
+        region: item.region,
+        kind: item.kind,
+        sourceKey: item.sourceKey,
+        sourceLists: [src?.label || item.city],
+        sourceUrl: src?.url || '',
+        url: mapsSearchUrl(item.title, item.city),
+        note: '',
+        comment: '',
+        localNote: prev?.localNote || '',
+        eaten: !!prev?.eaten,
+        manual: false,
+        removed: false
+      };
+    });
+    const manual = (base.places || []).filter(p => p.manual);
+    const next = {
+      ...base,
+      places: dedupePlaces([...shared, ...manual]),
+      lastSync: SHARED_DATA_UPDATED_AT,
+      sharedVersion: SHARED_DATA_VERSION
+    };
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
+    return next;
+  }
+
+  function sharedPlaceId(sourceKey, title) {
+    return 'shared:' + sourceKey + ':' + String(title || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+
+  function mapsSearchUrl(title, city) {
+    return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent([title, city].filter(Boolean).join(' '));
+  }
+
   function defaultState() {
     return { version: 1, places: [], lastSync: null, lastImportName: null };
   }
@@ -259,7 +306,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   }
 
   function bindEvents() {
-    els.syncBtn.addEventListener('click', openSyncModal);
+    els.syncBtn.addEventListener('click', openSourcesModal);
     els.zipInput.addEventListener('change', handleZipSelect);
     els.addBtn.addEventListener('click', () => openEditModal());
     els.recommendBtn.addEventListener('click', () => pickToday('recommend'));
@@ -281,7 +328,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     renderStats();
     renderPlaces(list);
     els.visibleCount.textContent = `${list.length} 家`;
-    els.candidateCount.textContent = `${list.length} 家可選`;
+    els.candidateCount.textContent = `${list.filter(p => p.kind !== 'family').length} 家可選`;
   }
 
   function renderStats() {
@@ -290,7 +337,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     els.eatenStat.textContent = p.filter(x => x.eaten || hasList(x, '吃過')).length;
     els.wantStat.textContent = p.filter(x => hasList(x, '想去')).length;
     els.noteStat.textContent = p.filter(x => (x.localNote || x.note || x.comment || '').trim()).length;
-    els.lastSyncText.textContent = state.lastSync ? `上次同步：${formatDateTime(state.lastSync)}` : '尚未同步';
+    els.lastSyncText.textContent = `共享清單快取：${formatDateTime(SHARED_DATA_UPDATED_AT)}`;
   }
 
   function getFilteredPlaces() {
@@ -323,7 +370,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
 
   function renderPlaces(list) {
     if (!list.length) {
-      els.placeList.innerHTML = `<div class="empty-list">沒有符合條件的店家。<br><small>可先同步 Google Takeout 或手動新增。</small></div>`;
+      els.placeList.innerHTML = `<div class="empty-list">沒有符合條件的店家。<br><small>可從 Google Maps 共享清單載入，或手動新增。</small></div>`;
       return;
     }
     const groups = new Map();
@@ -366,7 +413,7 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
   }
 
   function pickToday(mode) {
-    const candidates = getFilteredPlaces();
+    const candidates = getFilteredPlaces().filter(p => p.kind !== 'family');
     if (!candidates.length) { toast('目前沒有可推薦的店家'); return; }
     let pick;
     if (mode === 'random') pick = candidates[Math.floor(Math.random() * candidates.length)];
@@ -411,10 +458,30 @@ select, .field input, .field textarea { color: var(--text); background: #17181c;
     return r.slice(0,2).join('＋');
   }
 
+  function openSourcesModal() {
+    const foodCount = SHARED_SOURCES.filter(s => s.kind === 'food').reduce((n, s) => n + (s.declared || 0), 0);
+    const rows = SHARED_SOURCES.map(s => `
+      <div class="check-row" style="margin-bottom:8px">
+        <div>
+          <strong>${escapeHtml(s.label)}</strong>
+          <div class="muted-small">${s.kind === 'family' ? '親子育樂' : escapeHtml(s.region)} · Google Maps ${s.declared} 個地點</div>
+        </div>
+        <button class="btn btn-ghost" type="button" data-source-open="${escapeAttr(s.url)}">開啟 ↗</button>
+      </div>`).join('');
+    els.modal.innerHTML = `
+      <h3>Google Maps 來源清單</h3>
+      <p class="modal-desc">目前以你提供的共享清單做主資料來源；美食共 ${foodCount} 個 Google Maps 收藏。親子育樂獨立保留，不會混進「今天要吃啥」。</p>
+      ${rows}
+      <div class="modal-actions"><button class="btn btn-ghost" id="closeModalBtn">關閉</button></div>`;
+    openModal();
+    document.getElementById('closeModalBtn').onclick = closeModal;
+    els.modal.querySelectorAll('[data-source-open]').forEach(btn => btn.onclick = () => window.open(btn.dataset.sourceOpen, '_blank', 'noopener'));
+  }
+
   function openSyncModal() {
     els.modal.innerHTML = `
       <h3>同步 Google Maps</h3>
-      <p class="modal-desc">Google Takeout → 只匯出「已儲存」→ 把 ZIP 丟進來。資料只在你的瀏覽器中處理，不會上傳到伺服器。</p>
+      <p class="modal-desc">備用匯入工具。主要資料來源已改為你提供的 Google Maps 共享清單。</p>
       <div class="dropzone" id="dropzone">
         <strong>拖曳 Takeout ZIP 到這裡</strong>
         <p>會自動讀取美食清單、合併重複店家，並保留「吃過」與你的備註。</p>
