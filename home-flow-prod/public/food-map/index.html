@@ -580,6 +580,36 @@ html,body{
 .city-jump{
   overscroll-behavior-x:contain;
 }
+
+/* Beta 1.5.3 — city shortcuts wrap, no horizontal scroll */
+.city-jump{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  width:100%;
+  max-width:100%;
+  margin:0 0 14px;
+  padding:0;
+  overflow:visible !important;
+}
+.city-jump .jump-chip{
+  width:100%;
+  min-width:0;
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:8px 6px;
+  border-radius:12px;
+  white-space:normal;
+  text-align:center;
+  line-height:1.25;
+}
+@media(max-width:380px){
+  .city-jump{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
 </style>
 </head>
 <body>
@@ -750,7 +780,7 @@ html,body{
   'use strict';
 
   const STORAGE_KEY = 'twFoodMap.v1';
-  const BUILD_VERSION = '1.5.2';
+  const BUILD_VERSION = '1.5.3';
   const SHARED_DATA_VERSION = '2026-10-07-shared-lists-v1';
   const SHARED_DATA_UPDATED_AT = '2026-10-07T18:45:00+08:00';
   const SHARED_SOURCES = [{"key":"keelung","label":"基隆","region":"北部","city":"基隆","kind":"food","declared":7,"url":"https://maps.app.goo.gl/4KACWmkaqChVpkvw6?g_st=ac","loaded":7},{"key":"wuqi","label":"梧棲","region":"中部","city":"梧棲","kind":"food","declared":76,"url":"https://maps.app.goo.gl/w1cTWpoC4z4itpZKA?g_st=ac","loaded":76},{"key":"family","label":"親子育樂","region":"其他","city":"親子育樂","kind":"family","declared":24,"url":"https://maps.app.goo.gl/f1mFM4Yjahaz9SyJ8?g_st=ac","loaded":24},{"key":"changhua","label":"彰化","region":"中部","city":"彰化","kind":"food","declared":29,"url":"https://maps.app.goo.gl/9oLNo3QeipNiEx7M7?g_st=ac","loaded":29},{"key":"tainan","label":"台南","region":"南部","city":"台南","kind":"food","declared":86,"url":"https://maps.app.goo.gl/EgamzKSobVtxUQHbA?g_st=ac","loaded":85},{"key":"kaohsiung","label":"高雄","region":"南部","city":"高雄","kind":"food","declared":9,"url":"https://maps.app.goo.gl/yANjiQEqpu76GJqc6?g_st=ac","loaded":9},{"key":"east","label":"東部","region":"東部","city":"東部","kind":"food","declared":3,"url":"https://maps.app.goo.gl/tKAFRrq6CMjShVeh6?g_st=ac","loaded":3},{"key":"chiayi","label":"嘉義","region":"南部","city":"嘉義","kind":"food","declared":14,"url":"https://maps.app.goo.gl/2bzH8oEPCLgnMUH67?g_st=ac","loaded":14},{"key":"qingshui","label":"清水","region":"中部","city":"清水","kind":"food","declared":43,"url":"https://maps.app.goo.gl/bZPPqHwSsL7VYN5v9?g_st=ac","loaded":44}];
@@ -1885,7 +1915,7 @@ html,body{
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
-          const reg = await navigator.serviceWorker.register('./sw.js?v=1.5.2');
+          const reg = await navigator.serviceWorker.register('./sw.js?v=1.5.3');
           await reg.update();
         } catch {}
       });
