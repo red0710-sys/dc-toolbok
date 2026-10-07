@@ -46,45 +46,36 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const num = s => Number(String(s || '').replace(/,/g,''));
 const compact = s => String(s || '').replace(/\s+/g,' ').trim();
 
-function reviewTone(rating) {
-  if (!Number.isFinite(rating)) return '整體星等暫時抓不到';
-  if (rating >= 4.7) return '整體評價非常高';
-  if (rating >= 4.4) return '整體評價偏高';
-  if (rating >= 4.1) return '整體評價穩定';
-  if (rating >= 3.8) return '評價中上、仍有一些分歧';
-  return '評價較兩極';
-}
+function countHits(text,re){const m=String(text||'').match(re);return m?m.length:0}
 
-function practicalLine(text, topics) {
-  const t = text || '';
-  const rules = [
-    [/排隊|等候|候位|queue/i, '提醒：熱門時段常被提到排隊或等候。'],
-    [/停車|parking/i, '交通：停車便利度是評論常見討論點。'],
-    [/服務|態度|出餐|service/i, '服務：服務態度或出餐速度是評論常見討論點。'],
-    [/價格|價位|cp值|CP值|便宜|偏貴|price/i, '價格：價位與 CP 值是評論常見討論點。'],
-    [/份量|portion/i, '份量：餐點份量是評論常見討論點。'],
-    [/環境|座位|空間|冷氣|environment/i, '環境：座位與用餐環境是評論常見討論點。']
-  ];
-  for (const [re,line] of rules) if (re.test(t)) return line;
-  if (topics[2]) return `另外：「${topics[2].label}」也是高頻評論主題。`;
-  return '提醒：建議點開 Google Maps 看最新評論與營業狀態。';
-}
-
-function buildHighlights(rating, reviewCount, topics, summaryText) {
+function buildHighlights(topics, reviewText) {
   const lines = [];
-  if (Number.isFinite(rating)) {
-    lines.push(`口碑：Google ${rating.toFixed(1)}★／${Number.isFinite(reviewCount) ? reviewCount.toLocaleString('zh-TW') + ' 則' : '評論數未取得'}，${reviewTone(rating)}。`);
-  } else {
-    lines.push('口碑：Google 星等資料暫時抓不到，建議直接看最新評論。');
-  }
   if (topics.length >= 2) {
-    lines.push(`熱門：評論最常提到「${topics[0].label}」與「${topics[1].label}」。`);
+    lines.push(`熱門主題：最常提到「${topics[0].label}」（${topics[0].count}）與「${topics[1].label}」（${topics[1].count}）。`);
   } else if (topics.length === 1) {
-    lines.push(`熱門：目前最高頻的評論主題是「${topics[0].label}」。`);
-  } else {
-    lines.push('熱門：Google 沒有穩定提供可解析的熱門主題。');
+    lines.push(`熱門主題：最常提到「${topics[0].label}」（${topics[0].count}）。`);
   }
-  lines.push(practicalLine(summaryText, topics));
+
+  const cats = [
+    {re:/排隊|等候|候位|人潮|出餐|速度|久等|等待/gi,line:'用餐節奏：排隊、等候或出餐速度是近期評論常見話題。'},
+    {re:/價格|價位|便宜|偏貴|很貴|CP值|cp值|份量|大份|小份|划算/gi,line:'價格份量：價位、CP 值與份量是近期評論常見話題。'},
+    {re:/環境|座位|空間|冷氣|乾淨|衛生|停車|交通|車位/gi,line:'環境交通：座位、環境或停車交通是近期評論常見話題。'},
+    {re:/服務|態度|店員|老闆|親切|出餐/gi,line:'服務體驗：店員態度與服務流程是近期評論常見話題。'},
+    {re:/好吃|好喝|美味|口味|口感|湯頭|香|酥|脆|嫩|鮮|鹹|甜|辣|推薦/gi,line:'口味：味道、口感與招牌餐點是近期評論最常討論的核心。'}
+  ].map(x=>({...x,n:countHits(reviewText,x.re)})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n);
+
+  for (const x of cats) {
+    if (lines.length >= 2) break;
+    lines.push(x.line);
+  }
+
+  const pos = countHits(reviewText,/好吃|好喝|美味|推薦|滿意|讚|很棒|超讚|驚豔|香|嫩|酥|鮮|親切/gi);
+  const neg = countHits(reviewText,/普通|難吃|失望|太鹹|太甜|太油|油膩|偏貴|很貴|態度差|很慢|久等|不推/gi);
+  if (pos >= 2 && pos >= neg * 1.8) lines.push('整體語氣：目前可見 Google 評論以正面描述為主。');
+  else if (neg >= 2 && neg >= pos * .8) lines.push('整體語氣：目前可見 Google 評論較兩極，負面提醒也不少。');
+  else lines.push('整體語氣：目前可見 Google 評論正負意見都有，建議再看最新幾則。');
+
+  while (lines.length < 3) lines.push('評論資料：Google 公開頁面暫未提供更多可穩定解析的熱點。');
   return lines.slice(0,3);
 }
 
@@ -136,7 +127,10 @@ function parseBody(text, place) {
     }
   }
 
-  return { rating, reviewCount, topics, summaryBlock };
+  const reviewText = sortIdx >= 0
+    ? compact(lines.slice(sortIdx+1, Math.min(lines.length,sortIdx+220)).join(' '))
+    : compact(lines.slice(Math.max(0,reviewIdx), Math.min(lines.length,Math.max(0,reviewIdx)+220)).join(' '));
+  return { rating, reviewCount, topics, summaryBlock, reviewText };
 }
 
 async function scrape(p) {
@@ -157,7 +151,7 @@ async function scrape(p) {
       rating:parsed.rating,
       reviewCount:parsed.reviewCount,
       topics:parsed.topics,
-      highlights:buildHighlights(parsed.rating, parsed.reviewCount, parsed.topics, parsed.summaryBlock),
+      highlights:buildHighlights(parsed.topics, parsed.reviewText),
       fetchedAt:new Date().toISOString(),
       source:'Google Maps public review page'
     };
